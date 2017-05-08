@@ -1,0 +1,19 @@
+plugins {
+}
+
+group = 'io.aconite'
+version = '0.0.1'
+
+dependencies {
+    compile group: 'com.google.code.gson', name: 'gson', version: '1.7.2'
+    compile group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: '1.1.2-2'
+    testCompile 'junit:junit:4.12'
+}
+
+jar {
+    baseName = project.getProperty('name')
+    manifest {
+        attributes 'Implementation-Title': 'Aconite Core'
+        attributes 'Implementation-Version': version
+    }
+}
