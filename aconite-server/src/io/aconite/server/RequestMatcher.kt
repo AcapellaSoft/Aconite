@@ -12,11 +12,10 @@ interface RequestFilter {
 
 class RequestMatcher(private val filters: List<RequestFilter>) {
 
-    class Builder {
-        private val filters = mutableListOf<RequestFilter>()
+    class Builder(url: String, full: Boolean) {
+        private val filters = mutableListOf<RequestFilter>(PathFilter(url, full))
 
         private fun add(fn: () -> RequestFilter) = this.apply { filters.add(fn()) }
-        fun path(url: String, full: Boolean) = add { PathFilter(url, full) }
 
         fun build(): RequestMatcher = RequestMatcher(filters)
     }

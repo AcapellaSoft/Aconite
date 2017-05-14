@@ -8,8 +8,7 @@ class RequestMatcherTest {
 
     @Test
     fun testPathPartMatch() {
-        val matcher = RequestMatcher.Builder()
-                .path("/foo/bar", false)
+        val matcher = RequestMatcher.Builder("/foo/bar", false)
                 .build()
         val result = matcher.match(Request("GET", "/foo/bar/baz"))!!
         Assert.assertEquals("/baz", result.url)
@@ -17,8 +16,7 @@ class RequestMatcherTest {
 
     @Test
     fun testPathFullMatch() {
-        val matcher = RequestMatcher.Builder()
-                .path("/foo/bar/baz", true)
+        val matcher = RequestMatcher.Builder("/foo/bar/baz", true)
                 .build()
         val result = matcher.match(Request("GET", "/foo/bar/baz"))!!
         Assert.assertEquals("", result.url)
@@ -26,8 +24,7 @@ class RequestMatcherTest {
 
     @Test
     fun testPathFullNotMatch() {
-        val matcher = RequestMatcher.Builder()
-                .path("/foo/bar", true)
+        val matcher = RequestMatcher.Builder("/foo/bar", true)
                 .build()
         val result = matcher.match(Request("GET", "/foo/bar/baz"))
         Assert.assertNull(result)
@@ -35,8 +32,7 @@ class RequestMatcherTest {
 
     @Test
     fun testPathManyArgs() {
-        val matcher = RequestMatcher.Builder()
-                .path("/foo/{arg1}/{arg2}/{arg3}", true)
+        val matcher = RequestMatcher.Builder("/foo/{arg1}/{arg2}/{arg3}", true)
                 .build()
         val result = matcher.match(Request("GET", "/foo/bar/baz/123"))!!
         Assert.assertEquals(3, result.path.size)
@@ -47,8 +43,7 @@ class RequestMatcherTest {
 
     @Test
     fun testPathEmptyMatch() {
-        val matcher = RequestMatcher.Builder()
-                .path("", true)
+        val matcher = RequestMatcher.Builder("", true)
                 .build()
         val result = matcher.match(Request("GET", "/"))
         Assert.assertNotNull(result)
