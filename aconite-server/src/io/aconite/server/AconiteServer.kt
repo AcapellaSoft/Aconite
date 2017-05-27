@@ -9,8 +9,8 @@ interface BodySerializer {
         fun create(annotations: KAnnotatedElement, type: KType): BodySerializer?
     }
 
-    fun serialize(obj: Any?): BodyBuffer?
-    fun deserialize(body: BodyBuffer?): Any?
+    fun serialize(obj: Any?): BodyBuffer
+    fun deserialize(body: BodyBuffer): Any?
 }
 
 interface StringSerializer {
@@ -30,11 +30,12 @@ interface MethodFilter {
     fun predicate(fn: KCallable<*>): Boolean
 }
 
+class AconiteServerException(message: String): Exception(message)
+
 class AconiteServer(
-        val bodySerializer: BodySerializer,
-        val stringSerializer: StringSerializer,
+        val bodySerializer: BodySerializer.Factory,
+        val stringSerializer: StringSerializer.Factory,
         val callAdapter: CallAdapter,
         val methodFilter: MethodFilter
 ) {
-
 }

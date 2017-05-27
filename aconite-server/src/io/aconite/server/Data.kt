@@ -1,6 +1,6 @@
 package io.aconite.server
 
-import io.aconite.BodyBuffer
+import java.nio.Buffer
 
 data class Request (
         val method: String,
@@ -13,4 +13,9 @@ data class Request (
 data class Response (
         val headers: Map<String, String> = emptyMap(),
         val body: BodyBuffer? = null
+)
+
+data class BodyBuffer(
+        val content: Buffer,
+        val contentType: String
 )
