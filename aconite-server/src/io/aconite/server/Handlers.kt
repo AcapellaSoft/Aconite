@@ -4,8 +4,13 @@ import io.aconite.annotations.Body
 import io.aconite.annotations.Header
 import io.aconite.annotations.Path
 import io.aconite.annotations.Query
+import kotlinx.coroutines.experimental.future.await
+import java.util.concurrent.CompletableFuture
 import kotlin.reflect.KCallable
+import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
+import kotlin.reflect.KType
+import kotlin.reflect.full.isSubclassOf
 
 private val PARAM_ANNOTATIONS = listOf(
         Body::class,
@@ -16,17 +21,17 @@ private val PARAM_ANNOTATIONS = listOf(
 
 abstract class AbstractHandler : Comparable<AbstractHandler> {
     abstract val argsCount: Int
-    abstract fun accept(obj: Any, url: String, request: Request): Response?
+    abstract suspend fun accept(obj: Any, url: String, request: Request): Response?
     final override fun compareTo(other: AbstractHandler) = argsCount.compareTo(other.argsCount)
 }
 
 class MethodHandler(server: AconiteServer, private val fn: KCallable<*>) : AbstractHandler() {
     private val args = transformParams(server, fn)
-    private val responseSerializer = server.bodySerializer.create(fn, fn.returnType) ?:
+    private val responseSerializer = server.bodySerializer.create(fn, fn.asyncReturnType()) ?:
             throw AconiteServerException("No suitable serializer found for response body")
     override val argsCount: Int = args.size
 
-    override fun accept(obj: Any, url: String, request: Request): Response? {
+    override suspend fun accept(obj: Any, url: String, request: Request): Response? {
         val check = args.all { it.check(request) }
         if (!check) return null
 
@@ -34,12 +39,22 @@ class MethodHandler(server: AconiteServer, private val fn: KCallable<*>) : Abstr
                 .mapNotNull { it.process(obj, request) }
                 .toMap()
 
-        val result = fn.callBy(values)
+        val result = (fn.callBy(values) as CompletableFuture<*>).await()
 
         return Response(
                 body = responseSerializer.serialize(result)
         )
     }
+}
+
+private fun KCallable<*>.asyncReturnType(): KType {
+    val cls = returnType.classifier as? KClass<*> ?:
+            throw AconiteServerException("Return type of method $this is not determined")
+
+    if (CompletableFuture::class.isSubclassOf(cls))
+        throw AconiteServerException("Return type of method $this is not CompletableFuture<*>")
+
+    return returnType.arguments[0].type!!
 }
 
 private fun transformParams(server: AconiteServer, fn: KCallable<*>): List<ArgumentTransformer> {

@@ -1,8 +1,10 @@
 package io.aconite.server
 
 import io.aconite.annotations.*
+import kotlinx.coroutines.experimental.future.future
 import org.junit.Assert
 import org.junit.Test
+import java.util.concurrent.CompletableFuture
 
 private val server = AconiteServer(
         bodySerializer = TestBodySerializer.Factory(),
@@ -14,21 +16,26 @@ private val server = AconiteServer(
 @Suppress("unused")
 class TestModule {
     @GET("/kv/keys/{key}")
-    fun get(@Path key: String, @Query version: String, @Header opt: String = "foobar", @Body body: String? = null): String {
-        return "key = $key, version = $version, opt = $opt, body = $body"
+    fun get(
+            @Path key: String,
+            @Query version: String,
+            @Header opt: String = "foobar",
+            @Body body: String? = null
+    ): CompletableFuture<String> = future {
+        "key = $key, version = $version, opt = $opt, body = $body"
     }
 
     @PUT("/kv/keys/{key}")
-    fun putNotAnnotated(key: String) = key
+    fun putNotAnnotated(key: String) = CompletableFuture.completedFuture(key)!!
 
     @POST("/kv/keys")
-    fun post(@Path("key-in-path") key: String) = key
+    fun post(@Path("key-in-path") key: String) = CompletableFuture.completedFuture(key)!!
 }
 
 class MethodHandlerTest {
 
     @Test
-    fun testAllParams() {
+    fun testAllParams() = asyncTest {
         val obj = TestModule()
         val cls = TestModule::class
         val fn = cls.members.first { it.name == "get" }
@@ -46,7 +53,7 @@ class MethodHandlerTest {
     }
 
     @Test
-    fun testDefaultValues() {
+    fun testDefaultValues() = asyncTest {
         val obj = TestModule()
         val cls = TestModule::class
         val fn = cls.members.first { it.name == "get" }
@@ -62,7 +69,7 @@ class MethodHandlerTest {
     }
 
     @Test
-    fun testNotAccepted() {
+    fun testNotAccepted() = asyncTest {
         val obj = TestModule()
         val cls = TestModule::class
         val fn = cls.members.first { it.name == "get" }
@@ -76,15 +83,20 @@ class MethodHandlerTest {
         Assert.assertNull(response)
     }
 
-    @Test(expected = AconiteServerException::class)
-    fun testNotAnnotated() {
+    @Test()
+    fun testNotAnnotated() = asyncTest {
         val cls = TestModule::class
         val fn = cls.members.first { it.name == "putNotAnnotated" }
-        MethodHandler(server, fn)
+        try {
+            MethodHandler(server, fn)
+            Assert.assertTrue(false)
+        } catch (ex: AconiteServerException) {
+            Assert.assertTrue(true)
+        }
     }
 
     @Test
-    fun testNotDefaultName() {
+    fun testNotDefaultName() = asyncTest {
         val obj = TestModule()
         val cls = TestModule::class
         val fn = cls.members.first { it.name == "post" }

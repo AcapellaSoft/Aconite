@@ -1,6 +1,8 @@
 package io.aconite.server
 
+import kotlinx.coroutines.experimental.future.future
 import java.nio.ByteBuffer
+import java.util.concurrent.TimeUnit
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KCallable
 import kotlin.reflect.KType
@@ -49,3 +51,6 @@ class TestMethodFilter: MethodFilter {
 fun Response?.body() = String((this?.body?.content as ByteBuffer).array())
 
 fun body(s: String) = BodyBuffer(ByteBuffer.wrap(s.toByteArray()), "text/plain")
+
+fun asyncTest(timeout: Long = 1, unit: TimeUnit = TimeUnit.SECONDS, block: suspend () -> Unit)
+        = future { block() }.get(timeout, unit)!!

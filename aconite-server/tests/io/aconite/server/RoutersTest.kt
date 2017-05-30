@@ -6,7 +6,7 @@ import org.junit.Test
 import java.nio.ByteBuffer
 
 private class TestHandler(override var argsCount: Int, val message: String): AbstractHandler() {
-    override fun accept(obj: Any, url: String, request: Request): Response? {
+    override suspend fun accept(obj: Any, url: String, request: Request): Response? {
         if (request.path.size < argsCount) return null
         return Response(
                 body = BodyBuffer(ByteBuffer.wrap(message.toByteArray()), "text/plain"),
@@ -19,7 +19,7 @@ private class UrlToBodyHandler: AbstractHandler() {
     override val argsCount: Int
         get() = 0
 
-    override fun accept(obj: Any, url: String, request: Request): Response? {
+    override suspend fun accept(obj: Any, url: String, request: Request): Response? {
         if (request.path.size < argsCount) return null
         return Response(
                 body = BodyBuffer(ByteBuffer.wrap(url.toByteArray()), "text/plain"),
@@ -30,7 +30,7 @@ private class UrlToBodyHandler: AbstractHandler() {
 
 class RoutersTest {
     @Test
-    fun testSimpleModuleRouter() {
+    fun testSimpleModuleRouter() = asyncTest {
         val handler = TestHandler(0, "from handler")
         val router = ModuleRouter(UrlTemplate("/foo/bar"), listOf(handler))
 
@@ -40,7 +40,7 @@ class RoutersTest {
     }
 
     @Test
-    fun testModuleRouterWithParams() {
+    fun testModuleRouterWithParams() = asyncTest  {
         val handler = TestHandler(0, "from handler")
         val router = ModuleRouter(UrlTemplate("/foo/{bar}/baz/{qux}"), listOf(handler))
 
@@ -52,7 +52,7 @@ class RoutersTest {
     }
 
     @Test
-    fun testModuleRouterWithParamsNotMatch() {
+    fun testModuleRouterWithParamsNotMatch() = asyncTest  {
         val handler = TestHandler(0, "from handler")
         val router = ModuleRouter(UrlTemplate("/foo/{bar}/baz/{qux}"), listOf(handler))
 
@@ -61,7 +61,7 @@ class RoutersTest {
     }
 
     @Test
-    fun testModuleRouterMultipleHandlers() {
+    fun testModuleRouterMultipleHandlers() = asyncTest  {
         val router = ModuleRouter(UrlTemplate("/foo/{bar}/baz/{qux}"), listOf(
                 TestHandler(1, "one"),
                 TestHandler(2, "two"),
@@ -81,7 +81,7 @@ class RoutersTest {
     }
 
     @Test
-    fun testModuleRouterPartialMatch() {
+    fun testModuleRouterPartialMatch() = asyncTest  {
         val handler = UrlToBodyHandler()
         val router = ModuleRouter(UrlTemplate("/foo/{bar}"), listOf(handler))
 
