@@ -48,7 +48,7 @@ private fun KCallable<*>.asyncReturnType(): KType {
     val cls = returnType.classifier as? KClass<*> ?:
             throw AconiteServerException("Return type of method $this is not determined")
 
-    if (CompletableFuture::class.isSubclassOf(cls))
+    if (!CompletableFuture::class.isSubclassOf(cls))
         throw AconiteServerException("Return type of method $this is not CompletableFuture<*>")
 
     return returnType.arguments[0].type!!
