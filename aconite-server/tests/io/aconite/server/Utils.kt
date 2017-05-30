@@ -4,7 +4,7 @@ import kotlinx.coroutines.experimental.future.future
 import java.nio.ByteBuffer
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KAnnotatedElement
-import kotlin.reflect.KCallable
+import kotlin.reflect.KFunction
 import kotlin.reflect.KType
 
 class TestBodySerializer: BodySerializer {
@@ -40,11 +40,11 @@ class TestStringSerializer: StringSerializer {
 }
 
 class TestCallAdapter: CallAdapter {
-    override fun adapt(fn: KCallable<*>) = fn
+    override fun adapt(fn: KFunction<*>) = fn
 }
 
 class TestMethodFilter: MethodFilter {
-    override fun predicate(fn: KCallable<*>) = true
+    override fun predicate(fn: KFunction<*>) = true
 
 }
 

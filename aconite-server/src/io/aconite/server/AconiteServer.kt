@@ -1,7 +1,7 @@
 package io.aconite.server
 
 import kotlin.reflect.KAnnotatedElement
-import kotlin.reflect.KCallable
+import kotlin.reflect.KFunction
 import kotlin.reflect.KType
 
 interface BodySerializer {
@@ -23,11 +23,11 @@ interface StringSerializer {
 }
 
 interface CallAdapter {
-    fun adapt(fn: KCallable<*>): KCallable<*>?
+    fun adapt(fn: KFunction<*>): KFunction<*>?
 }
 
 interface MethodFilter {
-    fun predicate(fn: KCallable<*>): Boolean
+    fun predicate(fn: KFunction<*>): Boolean
 }
 
 class AconiteServerException(message: String): Exception(message)

@@ -6,10 +6,7 @@ import io.aconite.annotations.Path
 import io.aconite.annotations.Query
 import kotlinx.coroutines.experimental.future.await
 import java.util.concurrent.CompletableFuture
-import kotlin.reflect.KCallable
-import kotlin.reflect.KClass
-import kotlin.reflect.KParameter
-import kotlin.reflect.KType
+import kotlin.reflect.*
 import kotlin.reflect.full.isSubclassOf
 
 private val PARAM_ANNOTATIONS = listOf(
@@ -25,7 +22,7 @@ abstract class AbstractHandler : Comparable<AbstractHandler> {
     final override fun compareTo(other: AbstractHandler) = argsCount.compareTo(other.argsCount)
 }
 
-class MethodHandler(server: AconiteServer, private val fn: KCallable<*>) : AbstractHandler() {
+class MethodHandler(server: AconiteServer, private val fn: KFunction<*>) : AbstractHandler() {
     private val args = transformParams(server, fn)
     private val responseSerializer = server.bodySerializer.create(fn, fn.asyncReturnType()) ?:
             throw AconiteServerException("No suitable serializer found for response body")

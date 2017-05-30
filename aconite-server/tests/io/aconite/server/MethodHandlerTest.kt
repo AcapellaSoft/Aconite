@@ -5,6 +5,7 @@ import kotlinx.coroutines.experimental.future.future
 import org.junit.Assert
 import org.junit.Test
 import java.util.concurrent.CompletableFuture
+import kotlin.reflect.KFunction
 
 private val server = AconiteServer(
         bodySerializer = TestBodySerializer.Factory(),
@@ -38,7 +39,7 @@ class MethodHandlerTest {
     fun testAllParams() = asyncTest {
         val obj = TestModule()
         val cls = TestModule::class
-        val fn = cls.members.first { it.name == "get" }
+        val fn = cls.members.first { it.name == "get" } as KFunction<*>
         val handler = MethodHandler(server, fn)
 
         val response = handler.accept(obj, "", Request(
@@ -56,7 +57,7 @@ class MethodHandlerTest {
     fun testDefaultValues() = asyncTest {
         val obj = TestModule()
         val cls = TestModule::class
-        val fn = cls.members.first { it.name == "get" }
+        val fn = cls.members.first { it.name == "get" } as KFunction<*>
         val handler = MethodHandler(server, fn)
 
         val response = handler.accept(obj, "", Request(
@@ -72,7 +73,7 @@ class MethodHandlerTest {
     fun testNotAccepted() = asyncTest {
         val obj = TestModule()
         val cls = TestModule::class
-        val fn = cls.members.first { it.name == "get" }
+        val fn = cls.members.first { it.name == "get" } as KFunction<*>
         val handler = MethodHandler(server, fn)
 
         val response = handler.accept(obj, "", Request(
@@ -86,7 +87,7 @@ class MethodHandlerTest {
     @Test()
     fun testNotAnnotated() = asyncTest {
         val cls = TestModule::class
-        val fn = cls.members.first { it.name == "putNotAnnotated" }
+        val fn = cls.members.first { it.name == "putNotAnnotated" } as KFunction<*>
         try {
             MethodHandler(server, fn)
             Assert.assertTrue(false)
@@ -99,7 +100,7 @@ class MethodHandlerTest {
     fun testNotDefaultName() = asyncTest {
         val obj = TestModule()
         val cls = TestModule::class
-        val fn = cls.members.first { it.name == "post" }
+        val fn = cls.members.first { it.name == "post" } as KFunction<*>
         val handler = MethodHandler(server, fn)
 
         val response = handler.accept(obj, "", Request(
