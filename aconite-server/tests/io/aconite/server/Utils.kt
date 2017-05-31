@@ -1,11 +1,32 @@
 package io.aconite.server
 
+import io.aconite.annotations.*
 import kotlinx.coroutines.experimental.future.future
 import java.nio.ByteBuffer
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
+
+@Suppress("unused")
+class TestModule {
+    @GET("/kv/keys/{key}")
+    fun get(
+            @Path key: String,
+            @Query version: String,
+            @Header opt: String = "foobar",
+            @Body body: String? = null
+    ): CompletableFuture<String> = future {
+        "key = $key, version = $version, opt = $opt, body = $body"
+    }
+
+    @PUT("/kv/keys/{key}")
+    fun putNotAnnotated(key: String) = CompletableFuture.completedFuture(key)!!
+
+    @POST("/kv/keys")
+    fun post(@Path("key-in-path") key: String) = CompletableFuture.completedFuture(key)!!
+}
 
 class TestBodySerializer: BodySerializer {
 

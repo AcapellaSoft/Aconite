@@ -1,10 +1,7 @@
 package io.aconite.server
 
-import io.aconite.annotations.*
-import kotlinx.coroutines.experimental.future.future
 import org.junit.Assert
 import org.junit.Test
-import java.util.concurrent.CompletableFuture
 import kotlin.reflect.KFunction
 
 private val server = AconiteServer(
@@ -13,25 +10,6 @@ private val server = AconiteServer(
         callAdapter = TestCallAdapter(),
         methodFilter = TestMethodFilter()
 )
-
-@Suppress("unused")
-class TestModule {
-    @GET("/kv/keys/{key}")
-    fun get(
-            @Path key: String,
-            @Query version: String,
-            @Header opt: String = "foobar",
-            @Body body: String? = null
-    ): CompletableFuture<String> = future {
-        "key = $key, version = $version, opt = $opt, body = $body"
-    }
-
-    @PUT("/kv/keys/{key}")
-    fun putNotAnnotated(key: String) = CompletableFuture.completedFuture(key)!!
-
-    @POST("/kv/keys")
-    fun post(@Path("key-in-path") key: String) = CompletableFuture.completedFuture(key)!!
-}
 
 class MethodHandlerTest {
 
