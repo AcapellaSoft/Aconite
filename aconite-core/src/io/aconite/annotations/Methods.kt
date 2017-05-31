@@ -2,32 +2,36 @@ package io.aconite.annotations
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
-annotation class HTTP(val method: String, val url: String)
+annotation class HTTP(val method: String, val url: String = "")
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
-annotation class DELETE(val url: String)
+annotation class MODULE(val url: String = "")
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
-annotation class GET(val url: String)
+annotation class DELETE(val url: String = "")
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
-annotation class HEAD(val url: String)
+annotation class GET(val url: String = "")
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
-annotation class OPTIONS(val url: String)
+annotation class HEAD(val url: String = "")
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
-annotation class PATCH(val url: String)
+annotation class OPTIONS(val url: String = "")
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
-annotation class POST(val url: String)
+annotation class PATCH(val url: String = "")
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
-annotation class PUT(val url: String)
+annotation class POST(val url: String = "")
+
+@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.FUNCTION)
+annotation class PUT(val url: String = "")
