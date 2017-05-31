@@ -40,7 +40,7 @@ class MethodHandlerTest {
         val obj = TestModule()
         val cls = TestModule::class
         val fn = cls.members.first { it.name == "get" } as KFunction<*>
-        val handler = MethodHandler(server, fn)
+        val handler = MethodHandler(server, "GET", fn)
 
         val response = handler.accept(obj, "", Request(
                 method = "GET",
@@ -54,11 +54,28 @@ class MethodHandlerTest {
     }
 
     @Test
+    fun testAllParamsWrongMethod() = asyncTest {
+        val obj = TestModule()
+        val cls = TestModule::class
+        val fn = cls.members.first { it.name == "get" } as KFunction<*>
+        val handler = MethodHandler(server, "GET", fn)
+
+        val response = handler.accept(obj, "", Request(
+                method = "POST",
+                path = mapOf("key" to "abc"),
+                query = mapOf("version" to "123"),
+                headers = mapOf("opt" to "baz"),
+                body = body("body_str")
+        ))
+        Assert.assertNull(response)
+    }
+
+    @Test
     fun testDefaultValues() = asyncTest {
         val obj = TestModule()
         val cls = TestModule::class
         val fn = cls.members.first { it.name == "get" } as KFunction<*>
-        val handler = MethodHandler(server, fn)
+        val handler = MethodHandler(server, "GET", fn)
 
         val response = handler.accept(obj, "", Request(
                 method = "GET",
@@ -74,7 +91,7 @@ class MethodHandlerTest {
         val obj = TestModule()
         val cls = TestModule::class
         val fn = cls.members.first { it.name == "get" } as KFunction<*>
-        val handler = MethodHandler(server, fn)
+        val handler = MethodHandler(server, "GET", fn)
 
         val response = handler.accept(obj, "", Request(
                 method = "GET",
@@ -89,7 +106,7 @@ class MethodHandlerTest {
         val cls = TestModule::class
         val fn = cls.members.first { it.name == "putNotAnnotated" } as KFunction<*>
         try {
-            MethodHandler(server, fn)
+            MethodHandler(server, "GET", fn)
             Assert.assertTrue(false)
         } catch (ex: AconiteServerException) {
             Assert.assertTrue(true)
@@ -101,7 +118,7 @@ class MethodHandlerTest {
         val obj = TestModule()
         val cls = TestModule::class
         val fn = cls.members.first { it.name == "post" } as KFunction<*>
-        val handler = MethodHandler(server, fn)
+        val handler = MethodHandler(server, "POST", fn)
 
         val response = handler.accept(obj, "", Request(
                 method = "POST",

@@ -22,24 +22,16 @@ abstract class AbstractHandler : Comparable<AbstractHandler> {
     final override fun compareTo(other: AbstractHandler) = argsCount.compareTo(other.argsCount)
 }
 
-class MethodHandler(server: AconiteServer, private val fn: KFunction<*>) : AbstractHandler() {
+class MethodHandler(server: AconiteServer, private val method: String, private val fn: KFunction<*>) : AbstractHandler() {
     private val args = transformParams(server, fn)
     private val responseSerializer = responseSerializer(server, fn)
-    override val argsCount: Int = args.size
+    override val argsCount = args.size
 
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
-        val check = args.all { it.check(request) }
-        if (!check) return null
-
-        val values = args
-                .mapNotNull { it.process(obj, request) }
-                .toMap()
-
-        val result = (fn.callBy(values) as CompletableFuture<*>).await()
-
-        return Response(
-                body = responseSerializer.serialize(result)
-        )
+        if (request.method != method) return null
+        return fn.callBy(args, obj, request)?.await()?.let {
+            Response(body = responseSerializer.serialize(it))
+        }
     }
 }
 
@@ -160,4 +152,12 @@ private fun KCallable<*>.asyncReturnType(): KType {
 private fun KCallable<*>.returnClass(): KClass<*> {
     return returnType.classifier as? KClass<*> ?:
             throw AconiteServerException("Return type of method $this is not determined")
+}
+
+suspend private fun KCallable<*>.callBy(args: List<ArgumentTransformer>, obj: Any, request: Request): CompletableFuture<*>? {
+    if (!args.all { it.check(request) }) return null
+    val values = args
+            .mapNotNull { it.process(obj, request) }
+            .toMap()
+    return callBy(values) as CompletableFuture<*>
 }
