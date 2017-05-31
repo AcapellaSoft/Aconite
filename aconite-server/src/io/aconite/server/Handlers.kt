@@ -24,8 +24,7 @@ abstract class AbstractHandler : Comparable<AbstractHandler> {
 
 class MethodHandler(server: AconiteServer, private val fn: KFunction<*>) : AbstractHandler() {
     private val args = transformParams(server, fn)
-    private val responseSerializer = server.bodySerializer.create(fn, fn.asyncReturnType()) ?:
-            throw AconiteServerException("No suitable serializer found for response body")
+    private val responseSerializer = responseSerializer(server, fn)
     override val argsCount: Int = args.size
 
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
@@ -42,16 +41,6 @@ class MethodHandler(server: AconiteServer, private val fn: KFunction<*>) : Abstr
                 body = responseSerializer.serialize(result)
         )
     }
-}
-
-private fun KCallable<*>.asyncReturnType(): KType {
-    val cls = returnType.classifier as? KClass<*> ?:
-            throw AconiteServerException("Return type of method $this is not determined")
-
-    if (!CompletableFuture::class.isSubclassOf(cls))
-        throw AconiteServerException("Return type of method $this is not CompletableFuture<*>")
-
-    return returnType.arguments[0].type!!
 }
 
 private fun transformParams(server: AconiteServer, fn: KCallable<*>): List<ArgumentTransformer> {
@@ -152,4 +141,23 @@ private class QueryTransformer(
 private class InstanceTransformer(private val param: KParameter): ArgumentTransformer {
     override fun check(request: Request) = true
     override fun process(instance: Any, request: Request) = Pair(param, instance)
+}
+
+private fun responseSerializer(server: AconiteServer, fn: KFunction<*>): BodySerializer {
+    return server.bodySerializer.create(fn, fn.asyncReturnType()) ?:
+            throw AconiteServerException("No suitable serializer found for response body of method $fn")
+}
+
+private fun KCallable<*>.asyncReturnType(): KType {
+    val cls = this.returnClass()
+
+    if (!CompletableFuture::class.isSubclassOf(cls))
+        throw AconiteServerException("Return type of method $this is not CompletableFuture<*>")
+
+    return returnType.arguments[0].type!!
+}
+
+private fun KCallable<*>.returnClass(): KClass<*> {
+    return returnType.classifier as? KClass<*> ?:
+            throw AconiteServerException("Return type of method $this is not determined")
 }
