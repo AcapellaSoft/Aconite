@@ -2,6 +2,7 @@ package io.aconite.server
 
 import io.aconite.annotations.*
 import io.aconite.utils.UrlTemplate
+import io.aconite.utils.resolve
 import kotlinx.coroutines.experimental.future.await
 import java.util.concurrent.CompletableFuture
 import kotlin.reflect.*
@@ -44,7 +45,8 @@ class MethodHandler(server: AconiteServer, private val method: String, private v
     }
 }
 
-class ModuleHandler(server: AconiteServer, iface: KType, private val fn: KFunction<*>): AbstractHandler() {
+class ModuleHandler(server: AconiteServer, iface: KType, fn: KFunction<*>): AbstractHandler() {
+    private val fn = resolve(iface, fn)
     private val args = transformParams(server, fn)
     private val routers = buildRouters(server, iface)
     override val argsCount = args.size
