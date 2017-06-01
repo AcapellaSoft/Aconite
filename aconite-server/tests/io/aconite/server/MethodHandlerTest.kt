@@ -2,13 +2,12 @@ package io.aconite.server
 
 import org.junit.Assert
 import org.junit.Test
-import kotlin.reflect.KFunction
 
 private val server = AconiteServer(
         bodySerializer = TestBodySerializer.Factory(),
         stringSerializer = TestStringSerializer.Factory(),
         callAdapter = TestCallAdapter(),
-        methodFilter = TestMethodFilter()
+        methodFilter = MethodFilterPassAll()
 )
 
 class MethodHandlerTest {
@@ -16,8 +15,7 @@ class MethodHandlerTest {
     @Test
     fun testAllParams() = asyncTest {
         val obj = TestModule()
-        val cls = TestModule::class
-        val fn = cls.members.first { it.name == "get" } as KFunction<*>
+        val fn = TestModuleApi::get
         val handler = MethodHandler(server, "GET", fn)
 
         val response = handler.accept(obj, "", Request(
@@ -34,8 +32,7 @@ class MethodHandlerTest {
     @Test
     fun testAllParamsWrongMethod() = asyncTest {
         val obj = TestModule()
-        val cls = TestModule::class
-        val fn = cls.members.first { it.name == "get" } as KFunction<*>
+        val fn = TestModuleApi::get
         val handler = MethodHandler(server, "GET", fn)
 
         val response = handler.accept(obj, "", Request(
@@ -49,10 +46,9 @@ class MethodHandlerTest {
     }
 
     @Test
-    fun testDefaultValues() = asyncTest {
+    fun testDefaultValues() = asyncTest(1000) {
         val obj = TestModule()
-        val cls = TestModule::class
-        val fn = cls.members.first { it.name == "get" } as KFunction<*>
+        val fn = TestModuleApi::get
         val handler = MethodHandler(server, "GET", fn)
 
         val response = handler.accept(obj, "", Request(
@@ -67,8 +63,7 @@ class MethodHandlerTest {
     @Test
     fun testNotAccepted() = asyncTest {
         val obj = TestModule()
-        val cls = TestModule::class
-        val fn = cls.members.first { it.name == "get" } as KFunction<*>
+        val fn = TestModuleApi::get
         val handler = MethodHandler(server, "GET", fn)
 
         val response = handler.accept(obj, "", Request(
@@ -81,8 +76,7 @@ class MethodHandlerTest {
 
     @Test()
     fun testNotAnnotated() = asyncTest {
-        val cls = TestModule::class
-        val fn = cls.members.first { it.name == "putNotAnnotated" } as KFunction<*>
+        val fn = TestModuleApi::putNotAnnotated
         try {
             MethodHandler(server, "GET", fn)
             Assert.assertTrue(false)
@@ -94,8 +88,7 @@ class MethodHandlerTest {
     @Test
     fun testNotDefaultName() = asyncTest {
         val obj = TestModule()
-        val cls = TestModule::class
-        val fn = cls.members.first { it.name == "post" } as KFunction<*>
+        val fn = TestModuleApi::post
         val handler = MethodHandler(server, "POST", fn)
 
         val response = handler.accept(obj, "", Request(

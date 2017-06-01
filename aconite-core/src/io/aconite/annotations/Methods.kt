@@ -6,32 +6,32 @@ annotation class HTTP(val method: String, val url: String = "")
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
-annotation class MODULE(val url: String = "")
+annotation class MODULE(val value: String = "")
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
-annotation class DELETE(val url: String = "")
+annotation class DELETE(val value: String = "")
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
-annotation class GET(val url: String = "")
+annotation class GET(val value: String = "")
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
-annotation class HEAD(val url: String = "")
+annotation class HEAD(val value: String = "")
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
-annotation class OPTIONS(val url: String = "")
+annotation class OPTIONS(val value: String = "")
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
-annotation class PATCH(val url: String = "")
+annotation class PATCH(val value: String = "")
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
-annotation class POST(val url: String = "")
+annotation class POST(val value: String = "")
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
-annotation class PUT(val url: String = "")
+annotation class PUT(val value: String = "")

@@ -10,22 +10,47 @@ import kotlin.reflect.KFunction
 import kotlin.reflect.KType
 
 @Suppress("unused")
-class TestModule {
+interface RootModuleApi {
+    fun test(): CompletableFuture<TestModuleApi>
+}
+
+interface TestModuleApi {
+
     @GET("/kv/keys/{key}")
-    fun get(
-            @Path key: String,
+    fun get(@Path key: String,
             @Query version: String,
             @Header opt: String = "foobar",
             @Body body: String? = null
-    ): CompletableFuture<String> = future {
+    ): CompletableFuture<String>
+
+    @PUT("/kv/keys/{key}")
+    fun putNotAnnotated(key: String): CompletableFuture<String>
+
+    @POST("/kv/keys/{key-in-path}")
+    fun post(@Path("key-in-path") key: String): CompletableFuture<String>
+}
+
+@Suppress("unused")
+class RootModule: RootModuleApi {
+    override fun test() = future<TestModuleApi> {
+        TestModule()
+    }
+}
+
+@Suppress("unused")
+open class TestModule: TestModuleApi {
+
+    final override fun get(key: String, version: String, opt: String, body: String?) = future {
         "key = $key, version = $version, opt = $opt, body = $body"
     }
 
-    @PUT("/kv/keys/{key}")
-    fun putNotAnnotated(key: String) = CompletableFuture.completedFuture(key)!!
+    override fun putNotAnnotated(key: String) = future {
+        key
+    }
 
-    @POST("/kv/keys")
-    fun post(@Path("key-in-path") key: String) = CompletableFuture.completedFuture(key)!!
+    override fun post(key: String) = future {
+        key
+    }
 }
 
 class TestBodySerializer: BodySerializer {
@@ -64,9 +89,12 @@ class TestCallAdapter: CallAdapter {
     override fun adapt(fn: KFunction<*>) = fn
 }
 
-class TestMethodFilter: MethodFilter {
-    override fun predicate(fn: KFunction<*>) = true
+class MethodFilterPassAll(vararg val methods: String): MethodFilter {
+    override fun predicate(fn: KFunction<*>) = fn.name in methods
+}
 
+class MethodFilterPassSpecified(vararg val methods: String): MethodFilter {
+    override fun predicate(fn: KFunction<*>) = fn.name in methods
 }
 
 fun Response?.body() = String((this?.body?.content as ByteBuffer).array())
