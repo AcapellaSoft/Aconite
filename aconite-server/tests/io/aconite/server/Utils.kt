@@ -17,11 +17,7 @@ interface RootModuleApi {
 interface TestModuleApi {
 
     @GET("/kv/keys/{key}")
-    fun get(@Path key: String,
-            @Query version: String,
-            @Header opt: String = "foobar",
-            @Body body: String? = null
-    ): CompletableFuture<String>
+    fun get(@Path key: String, @Query version: String, @Header opt: String? = null, @Body body: String? = null): CompletableFuture<String>
 
     @PUT("/kv/keys/{key}")
     fun putNotAnnotated(key: String): CompletableFuture<String>
@@ -40,8 +36,8 @@ class RootModule: RootModuleApi {
 @Suppress("unused")
 open class TestModule: TestModuleApi {
 
-    final override fun get(key: String, version: String, opt: String, body: String?) = future {
-        "key = $key, version = $version, opt = $opt, body = $body"
+    final override fun get(key: String, version: String, opt: String?, body: String?) = future {
+        "key = $key, version = $version, opt = ${opt ?: "foobar"}, body = $body"
     }
 
     override fun putNotAnnotated(key: String) = future {

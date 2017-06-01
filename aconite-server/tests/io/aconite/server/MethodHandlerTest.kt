@@ -46,7 +46,7 @@ class MethodHandlerTest {
     }
 
     @Test
-    fun testDefaultValues() = asyncTest(1000) {
+    fun testDefaultValues() = asyncTest {
         val obj = TestModule()
         val fn = TestModuleApi::get
         val handler = MethodHandler(server, "GET", fn)

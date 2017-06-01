@@ -14,7 +14,7 @@ private val server = AconiteServer(
 class ModuleHandlerTest {
 
     @Test
-    fun testGet() = asyncTest(1000) {
+    fun testGet() = asyncTest {
         val module = ModuleHandler(server, TestModuleApi::class.createType(), RootModuleApi::test)
         val root = RootModule()
         val response = module.accept(root, "/kv/keys/abc", Request(
@@ -27,7 +27,7 @@ class ModuleHandlerTest {
     }
 
     @Test
-    fun testPost() = asyncTest(1000) {
+    fun testPost() = asyncTest {
         val module = ModuleHandler(server, TestModuleApi::class.createType(), RootModuleApi::test)
         val root = RootModule()
         val response = module.accept(root, "/kv/keys/foobar", Request(

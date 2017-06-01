@@ -38,7 +38,7 @@ class MethodHandler(server: AconiteServer, private val method: String, private v
 
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
         if (request.method != method) return null
-        return fn.callBy(args, obj, request)?.await()?.let {
+        return fn.httpCall(args, obj, request)?.await()?.let {
             Response(body = responseSerializer.serialize(it))
         }
     }
@@ -50,7 +50,7 @@ class ModuleHandler(server: AconiteServer, iface: KType, private val fn: KFuncti
     override val argsCount = args.size
 
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
-        return fn.callBy(args, obj, request)?.await()?.let { nextObj ->
+        return fn.httpCall(args, obj, request)?.await()?.let { nextObj ->
             for (router in routers) {
                 val response = router.accept(nextObj, url, request)
                 if (response != null) return response
@@ -85,7 +85,7 @@ private fun transformParams(server: AconiteServer, fn: KCallable<*>): List<Argum
 
 private fun transformParam(server: AconiteServer, param: KParameter): ArgumentTransformer {
     if (param.kind == KParameter.Kind.INSTANCE)
-        return InstanceTransformer(param)
+        return InstanceTransformer()
     if (param.kind == KParameter.Kind.EXTENSION_RECEIVER)
         throw AconiteServerException("Extension methods are not allowed")
 
@@ -105,78 +105,70 @@ private fun transformParam(server: AconiteServer, param: KParameter): ArgumentTr
 
 private interface ArgumentTransformer {
     fun check(request: Request): Boolean
-    fun process(instance: Any, request: Request): Pair<KParameter, Any?>?
+    fun process(instance: Any, request: Request): Any?
 }
 
-private class BodyTransformer(server: AconiteServer, private val param: KParameter): ArgumentTransformer {
+private class BodyTransformer(server: AconiteServer, param: KParameter): ArgumentTransformer {
+    private val isNullable = param.type.isMarkedNullable
     private val serializer = server.bodySerializer.create(param, param.type) ?:
             throw AconiteServerException("No suitable serializer found for body parameter $param")
 
-    override fun check(request: Request) = param.isOptional || request.body != null
+    override fun check(request: Request) = isNullable || request.body != null
 
-    override fun process(instance: Any, request: Request): Pair<KParameter, Any?>? {
+    override fun process(instance: Any, request: Request): Any? {
         val data = serializer.deserialize(request.body ?: return null)
-        return Pair(param, data)
+        return data
     }
 }
 
-private class HeaderTransformer(
-        server: AconiteServer,
-        private val param: KParameter,
-        name: String
-): ArgumentTransformer {
+private class HeaderTransformer(server: AconiteServer, param: KParameter, name: String): ArgumentTransformer {
+    private val isNullable = param.type.isMarkedNullable
     private val name = if (name.isEmpty()) param.name!! else name
     private val serializer = server.stringSerializer.create(param, param.type) ?:
             throw AconiteServerException("No suitable serializer found for header parameter $param")
 
-    override fun check(request: Request) = param.isOptional || request.headers.containsKey(name)
+    override fun check(request: Request) = isNullable || request.headers.containsKey(name)
 
-    override fun process(instance: Any, request: Request): Pair<KParameter, Any?>? {
+    override fun process(instance: Any, request: Request): Any? {
         val header = request.headers[name] ?: return null
         val data = serializer.deserialize(header)
-        return Pair(param, data)
+        return data
     }
 }
 
-private class PathTransformer(
-        server: AconiteServer,
-        private val param: KParameter,
-        name: String
-): ArgumentTransformer {
+private class PathTransformer(server: AconiteServer, param: KParameter, name: String): ArgumentTransformer {
+    private val isNullable = param.type.isMarkedNullable
     private val name = if (name.isEmpty()) param.name!! else name
     private val serializer = server.stringSerializer.create(param, param.type) ?:
             throw AconiteServerException("No suitable serializer found for path parameter $param")
 
-    override fun check(request: Request) = param.isOptional || request.path.containsKey(name)
+    override fun check(request: Request) = isNullable || request.path.containsKey(name)
 
-    override fun process(instance: Any, request: Request): Pair<KParameter, Any?>? {
+    override fun process(instance: Any, request: Request): Any? {
         val header = request.path[name] ?: return null
         val data = serializer.deserialize(header)
-        return Pair(param, data)
+        return data
     }
 }
 
-private class QueryTransformer(
-        server: AconiteServer,
-        private val param: KParameter,
-        name: String
-): ArgumentTransformer {
+private class QueryTransformer(server: AconiteServer, param: KParameter, name: String): ArgumentTransformer {
+    private val isNullable = param.type.isMarkedNullable
     private val name = if (name.isEmpty()) param.name!! else name
     private val serializer = server.stringSerializer.create(param, param.type) ?:
             throw AconiteServerException("No suitable serializer found for query parameter $param")
 
-    override fun check(request: Request) = param.isOptional || request.query.containsKey(name)
+    override fun check(request: Request) = isNullable || request.query.containsKey(name)
 
-    override fun process(instance: Any, request: Request): Pair<KParameter, Any?>? {
+    override fun process(instance: Any, request: Request): Any? {
         val header = request.query[name] ?: return null
         val data = serializer.deserialize(header)
-        return Pair(param, data)
+        return data
     }
 }
 
-private class InstanceTransformer(private val param: KParameter): ArgumentTransformer {
+private class InstanceTransformer: ArgumentTransformer {
     override fun check(request: Request) = true
-    override fun process(instance: Any, request: Request) = Pair(param, instance)
+    override fun process(instance: Any, request: Request) = instance
 }
 
 private fun responseSerializer(server: AconiteServer, fn: KFunction<*>): BodySerializer {
@@ -203,12 +195,10 @@ private fun KType.cls(): KClass<*> {
             throw AconiteServerException("Class of $this is not determined")
 }
 
-suspend private fun KCallable<*>.callBy(args: List<ArgumentTransformer>, obj: Any, request: Request): CompletableFuture<*>? {
+suspend private fun KCallable<*>.httpCall(args: List<ArgumentTransformer>, obj: Any, request: Request): CompletableFuture<*>? {
     if (!args.all { it.check(request) }) return null
-    val values = args
-            .mapNotNull { it.process(obj, request) }
-            .toMap()
-    return callBy(values) as CompletableFuture<*>
+    val values = args.map { it.process(obj, request) }
+    return call(*values.toTypedArray()) as CompletableFuture<*>
 }
 
 private fun adaptFunction(server: AconiteServer, fn: KFunction<*>): KFunction<*> {
