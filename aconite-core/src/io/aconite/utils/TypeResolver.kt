@@ -18,8 +18,8 @@ fun <R> resolve(parent: KType, fn: KFunction<R>) = object: KFunction<R> by fn {
         override val type by lazy { resolve(parent, parameter.type) }
     }
 
-    override val returnType by lazy { resolve(parent, fn.returnType) }
-    override val parameters by lazy { fn.parameters.map(this::KResolvedParameter) }
+    override val returnType = resolve(parent, fn.returnType)
+    override val parameters = fn.parameters.map(this::KResolvedParameter)
 }
 
 private fun resolveParam(parent: KType, param: KTypeParameter): KType? {
