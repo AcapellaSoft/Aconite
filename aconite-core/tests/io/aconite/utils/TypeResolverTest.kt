@@ -318,5 +318,23 @@ class TypeResolverTest {
 
         Assert.assertEquals("R", resolved.name)
     }
+
+    @Test
+    fun testResolveFunction_moduleA_innerModuleC() {
+        val moduleA = Api::moduleA.returnType
+        val fn = FirstModule<*>::innerModuleC
+        val resolved = resolve(moduleA, fn)
+        Assert.assertEquals(SecondModule::class.java, cls(resolved.returnType))
+        Assert.assertEquals(DataC::class.java, cls(resolved.returnType.arguments[0].type))
+        Assert.assertEquals(DataA::class.java, cls(resolved.returnType.arguments[1].type))
+    }
+
+    @Test
+    fun testResolveFunction_moduleA_set() {
+        val moduleA = Api::moduleA.returnType
+        val fn = FirstModule<*>::set
+        val resolved = resolve(moduleA, fn)
+        Assert.assertEquals(DataA::class.java, cls(resolved.parameters[1].type))
+    }
 }
 

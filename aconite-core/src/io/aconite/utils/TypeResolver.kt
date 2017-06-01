@@ -1,9 +1,6 @@
 package io.aconite.utils
 
-import kotlin.reflect.KClass
-import kotlin.reflect.KType
-import kotlin.reflect.KTypeParameter
-import kotlin.reflect.KTypeProjection
+import kotlin.reflect.*
 import kotlin.reflect.full.createType
 
 fun resolve(parent: KType, child: KType): KType {
@@ -14,6 +11,15 @@ fun resolve(parent: KType, child: KType): KType {
         is KTypeParameter -> resolveArgs(parent, resolveParam(parent, cls) ?: child)
         else -> throw UnsupportedOperationException("Not supported type class ${child.javaClass}")
     }
+}
+
+fun <R> resolve(parent: KType, fn: KFunction<R>) = object: KFunction<R> by fn {
+    inner class KResolvedParameter(parameter: KParameter): KParameter by parameter {
+        override val type by lazy { resolve(parent, parameter.type) }
+    }
+
+    override val returnType by lazy { resolve(parent, fn.returnType) }
+    override val parameters by lazy { fn.parameters.map(this::KResolvedParameter) }
 }
 
 private fun resolveParam(parent: KType, param: KTypeParameter): KType? {
