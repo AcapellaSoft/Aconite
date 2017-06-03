@@ -93,8 +93,8 @@ class TestCallAdapter: CallAdapter {
     override fun adapt(fn: KFunction<*>) = fn
 }
 
-class MethodFilterPassAll(vararg val methods: String): MethodFilter {
-    override fun predicate(fn: KFunction<*>) = fn.name in methods
+class MethodFilterPassAll: MethodFilter {
+    override fun predicate(fn: KFunction<*>) = true
 }
 
 class MethodFilterPassSpecified(vararg val methods: String): MethodFilter {
