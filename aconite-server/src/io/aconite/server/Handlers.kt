@@ -17,6 +17,7 @@ private val PARAM_ANNOTATIONS = listOf(
 )
 
 private val METHOD_ANNOTATION = listOf(
+        MODULE::class,
         DELETE::class,
         GET::class,
         HEAD::class,
@@ -59,6 +60,19 @@ class ModuleHandler(server: AconiteServer, iface: KType, fn: KFunction<*>): Abst
             }
             return null
         }
+    }
+}
+
+class RootHandler(server: AconiteServer, iface: KType): AbstractHandler() {
+    private val routers = buildRouters(server, iface)
+    override val argsCount = 0
+
+    override suspend fun accept(obj: Any, url: String, request: Request): Response? {
+        for (router in routers) {
+            val response = router.accept(obj, url, request)
+            if (response != null) return response
+        }
+        return null
     }
 }
 

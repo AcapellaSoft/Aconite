@@ -11,11 +11,14 @@ import kotlin.reflect.KType
 
 @Suppress("unused")
 interface RootModuleApi {
+    @MODULE("/foo/bar")
     fun test(): CompletableFuture<TestModuleApi>
+
+    @PATCH
+    fun patch(@Body newValue: String): CompletableFuture<String>
 }
 
 interface TestModuleApi {
-
     @GET("/kv/keys/{key}")
     fun get(@Path key: String, @Query version: String, @Header opt: String? = null, @Body body: String? = null): CompletableFuture<String>
 
@@ -28,8 +31,13 @@ interface TestModuleApi {
 
 @Suppress("unused")
 class RootModule: RootModuleApi {
+
     override fun test() = future<TestModuleApi> {
         TestModule()
+    }
+
+    override fun patch(newValue: String) = future {
+        "newValue = $newValue"
     }
 }
 
