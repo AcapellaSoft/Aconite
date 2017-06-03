@@ -15,9 +15,8 @@ class RootHandlerTest {
 
     @Test
     fun testInnerModuleGet() = asyncTest {
-        val root = RootHandler(server, RootModuleApi::class.createType())
-        val obj = RootModule()
-        val response = root.accept(obj, "/foo/bar/kv/keys/abc", Request(
+        val root = RootHandler(server, RootModule(), RootModuleApi::class.createType())
+        val response = root.accept("/foo/bar/kv/keys/abc", Request(
                 method = "GET",
                 query = mapOf("version" to "123")
         ))
@@ -26,9 +25,8 @@ class RootHandlerTest {
 
     @Test
     fun testInnerModulePost() = asyncTest {
-        val root = RootHandler(server, RootModuleApi::class.createType())
-        val obj = RootModule()
-        val response = root.accept(obj, "/foo/bar/kv/keys/abc", Request(
+        val root = RootHandler(server, RootModule(), RootModuleApi::class.createType())
+        val response = root.accept("/foo/bar/kv/keys/abc", Request(
                 method = "POST"
         ))
         Assert.assertEquals("abc", response.body())
@@ -36,9 +34,8 @@ class RootHandlerTest {
 
     @Test
     fun testRootModulePatch() = asyncTest {
-        val root = RootHandler(server, RootModuleApi::class.createType())
-        val obj = RootModule()
-        val response = root.accept(obj, "/foo/bar", Request(
+        val root = RootHandler(server, RootModule(), RootModuleApi::class.createType())
+        val response = root.accept("/foo/bar", Request(
                 method = "PATCH",
                 body = body("12345")
         ))

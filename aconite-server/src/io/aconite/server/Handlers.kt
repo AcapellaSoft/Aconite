@@ -63,11 +63,10 @@ class ModuleHandler(server: AconiteServer, iface: KType, fn: KFunction<*>): Abst
     }
 }
 
-class RootHandler(server: AconiteServer, iface: KType): AbstractHandler() {
+class RootHandler(server: AconiteServer, private val obj: Any, iface: KType) {
     private val routers = buildRouters(server, iface)
-    override val argsCount = 0
 
-    override suspend fun accept(obj: Any, url: String, request: Request): Response? {
+    suspend fun accept(url: String, request: Request): Response? {
         for (router in routers) {
             val response = router.accept(obj, url, request)
             if (response != null) return response
