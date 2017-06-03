@@ -2,6 +2,7 @@ package io.aconite.server
 
 import io.aconite.utils.UrlTemplate
 
+// TODO: remove superclass if no other subclasses will be added
 abstract class AbstractRouter: Comparable<AbstractRouter> {
     abstract val template: UrlTemplate
     abstract suspend fun accept(obj: Any, url: String, request: Request): Response?
