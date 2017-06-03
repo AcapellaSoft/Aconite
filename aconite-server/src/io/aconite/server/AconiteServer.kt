@@ -48,7 +48,8 @@ class AconiteServer(
 
     suspend fun accept(url: String, request: Request): Response? {
         for (router in modules) {
-            val response = router.accept(url, request)
+            val (response, error) = router.accept(url, request)
+            if (error != null) return error.toResponse()
             if (response != null) return response
         }
         return null

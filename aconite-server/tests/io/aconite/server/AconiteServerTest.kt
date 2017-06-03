@@ -34,7 +34,7 @@ class AconiteServerTest {
                 method = "DELETE",
                 query = mapOf("version" to "123")
         ))
-        Assert.assertNull(response)
+        Assert.assertEquals(405, response?.code)
     }
 
     @Test

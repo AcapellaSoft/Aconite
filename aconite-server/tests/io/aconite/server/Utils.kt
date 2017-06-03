@@ -25,7 +25,7 @@ interface TestModuleApi {
     @PUT("/kv/keys/{key}")
     fun putNotAnnotated(key: String): CompletableFuture<String>
 
-    @POST("/kv/keys/{key-in-path}")
+    @POST("/kv/keys2/{key-in-path}")
     fun post(@Path("key-in-path") key: String): CompletableFuture<String>
 }
 

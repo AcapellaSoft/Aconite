@@ -1,17 +1,18 @@
 package io.aconite.server
 
+import io.aconite.HttpError
 import io.aconite.utils.UrlTemplate
 import org.junit.Assert
 import org.junit.Test
 import java.nio.ByteBuffer
 
 private class TestHandler(override var argsCount: Int, val message: String): AbstractHandler() {
-    override suspend fun accept(obj: Any, url: String, request: Request): Response? {
-        if (request.path.size < argsCount) return null
-        return Response(
+    override suspend fun accept(obj: Any, url: String, request: Request): Pair<Response?, HttpError?> {
+        if (request.path.size < argsCount) return Pair(null, null)
+        return Pair(Response(
                 body = BodyBuffer(ByteBuffer.wrap(message.toByteArray()), "text/plain"),
                 headers = request.path
-        )
+        ), null)
     }
 }
 
@@ -19,12 +20,12 @@ private class UrlToBodyHandler: AbstractHandler() {
     override val argsCount: Int
         get() = 0
 
-    override suspend fun accept(obj: Any, url: String, request: Request): Response? {
-        if (request.path.size < argsCount) return null
-        return Response(
+    override suspend fun accept(obj: Any, url: String, request: Request): Pair<Response?, HttpError?> {
+        if (request.path.size < argsCount) return Pair(null, null)
+        return Pair(Response(
                 body = BodyBuffer(ByteBuffer.wrap(url.toByteArray()), "text/plain"),
                 headers = request.path
-        )
+        ), null)
     }
 }
 
@@ -34,9 +35,9 @@ class RoutersTest {
         val handler = TestHandler(0, "from handler")
         val router = ModuleRouter(UrlTemplate("/foo/bar"), listOf(handler))
 
-        val response = router.accept(Unit, "/foo/bar", Request("GET"))
-        val body = response.body()
-        Assert.assertEquals("from handler", body)
+        val (response, error) = router.accept(Unit, "/foo/bar", Request("GET"))
+        Assert.assertNull(error)
+        Assert.assertEquals("from handler", response.body())
     }
 
     @Test
@@ -44,9 +45,9 @@ class RoutersTest {
         val handler = TestHandler(0, "from handler")
         val router = ModuleRouter(UrlTemplate("/foo/{bar}/baz/{qux}"), listOf(handler))
 
-        val response = router.accept(Unit, "/foo/12345/baz/67890", Request("GET"))
-        val body = response.body()
-        Assert.assertEquals("from handler", body)
+        val (response, error) = router.accept(Unit, "/foo/12345/baz/67890", Request("GET"))
+        Assert.assertNull(error)
+        Assert.assertEquals("from handler", response.body())
         Assert.assertEquals("12345", response?.headers?.get("bar"))
         Assert.assertEquals("67890", response?.headers?.get("qux"))
     }
@@ -56,7 +57,8 @@ class RoutersTest {
         val handler = TestHandler(0, "from handler")
         val router = ModuleRouter(UrlTemplate("/foo/{bar}/baz/{qux}"), listOf(handler))
 
-        val response = router.accept(Unit, "/foo123/12345/baz/67890", Request("GET"))
+        val (response, error) = router.accept(Unit, "/foo123/12345/baz/67890", Request("GET"))
+        Assert.assertNull(error)
         Assert.assertNull(response)
     }
 
@@ -70,13 +72,13 @@ class RoutersTest {
 
         var response: Response?
 
-        response = router.accept(Unit, "/foo/12345/baz/67890", Request("GET"))
+        response = router.accept(Unit, "/foo/12345/baz/67890", Request("GET")).first
         Assert.assertEquals("two", response.body())
 
         response = router.accept(Unit, "/foo/12345/baz/67890", Request("GET", path = mapOf(
                 "abc" to "123",
                 "qwerty" to "456"
-        )))
+        ))).first
         Assert.assertEquals("four", response.body())
     }
 
@@ -85,7 +87,8 @@ class RoutersTest {
         val handler = UrlToBodyHandler()
         val router = ModuleRouter(UrlTemplate("/foo/{bar}"), listOf(handler))
 
-        val response = router.accept(Unit, "/foo/12345/baz/67890", Request("GET"))
+        val (response, error) = router.accept(Unit, "/foo/12345/baz/67890", Request("GET"))
+        Assert.assertNull(error)
         Assert.assertEquals("/baz/67890", response.body())
     }
 }

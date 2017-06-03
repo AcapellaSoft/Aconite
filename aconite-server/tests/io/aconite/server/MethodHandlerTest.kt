@@ -18,7 +18,7 @@ class MethodHandlerTest {
         val fn = TestModuleApi::get
         val handler = MethodHandler(server, "GET", fn)
 
-        val response = handler.accept(obj, "", Request(
+        val (response, error) = handler.accept(obj, "", Request(
                 method = "GET",
                 path = mapOf("key" to "abc"),
                 query = mapOf("version" to "123"),
@@ -26,6 +26,7 @@ class MethodHandlerTest {
                 body = body("body_str")
         ))
 
+        Assert.assertNull(error)
         Assert.assertEquals("key = abc, version = 123, opt = baz, body = body_str", response.body())
     }
 
@@ -35,13 +36,14 @@ class MethodHandlerTest {
         val fn = TestModuleApi::get
         val handler = MethodHandler(server, "GET", fn)
 
-        val response = handler.accept(obj, "", Request(
+        val (response, error) = handler.accept(obj, "", Request(
                 method = "POST",
                 path = mapOf("key" to "abc"),
                 query = mapOf("version" to "123"),
                 headers = mapOf("opt" to "baz"),
                 body = body("body_str")
         ))
+        Assert.assertNull(error)
         Assert.assertNull(response)
     }
 
@@ -51,12 +53,13 @@ class MethodHandlerTest {
         val fn = TestModuleApi::get
         val handler = MethodHandler(server, "GET", fn)
 
-        val response = handler.accept(obj, "", Request(
+        val (response, error) = handler.accept(obj, "", Request(
                 method = "GET",
                 path = mapOf("key" to "abc"),
                 query = mapOf("version" to "123")
         ))
 
+        Assert.assertNull(error)
         Assert.assertEquals("key = abc, version = 123, opt = foobar, body = null", response.body())
     }
 
@@ -66,12 +69,12 @@ class MethodHandlerTest {
         val fn = TestModuleApi::get
         val handler = MethodHandler(server, "GET", fn)
 
-        val response = handler.accept(obj, "", Request(
+        val (response, error) = handler.accept(obj, "", Request(
                 method = "GET",
                 query = mapOf("version" to "123")
         ))
-
         Assert.assertNull(response)
+        Assert.assertEquals(400, error?.code)
     }
 
     @Test()
@@ -91,11 +94,12 @@ class MethodHandlerTest {
         val fn = TestModuleApi::post
         val handler = MethodHandler(server, "POST", fn)
 
-        val response = handler.accept(obj, "", Request(
+        val (response, error) = handler.accept(obj, "", Request(
                 method = "POST",
                 path = mapOf("key-in-path" to "abc")
         ))
 
+        Assert.assertNull(error)
         Assert.assertEquals("abc", response.body())
     }
 }

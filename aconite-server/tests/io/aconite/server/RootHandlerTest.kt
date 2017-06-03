@@ -16,29 +16,32 @@ class RootHandlerTest {
     @Test
     fun testInnerModuleGet() = asyncTest {
         val root = RootHandler(server, RootModule(), RootModuleApi::class.createType())
-        val response = root.accept("/foo/bar/kv/keys/abc", Request(
+        val (response, error) = root.accept("/foo/bar/kv/keys/abc", Request(
                 method = "GET",
                 query = mapOf("version" to "123")
         ))
+        Assert.assertNull(error)
         Assert.assertEquals("key = abc, version = 123, opt = foobar, body = null", response.body())
     }
 
     @Test
     fun testInnerModulePost() = asyncTest {
         val root = RootHandler(server, RootModule(), RootModuleApi::class.createType())
-        val response = root.accept("/foo/bar/kv/keys/abc", Request(
+        val (response, error) = root.accept("/foo/bar/kv/keys2/abc", Request(
                 method = "POST"
         ))
+        Assert.assertNull(error)
         Assert.assertEquals("abc", response.body())
     }
 
     @Test
-    fun testRootModulePatch() = asyncTest {
+    fun testRootModulePatch() = asyncTest(1000) {
         val root = RootHandler(server, RootModule(), RootModuleApi::class.createType())
-        val response = root.accept("/foo/bar", Request(
+        val (response, error) = root.accept("/", Request(
                 method = "PATCH",
                 body = body("12345")
         ))
+        Assert.assertNull(error)
         Assert.assertEquals("newValue = 12345", response.body())
     }
 }
