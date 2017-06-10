@@ -3,6 +3,7 @@ package io.aconite.server
 import org.junit.Assert
 import org.junit.Test
 import kotlin.reflect.full.createType
+import kotlin.reflect.full.functions
 
 private val server = AconiteServer(
         bodySerializer = TestBodySerializer.Factory(),
@@ -15,7 +16,8 @@ class ModuleHandlerTest {
 
     @Test
     fun testGet() = asyncTest {
-        val module = ModuleHandler(server, TestModuleApi::class.createType(), RootModuleApi::test)
+        val test = RootModuleApi::class.functions.first { it.name == "test" }
+        val module = ModuleHandler(server, TestModuleApi::class.createType(), test)
         val root = RootModule()
         val response = module.accept(root, "/kv/keys/abc", Request(
                 method = "GET",
@@ -28,7 +30,8 @@ class ModuleHandlerTest {
 
     @Test
     fun testPost() = asyncTest {
-        val module = ModuleHandler(server, TestModuleApi::class.createType(), RootModuleApi::test)
+        val test = RootModuleApi::class.functions.first { it.name == "test" }
+        val module = ModuleHandler(server, TestModuleApi::class.createType(), test)
         val root = RootModule()
         val response = module.accept(root, "/kv/keys2/foobar", Request(
                 method = "POST"

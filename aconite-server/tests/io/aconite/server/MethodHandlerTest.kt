@@ -3,6 +3,7 @@ package io.aconite.server
 import io.aconite.BadRequestException
 import org.junit.Assert
 import org.junit.Test
+import kotlin.reflect.full.functions
 
 private val server = AconiteServer(
         bodySerializer = TestBodySerializer.Factory(),
@@ -16,7 +17,7 @@ class MethodHandlerTest {
     @Test
     fun testAllParams() = asyncTest {
         val obj = TestModule()
-        val fn = TestModuleApi::get
+        val fn = TestModuleApi::class.functions.first { it.name == "get" }
         val handler = MethodHandler(server, "GET", fn)
 
         val response = handler.accept(obj, "", Request(
@@ -33,7 +34,7 @@ class MethodHandlerTest {
     @Test
     fun testAllParamsWrongMethod() = asyncTest {
         val obj = TestModule()
-        val fn = TestModuleApi::get
+        val fn = TestModuleApi::class.functions.first { it.name == "get" }
         val handler = MethodHandler(server, "GET", fn)
 
         val response = handler.accept(obj, "", Request(
@@ -49,7 +50,7 @@ class MethodHandlerTest {
     @Test
     fun testDefaultValues() = asyncTest {
         val obj = TestModule()
-        val fn = TestModuleApi::get
+        val fn = TestModuleApi::class.functions.first { it.name == "get" }
         val handler = MethodHandler(server, "GET", fn)
 
         val response = handler.accept(obj, "", Request(
@@ -64,7 +65,7 @@ class MethodHandlerTest {
     @Test
     fun testNotAccepted() = asyncTest {
         val obj = TestModule()
-        val fn = TestModuleApi::get
+        val fn = TestModuleApi::class.functions.first { it.name == "get" }
         val handler = MethodHandler(server, "GET", fn)
 
         try {
@@ -80,7 +81,7 @@ class MethodHandlerTest {
 
     @Test()
     fun testNotAnnotated() = asyncTest {
-        val fn = TestModuleApi::putNotAnnotated
+        val fn = TestModuleApi::class.functions.first { it.name == "putNotAnnotated" }
         try {
             MethodHandler(server, "GET", fn)
             Assert.assertTrue(false)
@@ -92,7 +93,7 @@ class MethodHandlerTest {
     @Test
     fun testNotDefaultName() = asyncTest {
         val obj = TestModule()
-        val fn = TestModuleApi::post
+        val fn = TestModuleApi::class.functions.first { it.name == "post" }
         val handler = MethodHandler(server, "POST", fn)
 
         val response = handler.accept(obj, "", Request(

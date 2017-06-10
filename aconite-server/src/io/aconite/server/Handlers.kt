@@ -3,12 +3,10 @@ package io.aconite.server
 import io.aconite.BadRequestException
 import io.aconite.annotations.*
 import io.aconite.utils.UrlTemplate
+import io.aconite.utils.asyncCall
 import io.aconite.utils.resolve
-import kotlinx.coroutines.experimental.future.await
-import java.util.concurrent.CompletableFuture
 import kotlin.reflect.*
 import kotlin.reflect.full.functions
-import kotlin.reflect.full.isSubclassOf
 
 private val PARAM_ANNOTATIONS = listOf(
         Body::class,
@@ -196,18 +194,9 @@ private fun responseSerializer(server: AconiteServer, fn: KFunction<*>): BodySer
             throw AconiteServerException("No suitable serializer found for response body of method $fn")
 }
 
-private fun KCallable<*>.asyncReturnType(): KType {
-    val cls = this.returnClass()
-
-    if (!CompletableFuture::class.isSubclassOf(cls))
-        throw AconiteServerException("Return type of method $this is not CompletableFuture<*>")
-
-    return returnType.arguments[0].type!!
-}
-
-private fun KCallable<*>.returnClass(): KClass<*> {
-    return returnType.classifier as? KClass<*> ?:
-            throw AconiteServerException("Return type of method $this is not determined")
+private fun KFunction<*>.asyncReturnType(): KType {
+    if (!isSuspend) throw AconiteServerException("Method '$this' is not suspend")
+    return returnType
 }
 
 private fun KType.cls(): KClass<*> {
@@ -215,7 +204,7 @@ private fun KType.cls(): KClass<*> {
             throw AconiteServerException("Class of $this is not determined")
 }
 
-suspend private fun KCallable<*>.httpCall(args: List<ArgumentTransformer>, obj: Any, request: Request): Any? {
+suspend private fun KFunction<*>.httpCall(args: List<ArgumentTransformer>, obj: Any, request: Request): Any? {
     val missingArgs = args
             .filter { !it.check(request) }
             .map { it.name }
@@ -225,7 +214,7 @@ suspend private fun KCallable<*>.httpCall(args: List<ArgumentTransformer>, obj: 
     }
 
     val values = args.map { it.process(obj, request) }
-    val result = (call(*values.toTypedArray()) as CompletableFuture<*>).await()
+    val result = asyncCall(*values.toTypedArray())
     return result
 }
 

@@ -12,49 +12,39 @@ import kotlin.reflect.KType
 @Suppress("unused")
 interface RootModuleApi {
     @MODULE("/foo/bar")
-    fun test(): CompletableFuture<TestModuleApi>
+    suspend fun test(): TestModuleApi
 
     @PATCH
-    fun patch(@Body newValue: String): CompletableFuture<String>
+    suspend fun patch(@Body newValue: String): String
 }
 
 interface TestModuleApi {
     @GET("/kv/keys/{key}")
-    fun get(@Path key: String, @Query version: String, @Header opt: String? = null, @Body body: String? = null): CompletableFuture<String>
+    suspend fun get(@Path key: String, @Query version: String, @Header opt: String? = null, @Body body: String? = null): String
 
     @PUT("/kv/keys/{key}")
-    fun putNotAnnotated(key: String): CompletableFuture<String>
+    suspend fun putNotAnnotated(key: String): String
 
     @POST("/kv/keys2/{key-in-path}")
-    fun post(@Path("key-in-path") key: String): CompletableFuture<String>
+    suspend fun post(@Path("key-in-path") key: String): String
 }
 
 @Suppress("unused")
 class RootModule: RootModuleApi {
 
-    override fun test() = future<TestModuleApi> {
-        TestModule()
-    }
+    override suspend fun test() = TestModule()
 
-    override fun patch(newValue: String) = future {
-        "newValue = $newValue"
-    }
+    override suspend fun patch(newValue: String) = "newValue = $newValue"
 }
 
 @Suppress("unused")
 open class TestModule: TestModuleApi {
+    override suspend fun get(key: String, version: String, opt: String?, body: String?)
+            = "key = $key, version = $version, opt = ${opt ?: "foobar"}, body = $body"
 
-    final override fun get(key: String, version: String, opt: String?, body: String?) = future {
-        "key = $key, version = $version, opt = ${opt ?: "foobar"}, body = $body"
-    }
+    override suspend fun putNotAnnotated(key: String) = key
 
-    override fun putNotAnnotated(key: String) = future {
-        key
-    }
-
-    override fun post(key: String) = future {
-        key
-    }
+    override suspend fun post(key: String) = key
 }
 
 class TestBodySerializer: BodySerializer {
