@@ -73,13 +73,14 @@ private fun buildRouters(server: AconiteServer, iface: KType): List<Router> {
     val allHandlers = hashMapOf<String, MutableList<AbstractHandler>>()
 
     for (fn in cls.functions) {
+        if (fn.isOpen) continue // FIXME: simple solution for filter out functions from 'Any' class
         if (!server.methodFilter.predicate(fn)) continue
         val adapted = adaptFunction(server, fn)
         val (url, method) = adapted.getHttpMethod()
         val urlHandlers = allHandlers.computeIfAbsent(url) { ArrayList() }
         val handler = when (method) {
             null -> ModuleHandler(server, adapted.asyncReturnType(), adapted)
-            else -> MethodHandler(server, method, fn)
+            else -> MethodHandler(server, method, adapted)
         }
         urlHandlers.add(handler)
     }
@@ -199,7 +200,7 @@ private fun KFunction<*>.asyncReturnType(): KType {
     return returnType
 }
 
-private fun KType.cls(): KClass<*> {
+internal fun KType.cls(): KClass<*> {
     return classifier as? KClass<*> ?:
             throw AconiteServerException("Class of $this is not determined")
 }

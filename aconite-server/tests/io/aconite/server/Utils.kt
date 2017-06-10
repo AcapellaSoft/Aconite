@@ -11,11 +11,8 @@ import kotlin.reflect.KType
 
 @Suppress("unused")
 interface RootModuleApi {
-    @MODULE("/foo/bar")
-    suspend fun test(): TestModuleApi
-
-    @PATCH
-    suspend fun patch(@Body newValue: String): String
+    @MODULE("/foo/bar") suspend fun test(): TestModuleApi
+    @PATCH suspend fun patch(@Body newValue: String): String
 }
 
 interface TestModuleApi {
@@ -29,11 +26,14 @@ interface TestModuleApi {
     suspend fun post(@Path("key-in-path") key: String): String
 }
 
+interface TestModuleMixedCallsApi {
+    @GET suspend fun get(@Body value: String): String
+    @POST fun post(@Body value: String): CompletableFuture<String>
+}
+
 @Suppress("unused")
 class RootModule: RootModuleApi {
-
     override suspend fun test() = TestModule()
-
     override suspend fun patch(newValue: String) = "newValue = $newValue"
 }
 
@@ -41,14 +41,17 @@ class RootModule: RootModuleApi {
 open class TestModule: TestModuleApi {
     override suspend fun get(key: String, version: String, opt: String?, body: String?)
             = "key = $key, version = $version, opt = ${opt ?: "foobar"}, body = $body"
-
     override suspend fun putNotAnnotated(key: String) = key
-
     override suspend fun post(key: String) = key
 }
 
-class TestBodySerializer: BodySerializer {
+@Suppress("unused")
+open class TestModuleMixedCalls: TestModuleMixedCallsApi {
+    override suspend fun get(value: String) = value
+    override fun post(value: String) = CompletableFuture.completedFuture(value)!!
+}
 
+class TestBodySerializer: BodySerializer {
     class Factory: BodySerializer.Factory {
         override fun create(annotations: KAnnotatedElement, type: KType)
                 = if (type.classifier == String::class) TestBodySerializer() else null
