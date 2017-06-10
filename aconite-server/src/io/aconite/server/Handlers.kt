@@ -1,6 +1,6 @@
 package io.aconite.server
 
-import io.aconite.HttpError
+import io.aconite.BadRequestException
 import io.aconite.annotations.*
 import io.aconite.utils.UrlTemplate
 import io.aconite.utils.resolve
@@ -30,7 +30,7 @@ private val METHOD_ANNOTATION = listOf(
 
 abstract class AbstractHandler : Comparable<AbstractHandler> {
     abstract val argsCount: Int
-    abstract suspend fun accept(obj: Any, url: String, request: Request): Pair<Response?, HttpError?>
+    abstract suspend fun accept(obj: Any, url: String, request: Request): Response?
     final override fun compareTo(other: AbstractHandler) = argsCount.compareTo(other.argsCount)
 }
 
@@ -39,15 +39,10 @@ class MethodHandler(server: AconiteServer, private val method: String, private v
     private val responseSerializer = responseSerializer(server, fn)
     override val argsCount = args.size
 
-    override suspend fun accept(obj: Any, url: String, request: Request): Pair<Response?, HttpError?> {
-        if (request.method != method) return Pair(null, null)
-        val (result, error) = fn.httpCall(args, obj, request)
-
-        return if (error == null) {
-            Pair(Response(body = responseSerializer.serialize(result)), null)
-        } else {
-            Pair(null, error)
-        }
+    override suspend fun accept(obj: Any, url: String, request: Request): Response? {
+        if (request.method != method) return null
+        val result = fn.httpCall(args, obj, request)
+        return Response(body = responseSerializer.serialize(result))
     }
 }
 
@@ -57,33 +52,25 @@ class ModuleHandler(server: AconiteServer, iface: KType, fn: KFunction<*>): Abst
     private val routers = buildRouters(server, iface)
     override val argsCount = args.size
 
-    override suspend fun accept(obj: Any, url: String, request: Request): Pair<Response?, HttpError?> {
-        val (nextObj, error) = fn.httpCall(args, obj, request)
-        if (error != null) return Pair(null, error)
-
-        for (router in routers) {
-            val (response, currentError) = router.accept(nextObj!!, url, request)
-            if (currentError != null) return Pair(null, currentError)
-            if (response != null) return Pair(response, null)
-        }
-        return Pair(null, null)
+    override suspend fun accept(obj: Any, url: String, request: Request): Response? {
+        val nextObj = fn.httpCall(args, obj, request)
+        for (router in routers)
+            return router.accept(nextObj!!, url, request) ?: continue
+        return null
     }
 }
 
 class RootHandler(server: AconiteServer, private val obj: Any, iface: KType) {
     private val routers = buildRouters(server, iface)
 
-    suspend fun accept(url: String, request: Request): Pair<Response?, HttpError?> {
-        for (router in routers) {
-            val (response, error) = router.accept(obj, url, request)
-            if (error != null) return Pair(null, error)
-            if (response != null) return Pair(response, null)
-        }
-        return Pair(null, null)
+    suspend fun accept(url: String, request: Request): Response? {
+        for (router in routers)
+            return router.accept(obj, url, request) ?: continue
+        return null
     }
 }
 
-private fun buildRouters(server: AconiteServer, iface: KType): List<AbstractRouter> {
+private fun buildRouters(server: AconiteServer, iface: KType): List<Router> {
     val cls = iface.cls()
     val allHandlers = hashMapOf<String, MutableList<AbstractHandler>>()
 
@@ -100,7 +87,7 @@ private fun buildRouters(server: AconiteServer, iface: KType): List<AbstractRout
     }
 
     return allHandlers
-            .map { ModuleRouter(UrlTemplate(it.key), it.value.sorted().reversed()) }
+            .map { Router(UrlTemplate(it.key), it.value.sorted().reversed()) }
             .sorted()
             .reversed()
 }
@@ -228,18 +215,18 @@ private fun KType.cls(): KClass<*> {
             throw AconiteServerException("Class of $this is not determined")
 }
 
-suspend private fun KCallable<*>.httpCall(args: List<ArgumentTransformer>, obj: Any, request: Request): Pair<Any?, HttpError?> {
+suspend private fun KCallable<*>.httpCall(args: List<ArgumentTransformer>, obj: Any, request: Request): Any? {
     val missingArgs = args
             .filter { !it.check(request) }
             .map { it.name }
     if (missingArgs.isNotEmpty()) {
         val argsStr = missingArgs.joinToString()
-        return Pair(null, HttpError(400, "Missing required arguments: $argsStr"))
+        throw BadRequestException("Missing required arguments: $argsStr")
     }
 
     val values = args.map { it.process(obj, request) }
     val result = (call(*values.toTypedArray()) as CompletableFuture<*>).await()
-    return Pair(result, null)
+    return result
 }
 
 private fun adaptFunction(server: AconiteServer, fn: KFunction<*>): KFunction<*> {

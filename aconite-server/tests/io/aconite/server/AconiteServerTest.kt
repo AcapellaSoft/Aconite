@@ -1,5 +1,6 @@
 package io.aconite.server
 
+import io.aconite.MethodNotAllowedException
 import org.junit.Assert
 import org.junit.Test
 
@@ -30,11 +31,15 @@ class AconiteServerTest {
                 methodFilter = MethodFilterPassSpecified("get", "post", "test", "patch")
         )
         server.register(RootModule(), RootModuleApi::class)
-        val response = server.accept("/foo/bar/kv/keys/abc", Request(
-                method = "DELETE",
-                query = mapOf("version" to "123")
-        ))
-        Assert.assertEquals(405, response?.code)
+        try {
+            server.accept("/foo/bar/kv/keys/abc", Request(
+                    method = "DELETE",
+                    query = mapOf("version" to "123")
+            ))
+            Assert.assertTrue(false)
+        } catch (ex: MethodNotAllowedException) {
+            Assert.assertTrue(true)
+        }
     }
 
     @Test

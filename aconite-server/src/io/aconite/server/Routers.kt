@@ -1,30 +1,25 @@
 package io.aconite.server
 
-import io.aconite.HttpError
-import io.aconite.METHOD_NOT_ALLOWED
+import io.aconite.*
 import io.aconite.utils.UrlTemplate
 
-// TODO: remove superclass if no other subclasses will be added
-abstract class AbstractRouter: Comparable<AbstractRouter> {
-    abstract val template: UrlTemplate
-    abstract suspend fun accept(obj: Any, url: String, request: Request): Pair<Response?, HttpError?>
-    final override fun compareTo(other: AbstractRouter) = template.compareTo(other.template)
-}
-
-class ModuleRouter(override val template: UrlTemplate, handlers: List<AbstractHandler>): AbstractRouter() {
+class Router(val template: UrlTemplate, handlers: List<AbstractHandler>): Comparable<Router> {
     private val handlers = handlers.sorted().reversed()
 
-    override suspend fun accept(obj: Any, url: String, request: Request): Pair<Response?, HttpError?> {
-        val (rest, path) = template.parse(url) ?: return Pair(null, null)
+    suspend fun accept(obj: Any, url: String, request: Request): Response? {
+        val (rest, path) = template.parse(url) ?: return null
         val parsedRequest = request.copy(path = request.path + path)
-        var resultError: HttpError? = null
+        var error: BadRequestException? = null
 
-        for (handler in handlers) {
-            val (response, currentError) = handler.accept(obj, rest, parsedRequest)
-            if (response != null) return Pair(response, null)
-            resultError = currentError ?: resultError
+        for (handler in handlers) try {
+            return handler.accept(obj, rest, parsedRequest) ?: continue
+        } catch (ex: BadRequestException) {
+            error = ex
         }
 
-        return Pair(null, resultError ?: METHOD_NOT_ALLOWED)
+        if (error != null) throw error
+        throw MethodNotAllowedException("Method not allowed")
     }
+
+    override fun compareTo(other: Router) = template.compareTo(other.template)
 }

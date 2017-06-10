@@ -1,6 +1,6 @@
 package io.aconite.server
 
-import io.aconite.HttpError
+import io.aconite.HttpException
 import java.nio.Buffer
 import java.nio.ByteBuffer
 
@@ -23,10 +23,10 @@ data class BodyBuffer(
         val contentType: String
 )
 
-fun HttpError.toResponse() = Response(
+fun HttpException.toResponse() = Response(
         code = this.code,
         body = BodyBuffer(
-                content = ByteBuffer.wrap(this.message.toByteArray()),
+                content = ByteBuffer.wrap((this.message ?: "").toByteArray()),
                 contentType = "text/plain"
         )
 )

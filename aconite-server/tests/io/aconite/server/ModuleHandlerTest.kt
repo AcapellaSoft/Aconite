@@ -17,13 +17,12 @@ class ModuleHandlerTest {
     fun testGet() = asyncTest {
         val module = ModuleHandler(server, TestModuleApi::class.createType(), RootModuleApi::test)
         val root = RootModule()
-        val (response, error) = module.accept(root, "/kv/keys/abc", Request(
+        val response = module.accept(root, "/kv/keys/abc", Request(
                 method = "GET",
                 query = mapOf("version" to "123"),
                 headers = mapOf("opt" to "baz"),
                 body = body("body_str")
         ))
-        Assert.assertNull(error)
         Assert.assertEquals("key = abc, version = 123, opt = baz, body = body_str", response.body())
     }
 
@@ -31,10 +30,9 @@ class ModuleHandlerTest {
     fun testPost() = asyncTest {
         val module = ModuleHandler(server, TestModuleApi::class.createType(), RootModuleApi::test)
         val root = RootModule()
-        val (response, error) = module.accept(root, "/kv/keys2/foobar", Request(
+        val response = module.accept(root, "/kv/keys2/foobar", Request(
                 method = "POST"
         ))
-        Assert.assertNull(error)
         Assert.assertEquals("foobar", response.body())
     }
 }
