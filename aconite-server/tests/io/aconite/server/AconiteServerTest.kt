@@ -31,15 +31,11 @@ class AconiteServerTest {
                 methodFilter = MethodFilterPassSpecified("get", "post", "test", "patch")
         )
         server.register(RootModule(), RootModuleApi::class)
-        try {
-            server.accept("/foo/bar/kv/keys/abc", Request(
-                    method = "DELETE",
-                    query = mapOf("version" to "123")
-            ))
-            Assert.assertTrue(false)
-        } catch (ex: MethodNotAllowedException) {
-            Assert.assertTrue(true)
-        }
+        val response = server.accept("/foo/bar/kv/keys/abc", Request(
+                method = "DELETE",
+                query = mapOf("version" to "123")
+        ))
+        Assert.assertEquals(405, response?.code)
     }
 
     @Test
