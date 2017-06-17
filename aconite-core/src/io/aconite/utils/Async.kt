@@ -1,5 +1,6 @@
 package io.aconite.utils
 
+import java.lang.reflect.InvocationTargetException
 import kotlin.coroutines.experimental.Continuation
 import kotlin.coroutines.experimental.CoroutineContext
 import kotlin.coroutines.experimental.suspendCoroutine
@@ -24,6 +25,10 @@ class MyContinuation<in R>(val c: Continuation<R>): Continuation<R> {
 
 suspend fun <R> KFunction<R>.asyncCall(vararg args: Any?) = suspendCoroutine<R> { c ->
     val cc = MyContinuation(c)
-    val r = call(*args, cc)
-    cc.resume(r)
+    try {
+        val r = call(*args, cc)
+        cc.resume(r)
+    } catch (ex: InvocationTargetException) {
+        throw ex.cause ?: ex
+    }
 }
