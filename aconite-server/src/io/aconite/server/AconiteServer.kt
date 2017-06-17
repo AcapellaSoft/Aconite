@@ -1,5 +1,9 @@
 package io.aconite.server
 
+import io.aconite.server.adapters.SuspendCallAdapter
+import io.aconite.server.filters.PassMethodFilter
+import io.aconite.server.serializers.SimpleBodySerializer
+import io.aconite.server.serializers.SimpleStringSerializer
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
@@ -35,10 +39,10 @@ interface MethodFilter {
 class AconiteServerException(message: String): Exception(message)
 
 class AconiteServer(
-        val bodySerializer: BodySerializer.Factory,
-        val stringSerializer: StringSerializer.Factory,
-        val callAdapter: CallAdapter,
-        val methodFilter: MethodFilter
+        val bodySerializer: BodySerializer.Factory = SimpleBodySerializer.Factory,
+        val stringSerializer: StringSerializer.Factory = SimpleStringSerializer.Factory,
+        val callAdapter: CallAdapter = SuspendCallAdapter,
+        val methodFilter: MethodFilter = PassMethodFilter
 ) {
     private val modules = mutableListOf<RootHandler>()
 
