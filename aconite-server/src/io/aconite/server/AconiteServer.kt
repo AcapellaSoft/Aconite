@@ -1,6 +1,8 @@
 package io.aconite.server
 
+import io.aconite.HttpException
 import io.aconite.server.adapters.SuspendCallAdapter
+import io.aconite.server.errors.PassErrorHandler
 import io.aconite.server.filters.PassMethodFilter
 import io.aconite.server.serializers.SimpleBodySerializer
 import io.aconite.server.serializers.SimpleStringSerializer
@@ -36,13 +38,18 @@ interface MethodFilter {
     fun predicate(fn: KFunction<*>): Boolean
 }
 
+interface ErrorHandler {
+    fun handle(ex: Throwable): HttpException?
+}
+
 class AconiteServerException(message: String): Exception(message)
 
 class AconiteServer(
         val bodySerializer: BodySerializer.Factory = SimpleBodySerializer.Factory,
         val stringSerializer: StringSerializer.Factory = SimpleStringSerializer.Factory,
         val callAdapter: CallAdapter = SuspendCallAdapter,
-        val methodFilter: MethodFilter = PassMethodFilter
+        val methodFilter: MethodFilter = PassMethodFilter,
+        val errorHandler: ErrorHandler = PassErrorHandler
 ) {
     private val modules = mutableListOf<RootHandler>()
 
@@ -51,8 +58,14 @@ class AconiteServer(
     }
 
     suspend fun accept(url: String, request: Request): Response? {
-        for (router in modules)
-            return router.accept(url, request) ?: continue
-        return null
+        try {
+            for (router in modules)
+                return router.accept(url, request) ?: continue
+            return null
+        } catch (ex: HttpException) {
+            return ex.toResponse()
+        } catch (ex: Throwable) {
+            return errorHandler.handle(ex)?.toResponse() ?: throw ex
+        }
     }
 }
