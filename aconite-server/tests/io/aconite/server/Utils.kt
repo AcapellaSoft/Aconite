@@ -58,11 +58,11 @@ class TestBodySerializer: BodySerializer {
     }
 
     override fun serialize(obj: Any?): BodyBuffer {
-        return BodyBuffer(ByteBuffer.wrap((obj as String).toByteArray()), "plain/text")
+        return BodyBuffer(Buffer.wrap(obj as String), "plain/text")
     }
 
     override fun deserialize(body: BodyBuffer): Any? {
-        return String((body.content as ByteBuffer).array())
+        return body.content.string
     }
 }
 
@@ -94,9 +94,9 @@ class MethodFilterPassSpecified(vararg val methods: String): MethodFilter {
     override fun predicate(fn: KFunction<*>) = fn.name in methods
 }
 
-fun Response?.body() = String((this?.body?.content as ByteBuffer).array())
+fun Response?.body() = this?.body?.content?.string!!
 
-fun body(s: String) = BodyBuffer(ByteBuffer.wrap(s.toByteArray()), "text/plain")
+fun body(s: String) = BodyBuffer(Buffer.wrap(s), "text/plain")
 
 fun asyncTest(timeout: Long = 1, unit: TimeUnit = TimeUnit.SECONDS, block: suspend () -> Unit)
         = future { block() }.get(timeout, unit)!!

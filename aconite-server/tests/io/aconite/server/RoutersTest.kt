@@ -4,13 +4,12 @@ import io.aconite.BadRequestException
 import io.aconite.utils.UrlTemplate
 import org.junit.Assert
 import org.junit.Test
-import java.nio.ByteBuffer
 
 private class TestHandler(override var argsCount: Int, val message: String): AbstractHandler() {
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
         if (request.path.size < argsCount) throw BadRequestException("Too few arguments")
         return Response(
-                body = BodyBuffer(ByteBuffer.wrap(message.toByteArray()), "text/plain"),
+                body = BodyBuffer(Buffer.wrap(message), "text/plain"),
                 headers = request.path
         )
     }
@@ -23,7 +22,7 @@ private class UrlToBodyHandler: AbstractHandler() {
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
         if (request.path.size < argsCount) throw BadRequestException("Too few arguments")
         return Response(
-                body = BodyBuffer(ByteBuffer.wrap(url.toByteArray()), "text/plain"),
+                body = BodyBuffer(Buffer.wrap(url), "text/plain"),
                 headers = request.path
         )
     }

@@ -1,8 +1,6 @@
 package io.aconite.server
 
 import io.aconite.HttpException
-import java.nio.Buffer
-import java.nio.ByteBuffer
 
 data class Request (
         val method: String,
@@ -23,10 +21,28 @@ data class BodyBuffer(
         val contentType: String
 )
 
+interface Buffer {
+    val string: String
+    val bytes: ByteArray
+
+    companion object Factory {
+        fun wrap(string: String) = object: Buffer {
+            override val string = string
+            override val bytes by lazy { string.toByteArray() }
+        }
+
+        fun wrap(bytes: ByteArray) = object: Buffer {
+            override val string by lazy { String(bytes) }
+            override val bytes = bytes
+        }
+    }
+}
+
 fun HttpException.toResponse() = Response(
         code = this.code,
         body = BodyBuffer(
-                content = ByteBuffer.wrap((this.message ?: "").toByteArray()),
+                content = Buffer.wrap(this.message ?: ""),
                 contentType = "text/plain"
         )
 )
+

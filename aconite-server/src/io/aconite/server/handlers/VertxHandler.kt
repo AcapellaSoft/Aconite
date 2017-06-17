@@ -1,15 +1,11 @@
 package io.aconite.server.handlers
 
-import io.aconite.server.AconiteServer
-import io.aconite.server.BodyBuffer
-import io.aconite.server.Request
-import io.aconite.server.Response
+import io.aconite.server.*
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
 import io.vertx.ext.web.RoutingContext
 import kotlinx.coroutines.experimental.CoroutineDispatcher
 import kotlinx.coroutines.experimental.async
-import java.nio.ByteBuffer
 import kotlin.coroutines.experimental.CoroutineContext
 
 class VertxHandler(private val vertx: Vertx, private val server: AconiteServer): Handler<RoutingContext> {
@@ -19,6 +15,11 @@ class VertxHandler(private val vertx: Vertx, private val server: AconiteServer):
         override fun dispatch(context: CoroutineContext, block: Runnable) {
             vertx.runOnContext { block.run() }
         }
+    }
+
+    class VertxBuffer(private val buffer: io.vertx.core.buffer.Buffer): Buffer {
+        override val bytes by lazy { buffer.bytes!! }
+        override val string by lazy { buffer.toString() }
     }
 
     override fun handle(routingCtx: RoutingContext) {
@@ -50,7 +51,7 @@ class VertxHandler(private val vertx: Vertx, private val server: AconiteServer):
                         .map { Pair(it.key, it.value) }
                         .toMap(),
                 body = BodyBuffer(
-                        content = ByteBuffer.wrap(ctx.body.bytes),
+                        content = VertxBuffer(ctx.body),
                         contentType = ctx.request().getHeader("Content-Type") ?: ""
                 )
         )
@@ -62,7 +63,7 @@ class VertxHandler(private val vertx: Vertx, private val server: AconiteServer):
                 putHeader(k, v)
             statusCode = response.code
             response.body?.let { putHeader("Content-Type", it.contentType) }
-            end(String((response.body?.content as ByteBuffer).array()))
+            end(io.vertx.core.buffer.Buffer.buffer(response.body?.content?.bytes))
         }
     }
 }
