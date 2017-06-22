@@ -1,6 +1,6 @@
 package io.aconite.server
 
-import io.aconite.BadRequestException
+import io.aconite.ArgumentMissingException
 import org.junit.Assert
 import org.junit.Test
 import kotlin.reflect.full.functions
@@ -74,7 +74,7 @@ class MethodHandlerTest {
                     query = mapOf("version" to "123")
             ))
             Assert.assertTrue(false)
-        } catch (ex: BadRequestException) {
+        } catch (ex: ArgumentMissingException) {
             Assert.assertTrue(true)
         }
     }

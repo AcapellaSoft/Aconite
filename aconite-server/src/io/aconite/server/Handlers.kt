@@ -1,6 +1,6 @@
 package io.aconite.server
 
-import io.aconite.BadRequestException
+import io.aconite.ArgumentMissingException
 import io.aconite.annotations.*
 import io.aconite.utils.UrlTemplate
 import io.aconite.utils.asyncCall
@@ -211,7 +211,7 @@ suspend private fun KFunction<*>.httpCall(args: List<ArgumentTransformer>, obj: 
             .map { it.name }
     if (missingArgs.isNotEmpty()) {
         val argsStr = missingArgs.joinToString()
-        throw BadRequestException("Missing required arguments: $argsStr")
+        throw ArgumentMissingException("Missing required arguments: $argsStr")
     }
 
     val values = args.map { it.process(obj, request) }

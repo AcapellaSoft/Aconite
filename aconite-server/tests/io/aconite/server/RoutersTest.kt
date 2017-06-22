@@ -1,13 +1,13 @@
 package io.aconite.server
 
-import io.aconite.BadRequestException
+import io.aconite.ArgumentMissingException
 import io.aconite.utils.UrlTemplate
 import org.junit.Assert
 import org.junit.Test
 
 private class TestHandler(override var argsCount: Int, val message: String): AbstractHandler() {
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
-        if (request.path.size < argsCount) throw BadRequestException("Too few arguments")
+        if (request.path.size < argsCount) throw ArgumentMissingException("Too few arguments")
         return Response(
                 body = BodyBuffer(Buffer.wrap(message), "text/plain"),
                 headers = request.path
@@ -20,7 +20,7 @@ private class UrlToBodyHandler: AbstractHandler() {
         get() = 0
 
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
-        if (request.path.size < argsCount) throw BadRequestException("Too few arguments")
+        if (request.path.size < argsCount) throw ArgumentMissingException("Too few arguments")
         return Response(
                 body = BodyBuffer(Buffer.wrap(url), "text/plain"),
                 headers = request.path

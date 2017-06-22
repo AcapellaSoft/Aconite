@@ -9,11 +9,11 @@ class Router(val template: UrlTemplate, handlers: List<AbstractHandler>): Compar
     suspend fun accept(obj: Any, url: String, request: Request): Response? {
         val (rest, path) = template.parse(url) ?: return null
         val parsedRequest = request.copy(path = request.path + path)
-        var error: BadRequestException? = null
+        var error: ArgumentMissingException? = null
 
         for (handler in handlers) try {
             return handler.accept(obj, rest, parsedRequest) ?: continue
-        } catch (ex: BadRequestException) {
+        } catch (ex: ArgumentMissingException) {
             error = ex
         }
 
