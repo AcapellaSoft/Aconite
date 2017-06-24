@@ -1,6 +1,5 @@
 package io.aconite.server
 
-import io.aconite.HttpException
 import io.aconite.server.adapters.SuspendCallAdapter
 import io.aconite.server.errors.PassErrorHandler
 import io.aconite.server.filters.PassMethodFilter
@@ -39,7 +38,7 @@ interface MethodFilter {
 }
 
 interface ErrorHandler {
-    fun handle(ex: Throwable): HttpException?
+    fun handle(ex: Throwable): Response
 }
 
 class AconiteServerException(message: String): Exception(message)
@@ -62,10 +61,8 @@ class AconiteServer(
             for (router in modules)
                 return router.accept(url, request) ?: continue
             return null
-        } catch (ex: HttpException) {
-            return ex.toResponse()
         } catch (ex: Throwable) {
-            return errorHandler.handle(ex)?.toResponse() ?: throw ex
+            return errorHandler.handle(ex)
         }
     }
 }

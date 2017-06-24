@@ -2,7 +2,6 @@ package io.aconite.server
 
 import io.aconite.annotations.*
 import kotlinx.coroutines.experimental.future.future
-import java.nio.ByteBuffer
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KAnnotatedElement
@@ -98,5 +97,5 @@ fun Response?.body() = this?.body?.content?.string!!
 
 fun body(s: String) = BodyBuffer(Buffer.wrap(s), "text/plain")
 
-fun asyncTest(timeout: Long = 1, unit: TimeUnit = TimeUnit.SECONDS, block: suspend () -> Unit)
+fun asyncTest(timeout: Long = 10, unit: TimeUnit = TimeUnit.SECONDS, block: suspend () -> Unit)
         = future { block() }.get(timeout, unit)!!
