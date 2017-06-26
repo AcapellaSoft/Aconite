@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import io.aconite.ArgumentMissingException
 import io.aconite.HttpException
 import io.aconite.MethodNotAllowedException
+import io.aconite.UnsupportedMediaTypeException
 import io.aconite.server.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
@@ -25,6 +26,7 @@ object ExtendedCodeErrorHandler: ErrorHandler {
     init {
         ex2error[ArgumentMissingException::class] = 0
         ex2error[MethodNotAllowedException::class] = 0
+        ex2error[UnsupportedMediaTypeException::class] = 0
     }
 
     fun <T: Any> register(cls: KClass<T>) {

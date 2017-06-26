@@ -5,3 +5,5 @@ abstract class HttpException(val code: Int, message: String? = null, cause: Thro
 class ArgumentMissingException(message: String? = null, cause: Throwable? = null): HttpException(400, message, cause)
 
 class MethodNotAllowedException(message: String? = null, cause: Throwable? = null): HttpException(405, message, cause)
+
+class UnsupportedMediaTypeException(message: String? = null, cause: Throwable? = null): HttpException(415, message, cause)
