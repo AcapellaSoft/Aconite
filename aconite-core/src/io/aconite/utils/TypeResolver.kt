@@ -1,5 +1,7 @@
 package io.aconite.utils
 
+import java.lang.reflect.ParameterizedType
+import java.lang.reflect.Type
 import kotlin.reflect.*
 import kotlin.reflect.full.createType
 
@@ -38,4 +40,16 @@ private fun resolveArgs(parent: KType, child: KType) = child.classifier!!.create
 private fun resolveProjection(parent: KType, projection: KTypeProjection): KTypeProjection {
     val resolved = projection.type?.let { resolve(parent, it) }
     return KTypeProjection(projection.variance, resolved)
+}
+
+// TODO: tests
+fun KType.toJavaType(): Type = when {
+    arguments.isNotEmpty() -> object : ParameterizedType {
+        private val rawType = (classifier as KClass<*>).java
+        private val args = arguments.map { it.type?.toJavaType() }.toTypedArray()
+        override fun getRawType() = rawType
+        override fun getOwnerType() = null
+        override fun getActualTypeArguments() = args
+    }
+    else -> (classifier as KClass<*>).java
 }
