@@ -1,10 +1,7 @@
 package io.aconite.server.errors
 
 import com.google.gson.Gson
-import io.aconite.ArgumentMissingException
-import io.aconite.HttpException
-import io.aconite.MethodNotAllowedException
-import io.aconite.UnsupportedMediaTypeException
+import io.aconite.*
 import io.aconite.server.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
@@ -24,8 +21,12 @@ object ExtendedCodeErrorHandler: ErrorHandler {
     private val gson = Gson()
 
     init {
-        ex2error[ArgumentMissingException::class] = 0
+        // 400
+        ex2error[BadRequestException::class] = 0
+        ex2error[ArgumentMissingException::class] = 1
+        // 405
         ex2error[MethodNotAllowedException::class] = 0
+        // 415
         ex2error[UnsupportedMediaTypeException::class] = 0
     }
 
