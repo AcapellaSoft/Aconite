@@ -2,6 +2,7 @@ package io.aconite.server.errors
 
 import com.google.gson.Gson
 import io.aconite.ArgumentMissingException
+import io.aconite.BadRequestException
 import io.aconite.MethodNotAllowedException
 import io.aconite.server.AconiteServerException
 import org.junit.Assert
@@ -31,11 +32,19 @@ class ExtendedCodeErrorHandlerTest {
         Assert.assertEquals("Internal server error", response.body?.content?.string)
     }
 
+    @Test fun testBadRequestToResponse() {
+        val response = ExtendedCodeErrorHandler.handle(BadRequestException("json is not valid"))
+        Assert.assertEquals(400, response.code)
+        val message = gson.fromJson(response.body?.content?.string, ErrorResponseBody::class.java)
+        Assert.assertEquals(0, message.code)
+        Assert.assertEquals("json is not valid", message.message)
+    }
+
     @Test fun testArgumentMissingToResponse() {
         val response = ExtendedCodeErrorHandler.handle(ArgumentMissingException("arg1"))
         Assert.assertEquals(400, response.code)
         val message = gson.fromJson(response.body?.content?.string, ErrorResponseBody::class.java)
-        Assert.assertEquals(0, message.code)
+        Assert.assertEquals(1, message.code)
         Assert.assertEquals("arg1", message.message)
     }
 
