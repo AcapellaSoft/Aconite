@@ -42,7 +42,6 @@ private fun resolveProjection(parent: KType, projection: KTypeProjection): KType
     return KTypeProjection(projection.variance, resolved)
 }
 
-// TODO: tests
 fun KType.toJavaType(): Type = when {
     arguments.isNotEmpty() -> object : ParameterizedType {
         private val rawType = (classifier as KClass<*>).java

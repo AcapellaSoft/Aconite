@@ -4,9 +4,12 @@ package io.aconite.utils
 
 import org.junit.Assert
 import org.junit.Test
+import java.lang.reflect.ParameterizedType
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeParameter
+import kotlin.reflect.KTypeProjection
+import kotlin.reflect.full.createType
 
 class TypeResolverTest {
 
@@ -335,6 +338,50 @@ class TypeResolverTest {
         val fn = FirstModule<*>::set
         val resolved = resolve(moduleA, fn)
         Assert.assertEquals(DataA::class.java, cls(resolved.parameters[1].type))
+    }
+
+    @Test
+    fun testSimpleTypeToJava() {
+        val type = Long::class.createType()
+        Assert.assertEquals(Long::class.java, type.toJavaType())
+    }
+
+    @Test
+    fun testParametrizedTypeToJava() {
+        val type = Map::class.createType(listOf(
+                KTypeProjection.invariant(Long::class.createType()),
+                KTypeProjection.invariant(String::class.createType())
+        ))
+        val javaType = type.toJavaType() as ParameterizedType
+        Assert.assertEquals(Map::class.java, javaType.rawType)
+        Assert.assertEquals(2, javaType.actualTypeArguments.size)
+        Assert.assertEquals(Long::class.java, javaType.actualTypeArguments[0])
+        Assert.assertEquals(String::class.java, javaType.actualTypeArguments[1])
+    }
+
+    @Test
+    fun testComplexParametrizedTypeToJava() {
+        val type = Map::class.createType(listOf(
+                KTypeProjection.invariant(Set::class.createType(listOf(
+                        KTypeProjection.invariant(Long::class.createType())
+                ))),
+                KTypeProjection.invariant(List::class.createType(listOf(
+                        KTypeProjection.invariant(String::class.createType())
+                )))
+        ))
+        val javaType = type.toJavaType() as ParameterizedType
+        Assert.assertEquals(Map::class.java, javaType.rawType)
+        Assert.assertEquals(2, javaType.actualTypeArguments.size)
+
+        val keyType = javaType.actualTypeArguments[0] as ParameterizedType
+        Assert.assertEquals(Set::class.java, keyType.rawType)
+        Assert.assertEquals(1, keyType.actualTypeArguments.size)
+        Assert.assertEquals(Long::class.java, keyType.actualTypeArguments[0])
+
+        val valueType = javaType.actualTypeArguments[1] as ParameterizedType
+        Assert.assertEquals(List::class.java, valueType.rawType)
+        Assert.assertEquals(1, valueType.actualTypeArguments.size)
+        Assert.assertEquals(String::class.java, valueType.actualTypeArguments[0])
     }
 }
 
