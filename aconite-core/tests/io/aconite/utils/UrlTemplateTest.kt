@@ -76,7 +76,7 @@ class UrlTemplateTest {
     fun testPathFullMatch() {
         val template = UrlTemplate("/foo/bar/baz")
         val (rest, _) = template.parseEntire("/foo/bar/baz")!!
-        Assert.assertEquals("", rest)
+        Assert.assertEquals("/", rest)
     }
 
     @Test
