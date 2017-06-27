@@ -3,6 +3,7 @@ package io.aconite.server.errors
 import com.google.gson.Gson
 import io.aconite.*
 import io.aconite.server.*
+import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.full.findAnnotation
@@ -19,6 +20,7 @@ internal data class ErrorResponseBody(val code: Int, val message: String)
 object ExtendedCodeErrorHandler: ErrorHandler {
     private val ex2error = ConcurrentHashMap<KClass<*>, Int>()
     private val gson = Gson()
+    private val logger = LoggerFactory.getLogger(ExtendedCodeErrorHandler::class.java)
 
     init {
         // 400
@@ -54,6 +56,7 @@ object ExtendedCodeErrorHandler: ErrorHandler {
                 ))
             }
             else -> {
+                logger.error("Internal server error", ex)
                 Response(code = 500, body = BodyBuffer(Buffer.wrap("Internal server error"), "plain/text"))
             }
         }
