@@ -36,7 +36,7 @@ class UrlTemplate(url: String): Comparable<UrlTemplate> {
                 .mapIndexed { idx, name -> Pair(name, match.groups[idx + 1]?.value) }
                 .mapNotNull { it.allOrNull() }
                 .toMap()
-        val parsedUrl = url.drop(match.range.last + 1)
+        val parsedUrl = formatUrl(url.drop(match.range.last + 1))
         return Pair(parsedUrl, values)
     }
 
