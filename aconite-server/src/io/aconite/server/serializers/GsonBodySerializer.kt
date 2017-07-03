@@ -21,7 +21,7 @@ class GsonBodySerializer(val gson: Gson, val type: Type): BodySerializer {
     }
 
     override fun serialize(obj: Any?) = BodyBuffer(
-            content = Buffer.wrap(gson.toJson(obj)),
+            content = Buffer.wrap(gson.toJson(obj, type)),
             contentType = "application/json"
     )
 
