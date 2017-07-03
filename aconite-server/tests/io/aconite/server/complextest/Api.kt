@@ -4,9 +4,9 @@ import io.aconite.annotations.*
 import java.util.*
 
 interface RootApi {
-    @MODULE("/devices/{deviceId}") suspend fun devices(@Path deviceId: String): DevicesApi
-    @MODULE("/users/{userId}") suspend fun users(@Path userId: String): UsersApi
-    @MODULE("/services/{serviceId}") suspend fun services(@Path serviceId: String): ServicesApi
+    @MODULE("/devices/{deviceId}") suspend fun devices(@Path deviceId: UUID): DevicesApi
+    @MODULE("/users/{userId}") suspend fun users(@Path userId: UUID): UsersApi
+    @MODULE("/services/{serviceId}") suspend fun services(@Path serviceId: UUID): ServicesApi
 }
 
 interface EntityApi<T: Entity> {
@@ -19,24 +19,24 @@ interface EntityApi<T: Entity> {
 interface DevicesApi: EntityApi<Device>
 
 interface UsersApi: EntityApi<User> {
-    @GET("/devices") suspend fun getAllDevices(): Map<String, Device>
+    @GET("/devices") suspend fun getAllDevices(): Map<UUID, Device>
 }
 
 interface ServicesApi: EntityApi<Service> {
-    @GET("/devices") suspend fun getAllDevices(): Map<String, Device>
+    @GET("/devices") suspend fun getAllDevices(): Map<UUID, Device>
 }
 
 interface OrderedMapApi<E> {
-    @GET suspend fun getAll(): SortedMap<String, E?>
-    @GET("/{key}") suspend fun get(@Path key: String): E?
-    @PUT("/{key}") suspend fun put(@Path key: String, @Body value: E?)
+    @GET suspend fun getAll(): SortedMap<Long, E?>
+    @GET("/{key}") suspend fun get(@Path key: Long): E?
+    @PUT("/{key}") suspend fun put(@Path key: Long, @Body value: E?)
 }
 
 interface Entity
 
 data class Device(
-        val serviceId: String,
-        val ownerId: String
+        val serviceId: UUID,
+        val ownerId: UUID
 ): Entity
 
 data class User(
