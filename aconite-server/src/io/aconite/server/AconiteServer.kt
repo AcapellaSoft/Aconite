@@ -4,7 +4,7 @@ import io.aconite.server.adapters.SuspendCallAdapter
 import io.aconite.server.errors.PassErrorHandler
 import io.aconite.server.filters.PassMethodFilter
 import io.aconite.server.serializers.SimpleBodySerializer
-import io.aconite.server.serializers.StringSerializerFactory
+import io.aconite.server.serializers.SimpleStringSerializerFactory
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
@@ -45,7 +45,7 @@ class AconiteServerException(message: String): Exception(message)
 
 class AconiteServer(
         val bodySerializer: BodySerializer.Factory = SimpleBodySerializer.Factory,
-        val stringSerializer: StringSerializer.Factory = StringSerializerFactory(),
+        val stringSerializer: StringSerializer.Factory = SimpleStringSerializerFactory(),
         val callAdapter: CallAdapter = SuspendCallAdapter,
         val methodFilter: MethodFilter = PassMethodFilter,
         val errorHandler: ErrorHandler = PassErrorHandler

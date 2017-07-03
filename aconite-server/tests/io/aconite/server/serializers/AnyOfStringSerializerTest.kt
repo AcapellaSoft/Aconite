@@ -25,7 +25,7 @@ class AnyOfStringSerializerTest {
     @Test fun testFirstAcceptableSelected() {
         val serializer = anyOf(
                 TestStringSerializer(String::class),
-                StringSerializerFactory()
+                SimpleStringSerializerFactory()
         )
         val selected = serializer.create(EmptyAnnotations, String::class.createType())
         Assert.assertEquals(serializer.serializers.first(), selected)
@@ -34,7 +34,7 @@ class AnyOfStringSerializerTest {
     @Test fun testSelectOtherIfNotAccepted() {
         val serializer = anyOf(
                 TestStringSerializer(String::class),
-                StringSerializerFactory()
+                SimpleStringSerializerFactory()
         )
         val selected = serializer.create(EmptyAnnotations, Long::class.createType())
         Assert.assertNotEquals(serializer.serializers.first(), selected)

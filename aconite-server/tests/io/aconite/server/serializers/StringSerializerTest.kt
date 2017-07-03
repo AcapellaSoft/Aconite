@@ -8,21 +8,21 @@ import kotlin.reflect.full.createType
 
 class StringSerializerTest {
     @Test fun testString() {
-        val serializer = StringSerializerFactory().create(EmptyAnnotations, String::class.createType())!!
+        val serializer = SimpleStringSerializerFactory().create(EmptyAnnotations, String::class.createType())!!
 
         Assert.assertEquals("foobar", serializer.serialize("foobar"))
         Assert.assertEquals("foobar", serializer.deserialize("foobar"))
     }
 
     @Test fun testInt() {
-        val serializer = StringSerializerFactory().create(EmptyAnnotations, Int::class.createType())!!
+        val serializer = SimpleStringSerializerFactory().create(EmptyAnnotations, Int::class.createType())!!
 
         Assert.assertEquals("123", serializer.serialize(123))
         Assert.assertEquals(123, serializer.deserialize("123"))
     }
 
     @Test fun testUUID() {
-        val serializer = StringSerializerFactory().create(EmptyAnnotations, UUID::class.createType())!!
+        val serializer = SimpleStringSerializerFactory().create(EmptyAnnotations, UUID::class.createType())!!
 
         val expected = UUID.randomUUID()
         val string = serializer.serialize(expected)!!

@@ -1,13 +1,12 @@
 package io.aconite.server.serializers
 
 import io.aconite.server.StringSerializer
-import java.text.DateFormat
 import java.util.*
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
-class StringSerializerFactory: StringSerializer.Factory {
+class SimpleStringSerializerFactory : StringSerializer.Factory {
     private val serializers = mutableMapOf<KClass<*>, StringSerializer>()
 
     init {
