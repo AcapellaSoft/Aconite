@@ -355,7 +355,7 @@ class TypeResolverTest {
         val javaType = type.toJavaType() as ParameterizedType
         Assert.assertEquals(Map::class.java, javaType.rawType)
         Assert.assertEquals(2, javaType.actualTypeArguments.size)
-        Assert.assertEquals(Long::class.java, javaType.actualTypeArguments[0])
+        Assert.assertEquals(java.lang.Long::class.java, javaType.actualTypeArguments[0])
         Assert.assertEquals(String::class.java, javaType.actualTypeArguments[1])
     }
 
@@ -376,12 +376,24 @@ class TypeResolverTest {
         val keyType = javaType.actualTypeArguments[0] as ParameterizedType
         Assert.assertEquals(Set::class.java, keyType.rawType)
         Assert.assertEquals(1, keyType.actualTypeArguments.size)
-        Assert.assertEquals(Long::class.java, keyType.actualTypeArguments[0])
+        Assert.assertEquals(java.lang.Long::class.java, keyType.actualTypeArguments[0])
 
         val valueType = javaType.actualTypeArguments[1] as ParameterizedType
         Assert.assertEquals(List::class.java, valueType.rawType)
         Assert.assertEquals(1, valueType.actualTypeArguments.size)
         Assert.assertEquals(String::class.java, valueType.actualTypeArguments[0])
+    }
+
+    @Test
+    fun testPrimitiveNotWrap() {
+        val type = Long::class.createType().toJavaType(false)
+        Assert.assertEquals(Long::class.java, type)
+    }
+
+    @Test
+    fun testPrimitiveWrap() {
+        val type = Long::class.createType().toJavaType(true)
+        Assert.assertEquals(java.lang.Long::class.java, type)
     }
 }
 
