@@ -93,6 +93,10 @@ class MethodFilterPassSpecified(vararg val methods: String): MethodFilter {
     override fun predicate(fn: KFunction<*>) = fn.name in methods
 }
 
+object EmptyAnnotations: KAnnotatedElement {
+    override val annotations: List<Annotation> get() = emptyList()
+}
+
 fun Response?.body() = this?.body?.content?.string!!
 
 fun body(s: String) = BodyBuffer(Buffer.wrap(s), "text/plain")
