@@ -7,7 +7,7 @@ import org.junit.Test
 private fun server() = AconiteServer(
         bodySerializer = TestBodySerializer.Factory(),
         stringSerializer = TestStringSerializer.Factory(),
-        callAdapter = AnyOfAdapter(
+        callAdapter = anyOf(
                 CompletableFutureCallAdapter,
                 SuspendCallAdapter
         ),

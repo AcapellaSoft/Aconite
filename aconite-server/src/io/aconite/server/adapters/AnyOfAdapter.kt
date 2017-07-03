@@ -8,3 +8,5 @@ class AnyOfAdapter(vararg val adapters: CallAdapter): CallAdapter {
             .map { it.adapt(fn) }
             .firstOrNull { it != null }
 }
+
+fun anyOf(vararg adapters: CallAdapter) = AnyOfAdapter(*adapters)
