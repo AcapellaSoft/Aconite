@@ -42,7 +42,7 @@ annotation class Path(val name: String = "")
  * the [name] query parameter of the request. If [name] is an empty
  * string then the argument name will be used. The argument value
  * will be serialized using the string serializer. If the request
- * does not contain this header then `null` will be passed as the
+ * does not contain this query then `null` will be passed as the
  * argument value.
  */
 @Retention(AnnotationRetention.RUNTIME)
