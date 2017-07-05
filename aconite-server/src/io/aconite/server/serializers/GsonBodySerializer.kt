@@ -6,7 +6,7 @@ import com.google.gson.JsonParseException
 import io.aconite.BadRequestException
 import io.aconite.UnsupportedMediaTypeException
 import io.aconite.BodyBuffer
-import io.aconite.server.BodySerializer
+import io.aconite.BodySerializer
 import io.aconite.Buffer
 import io.aconite.utils.toJavaType
 import java.lang.reflect.Type

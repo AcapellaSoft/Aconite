@@ -1,6 +1,7 @@
 package io.aconite.server
 
 import io.aconite.ArgumentMissingException
+import io.aconite.BodySerializer
 import io.aconite.Request
 import io.aconite.Response
 import io.aconite.annotations.*

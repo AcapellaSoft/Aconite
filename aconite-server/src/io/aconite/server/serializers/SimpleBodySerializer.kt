@@ -1,7 +1,7 @@
 package io.aconite.server.serializers
 
 import io.aconite.BodyBuffer
-import io.aconite.server.BodySerializer
+import io.aconite.BodySerializer
 import io.aconite.Buffer
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KType

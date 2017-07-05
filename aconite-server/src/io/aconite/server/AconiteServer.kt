@@ -1,6 +1,6 @@
 package io.aconite.server
 
-import io.aconite.BodyBuffer
+import io.aconite.BodySerializer
 import io.aconite.Request
 import io.aconite.Response
 import io.aconite.server.adapters.SuspendCallAdapter
@@ -13,15 +13,6 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
 import kotlin.reflect.full.createType
-
-interface BodySerializer {
-    interface Factory {
-        fun create(annotations: KAnnotatedElement, type: KType): BodySerializer?
-    }
-
-    fun serialize(obj: Any?): BodyBuffer
-    fun deserialize(body: BodyBuffer): Any?
-}
 
 interface StringSerializer {
     interface Factory {
