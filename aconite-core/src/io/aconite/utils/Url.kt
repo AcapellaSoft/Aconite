@@ -36,6 +36,7 @@ fun formatUrl(url: String) = '/' + url.trim('/')
  * so, url `/baz/bar` will be accepted by first template, although it
  * can be accepted by the second template too.
  * @param[url] url-template string
+ * @throws[UrlFormatException] if malformed string was passed to constructor as url
  */
 class UrlTemplate(url: String): Comparable<UrlTemplate> {
     private val parts: List<UrlPart>
