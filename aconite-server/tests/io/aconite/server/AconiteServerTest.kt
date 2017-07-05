@@ -1,6 +1,6 @@
 package io.aconite.server
 
-import io.aconite.MethodNotAllowedException
+import io.aconite.Request
 import org.junit.Assert
 import org.junit.Test
 

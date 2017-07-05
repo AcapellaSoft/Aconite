@@ -2,8 +2,8 @@ package io.aconite.server.serializers
 
 import com.google.gson.GsonBuilder
 import com.google.gson.LongSerializationPolicy
-import io.aconite.server.BodyBuffer
-import io.aconite.server.Buffer
+import io.aconite.BodyBuffer
+import io.aconite.Buffer
 import io.aconite.server.EmptyAnnotations
 import org.junit.Assert
 import org.junit.Test

@@ -1,6 +1,7 @@
 package io.aconite.server
 
 import io.aconite.ArgumentMissingException
+import io.aconite.Request
 import org.junit.Assert
 import org.junit.Test
 import kotlin.reflect.full.functions

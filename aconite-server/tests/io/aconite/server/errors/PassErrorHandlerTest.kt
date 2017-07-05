@@ -1,5 +1,8 @@
 package io.aconite.server.errors
 
+import io.aconite.BodyBuffer
+import io.aconite.Buffer
+import io.aconite.Request
 import io.aconite.server.*
 import org.junit.Assert
 import org.junit.Test

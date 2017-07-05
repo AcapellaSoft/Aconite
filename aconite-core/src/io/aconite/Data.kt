@@ -1,6 +1,4 @@
-package io.aconite.server
-
-import io.aconite.HttpException
+package io.aconite
 
 data class Request (
         val method: String,
@@ -45,4 +43,3 @@ fun HttpException.toResponse() = Response(
                 contentType = "text/plain"
         )
 )
-

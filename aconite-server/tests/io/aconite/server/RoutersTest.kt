@@ -1,6 +1,6 @@
 package io.aconite.server
 
-import io.aconite.ArgumentMissingException
+import io.aconite.*
 import io.aconite.utils.UrlTemplate
 import org.junit.Assert
 import org.junit.Test

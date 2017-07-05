@@ -1,6 +1,6 @@
 package io.aconite.server.errors
 
-import io.aconite.HttpException
+import io.aconite.*
 import io.aconite.server.*
 
 object PassErrorHandler: ErrorHandler {

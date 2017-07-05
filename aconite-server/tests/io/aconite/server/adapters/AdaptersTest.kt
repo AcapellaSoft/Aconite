@@ -1,5 +1,6 @@
 package io.aconite.server.adapters
 
+import io.aconite.Request
 import io.aconite.server.*
 import org.junit.Assert
 import org.junit.Test

@@ -5,9 +5,9 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonParseException
 import io.aconite.BadRequestException
 import io.aconite.UnsupportedMediaTypeException
-import io.aconite.server.BodyBuffer
+import io.aconite.BodyBuffer
 import io.aconite.server.BodySerializer
-import io.aconite.server.Buffer
+import io.aconite.Buffer
 import io.aconite.utils.toJavaType
 import java.lang.reflect.Type
 import kotlin.reflect.KAnnotatedElement

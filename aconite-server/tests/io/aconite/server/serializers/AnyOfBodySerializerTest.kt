@@ -1,6 +1,6 @@
 package io.aconite.server.serializers
 
-import io.aconite.server.BodyBuffer
+import io.aconite.BodyBuffer
 import io.aconite.server.BodySerializer
 import io.aconite.server.EmptyAnnotations
 import org.junit.Assert
