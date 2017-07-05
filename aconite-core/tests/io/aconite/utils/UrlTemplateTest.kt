@@ -75,8 +75,8 @@ class UrlTemplateTest {
     @Test
     fun testPathFullMatch() {
         val template = UrlTemplate("/foo/bar/baz")
-        val (rest, _) = template.parseEntire("/foo/bar/baz")!!
-        Assert.assertEquals("/", rest)
+        val params = template.parseEntire("/foo/bar/baz")
+        Assert.assertNotNull(params)
     }
 
     @Test
@@ -89,7 +89,7 @@ class UrlTemplateTest {
     @Test
     fun testPathManyArgs() {
         val template = UrlTemplate("/foo/{arg1}/{arg2}/{arg3}")
-        val (_, values) = template.parseEntire("/foo/bar/baz/123")!!
+        val values = template.parseEntire("/foo/bar/baz/123")!!
         Assert.assertEquals(3, values.size)
         Assert.assertEquals("bar", values["arg1"])
         Assert.assertEquals("baz", values["arg2"])

@@ -64,12 +64,12 @@ class UrlTemplate(url: String): Comparable<UrlTemplate> {
 
     /**
      * Trying to match the entire [url] to the url-template regex. If it matches,
-     * returns the rest of the [url] and captured path parameters, else - returns `null`.
-     * @return pair: the rest of the [url] and captured path parameters
+     * returns captured path parameters, else - returns `null`.
+     * @return captured path parameters
      */
-    fun parseEntire(url: String): Pair<String, Map<String, String>>? {
+    fun parseEntire(url: String): Map<String, String>? {
         val match = regex.matchEntire(url) ?: return null
-        return parseInner(match, url)
+        return parseInner(match, url).second
     }
 
     private fun parseInner(match: MatchResult, url: String): Pair<String, Map<String, String>> {
