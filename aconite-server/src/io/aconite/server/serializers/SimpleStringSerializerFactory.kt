@@ -1,6 +1,6 @@
 package io.aconite.server.serializers
 
-import io.aconite.server.StringSerializer
+import io.aconite.StringSerializer
 import java.util.*
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KClass

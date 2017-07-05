@@ -1,7 +1,7 @@
 package io.aconite.server.serializers
 
 import io.aconite.server.EmptyAnnotations
-import io.aconite.server.StringSerializer
+import io.aconite.StringSerializer
 import org.junit.Assert
 import org.junit.Test
 import kotlin.reflect.KAnnotatedElement

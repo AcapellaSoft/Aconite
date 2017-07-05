@@ -3,25 +3,15 @@ package io.aconite.server
 import io.aconite.BodySerializer
 import io.aconite.Request
 import io.aconite.Response
+import io.aconite.StringSerializer
 import io.aconite.server.adapters.SuspendCallAdapter
 import io.aconite.server.errors.PassErrorHandler
 import io.aconite.server.filters.PassMethodFilter
 import io.aconite.server.serializers.SimpleBodySerializer
 import io.aconite.server.serializers.SimpleStringSerializerFactory
-import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
-import kotlin.reflect.KType
 import kotlin.reflect.full.createType
-
-interface StringSerializer {
-    interface Factory {
-        fun create(annotations: KAnnotatedElement, type: KType): StringSerializer?
-    }
-
-    fun serialize(obj: Any?): String?
-    fun deserialize(s: String): Any?
-}
 
 interface CallAdapter {
     fun adapt(fn: KFunction<*>): KFunction<*>?
