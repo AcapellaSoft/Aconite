@@ -7,13 +7,28 @@ import io.aconite.Response
 import io.aconite.server.*
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
+import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
+import io.vertx.ext.web.handler.BodyHandler
 import kotlinx.coroutines.experimental.CoroutineDispatcher
 import kotlinx.coroutines.experimental.async
 import kotlin.coroutines.experimental.CoroutineContext
 
 class VertxHandler(private val vertx: Vertx, private val server: AconiteServer): Handler<RoutingContext> {
     val coroutineCtx = VertxCoroutineContext()
+
+    companion object {
+        fun runServer(server: AconiteServer, port: Int) {
+            val vertx = Vertx.vertx()
+            val router = Router.router(vertx)
+            val handler = VertxHandler(vertx, server)
+            router.route().handler(BodyHandler.create())
+            router.route().handler(handler)
+            vertx.createHttpServer()
+                    .requestHandler(router::accept)
+                    .listen(port)
+        }
+    }
 
     inner class VertxCoroutineContext: CoroutineDispatcher() {
         override fun dispatch(context: CoroutineContext, block: Runnable) {
