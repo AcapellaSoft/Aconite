@@ -6,7 +6,7 @@ Type-safe HTTP client/server framework for Kotlin.
 Introduction
 ------------
 
-1) Declare your HTTP API as an interface:
+1) Declare your HTTP API as an interface (similar to [retrofit](http://square.github.io/retrofit/)):
 
 ```kotlin
 interface HelloApi {
@@ -25,25 +25,30 @@ class HelloImpl : HelloApi {
 3) Create and run the server using default vertx handler
 
 ```kotlin
-fun main(args: Array<String>) {
-    val server = AconiteServer()
-    server.register(HelloImpl(), HelloApi::class)
-    VertxHandler.runServer(server, 8080)
-}
+val server = AconiteServer()
+server.register(HelloImpl(), HelloApi::class)
+VertxHandler.runServer(server, 8080)
 ```
 
-4) Generate client interface implementation:
+4) Generate an interface implementation for the client (not yet implemented):
 
 ```kotlin
-val client = AconiteClient()
+val client = AconiteClient("http://localhost:8080")
 val api = client.create(HelloApi::class)
 ```
 
-5) Make a call:
+5) Make a call (not yet implemented):
 
 ```kotlin
 run(CommonPool) {
     val response = api.hello("World")
     println(response) // prints "Hello, World!"
 }
+```
+
+or test the server by curl:
+
+```bash
+$ curl -XPOST http://localhost:8080/hello?name=World
+Hello, World!
 ```
