@@ -29,13 +29,13 @@ private val METHOD_ANNOTATION = listOf(
         PUT::class
 )
 
-abstract class AbstractHandler : Comparable<AbstractHandler> {
+internal abstract class AbstractHandler : Comparable<AbstractHandler> {
     abstract val argsCount: Int
     abstract suspend fun accept(obj: Any, url: String, request: Request): Response?
     final override fun compareTo(other: AbstractHandler) = argsCount.compareTo(other.argsCount)
 }
 
-class MethodHandler(server: AconiteServer, private val method: String, private val fn: KFunction<*>) : AbstractHandler() {
+internal class MethodHandler(server: AconiteServer, private val method: String, private val fn: KFunction<*>) : AbstractHandler() {
     private val args = transformParams(server, fn)
     private val responseSerializer = responseSerializer(server, fn)
     override val argsCount = args.size
@@ -47,7 +47,7 @@ class MethodHandler(server: AconiteServer, private val method: String, private v
     }
 }
 
-class ModuleHandler(server: AconiteServer, iface: KType, fn: KFunction<*>): AbstractHandler() {
+internal class ModuleHandler(server: AconiteServer, iface: KType, fn: KFunction<*>): AbstractHandler() {
     private val fn = resolve(iface, fn)
     private val args = transformParams(server, fn)
     private val routers = buildRouters(server, iface)
@@ -61,7 +61,7 @@ class ModuleHandler(server: AconiteServer, iface: KType, fn: KFunction<*>): Abst
     }
 }
 
-class RootHandler(server: AconiteServer, private val obj: Any, iface: KType) {
+internal class RootHandler(server: AconiteServer, private val obj: Any, iface: KType) {
     private val routers = buildRouters(server, iface)
 
     suspend fun accept(url: String, request: Request): Response? {
@@ -209,7 +209,7 @@ internal fun KType.cls(): KClass<*> {
             throw AconiteServerException("Class of $this is not determined")
 }
 
-suspend private fun KFunction<*>.httpCall(args: List<ArgumentTransformer>, obj: Any, request: Request): Any? {
+private suspend fun KFunction<*>.httpCall(args: List<ArgumentTransformer>, obj: Any, request: Request): Any? {
     val missingArgs = args
             .filter { !it.check(request) }
             .map { it.name }

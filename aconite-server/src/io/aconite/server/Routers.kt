@@ -3,7 +3,7 @@ package io.aconite.server
 import io.aconite.*
 import io.aconite.utils.UrlTemplate
 
-class Router(val template: UrlTemplate, handlers: List<AbstractHandler>): Comparable<Router> {
+internal class Router(val template: UrlTemplate, handlers: List<AbstractHandler>): Comparable<Router> {
     private val handlers = handlers.sorted().reversed()
 
     suspend fun accept(obj: Any, url: String, request: Request): Response? {
