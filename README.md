@@ -1,12 +1,12 @@
 Aconite
 =======
 
-Type-safe HTTP client/server framework for Kotlin.
+Type-safe HTTP client/server framework for Kotlin inspired by [Retrofit](http://square.github.io/retrofit/).
 
 Introduction
 ------------
 
-1) Declare your HTTP API as an interface (similar to [retrofit](http://square.github.io/retrofit/)):
+1) Declare your HTTP API as an interface (similar to retrofit):
 
 ```kotlin
 interface HelloApi {
