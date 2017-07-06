@@ -52,3 +52,12 @@ or test the server by curl:
 $ curl -XPOST http://localhost:8080/hello?name=World
 Hello, World!
 ```
+
+Build
+-----
+
+Aconite using gradle build tool. To build and run tests, use following command:
+
+```bash
+./gradlew clean shadowjar test
+```
