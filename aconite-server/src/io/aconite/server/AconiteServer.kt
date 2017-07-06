@@ -25,7 +25,7 @@ interface ErrorHandler {
     fun handle(ex: Throwable): Response
 }
 
-class AconiteServerException(message: String): Exception(message)
+class AconiteServerException(message: String): RuntimeException(message)
 
 class AconiteServer(
         val bodySerializer: BodySerializer.Factory = SimpleBodySerializer.Factory,
