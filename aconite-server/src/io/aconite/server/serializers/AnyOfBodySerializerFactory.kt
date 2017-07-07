@@ -10,4 +10,4 @@ class AnyOfBodySerializerFactory(vararg val serializers: BodySerializer.Factory)
             .firstOrNull { it != null }
 }
 
-fun anyOf(vararg serializers: BodySerializer.Factory) = AnyOfBodySerializerFactory(*serializers)
+fun oneOf(vararg serializers: BodySerializer.Factory) = AnyOfBodySerializerFactory(*serializers)

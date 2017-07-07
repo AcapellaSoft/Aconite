@@ -24,7 +24,7 @@ class AnyOfBodySerializerTest {
     }
 
     @Test fun testFirstAcceptableSelected() {
-        val serializer = anyOf(
+        val serializer = oneOf(
                 TestBodySerializer(String::class),
                 GsonBodySerializer.Factory()
         )
@@ -33,7 +33,7 @@ class AnyOfBodySerializerTest {
     }
 
     @Test fun testSelectOtherIfNotAccepted() {
-        val serializer = anyOf(
+        val serializer = oneOf(
                 TestBodySerializer(String::class),
                 GsonBodySerializer.Factory()
         )
@@ -42,7 +42,7 @@ class AnyOfBodySerializerTest {
     }
 
     @Test fun testNoOneAccepted() {
-        val serializer = anyOf(
+        val serializer = oneOf(
                 TestBodySerializer(String::class),
                 TestBodySerializer(Long::class)
         )

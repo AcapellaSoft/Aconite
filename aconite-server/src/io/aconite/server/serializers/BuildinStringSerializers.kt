@@ -58,7 +58,7 @@ val DateStringSerializer = factoryFor<Date>(object : StringSerializer {
     }
 })
 
-val BuildInStringSerializers = anyOf(
+val BuildInStringSerializers = oneOf(
         DefaultStringSerializer,
         ByteStringSerializer,
         ShortStringSerializer,

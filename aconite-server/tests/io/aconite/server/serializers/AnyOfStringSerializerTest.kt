@@ -23,7 +23,7 @@ class AnyOfStringSerializerTest {
     }
 
     @Test fun testFirstAcceptableSelected() {
-        val serializer = anyOf(
+        val serializer = oneOf(
                 TestStringSerializer(String::class),
                 BuildInStringSerializers
         )
@@ -32,7 +32,7 @@ class AnyOfStringSerializerTest {
     }
 
     @Test fun testSelectOtherIfNotAccepted() {
-        val serializer = anyOf(
+        val serializer = oneOf(
                 TestStringSerializer(String::class),
                 BuildInStringSerializers
         )
@@ -41,7 +41,7 @@ class AnyOfStringSerializerTest {
     }
 
     @Test fun testNoOneAccepted() {
-        val serializer = anyOf(
+        val serializer = oneOf(
                 TestStringSerializer(String::class),
                 TestStringSerializer(Long::class)
         )

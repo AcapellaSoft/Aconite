@@ -10,4 +10,4 @@ class AnyOfStringSerializerFactory(vararg val serializers: StringSerializer.Fact
             .firstOrNull { it != null }
 }
 
-fun anyOf(vararg serializers: StringSerializer.Factory) = AnyOfStringSerializerFactory(*serializers)
+fun oneOf(vararg serializers: StringSerializer.Factory) = AnyOfStringSerializerFactory(*serializers)
