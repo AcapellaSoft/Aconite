@@ -7,12 +7,12 @@ import io.aconite.StringSerializer
 import io.aconite.server.adapters.SuspendCallAdapter
 import io.aconite.server.errors.PassErrorHandler
 import io.aconite.server.filters.PassMethodFilter
+import io.aconite.server.serializers.BuildInStringSerializers
 import io.aconite.server.serializers.SimpleBodySerializer
-import io.aconite.server.serializers.SimpleStringSerializerFactory
+import java.util.concurrent.CompletableFuture
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.createType
-import java.util.concurrent.CompletableFuture
 
 /**
  * Used to wrap functions, that are not `suspend`, but use some other form of an asynchronous call,
@@ -63,7 +63,7 @@ class AconiteServerException(message: String): RuntimeException(message)
  */
 class AconiteServer(
         val bodySerializer: BodySerializer.Factory = SimpleBodySerializer.Factory,
-        val stringSerializer: StringSerializer.Factory = SimpleStringSerializerFactory(),
+        val stringSerializer: StringSerializer.Factory = BuildInStringSerializers,
         val callAdapter: CallAdapter = SuspendCallAdapter,
         val methodFilter: MethodFilter = PassMethodFilter,
         val errorHandler: ErrorHandler = PassErrorHandler
