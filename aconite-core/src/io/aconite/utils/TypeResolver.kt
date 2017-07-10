@@ -1,5 +1,6 @@
 package io.aconite.utils
 
+import io.aconite.AconiteException
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import kotlin.reflect.*
@@ -71,4 +72,9 @@ fun KType.toJavaType(wrap: Boolean = false): Type = when {
     }
     wrap -> Primitives.wrap((classifier as KClass<*>).java)
     else -> (classifier as KClass<*>).java
+}
+
+fun KType.cls(): KClass<*> {
+    return classifier as? KClass<*> ?:
+            throw AconiteException("Class of $this is not determined")
 }

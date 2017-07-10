@@ -1,8 +1,8 @@
 package io.aconite.server.adapters
 
 import io.aconite.server.CallAdapter
-import io.aconite.server.cls
 import io.aconite.utils.COROUTINE_SUSPENDED
+import io.aconite.utils.cls
 import java.util.concurrent.CompletableFuture
 import javax.naming.OperationNotSupportedException
 import kotlin.coroutines.experimental.Continuation

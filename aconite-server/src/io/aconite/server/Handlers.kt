@@ -4,6 +4,7 @@ import io.aconite.*
 import io.aconite.annotations.*
 import io.aconite.utils.UrlTemplate
 import io.aconite.utils.asyncCall
+import io.aconite.utils.cls
 import io.aconite.utils.resolve
 import kotlin.reflect.*
 import kotlin.reflect.full.functions
@@ -199,11 +200,6 @@ private fun responseSerializer(server: AconiteServer, fn: KFunction<*>): BodySer
 private fun KFunction<*>.asyncReturnType(): KType {
     if (!isSuspend) throw AconiteException("Method '$this' is not suspend")
     return returnType
-}
-
-internal fun KType.cls(): KClass<*> {
-    return classifier as? KClass<*> ?:
-            throw AconiteException("Class of $this is not determined")
 }
 
 private suspend fun KFunction<*>.httpCall(args: List<ArgumentTransformer>, obj: Any, request: Request): Any? {
