@@ -1,7 +1,13 @@
-package io.aconite.server.serializers
+package io.aconite.serializers
 
 import io.aconite.BadRequestException
 import io.aconite.StringSerializer
+import java.lang.Boolean
+import java.lang.Byte
+import java.lang.Double
+import java.lang.Float
+import java.lang.Long
+import java.lang.Short
 import java.time.Instant
 import java.util.*
 import kotlin.reflect.KAnnotatedElement
@@ -17,7 +23,7 @@ private inline fun <reified T: Any> factoryFor(serializer: StringSerializer): St
 }
 
 private inline fun <reified T: Any> factoryFor(noinline deserializer: (String) -> T): StringSerializer.Factory {
-    return factoryFor<T>(object: StringSerializer {
+    return factoryFor<T>(object : StringSerializer {
         override fun serialize(obj: Any?) = obj.toString()
 
         override fun deserialize(s: String) = try {
@@ -29,13 +35,13 @@ private inline fun <reified T: Any> factoryFor(noinline deserializer: (String) -
 }
 
 val DefaultStringSerializer = factoryFor { it }
-val ByteStringSerializer = factoryFor(java.lang.Byte::parseByte)
-val ShortStringSerializer = factoryFor(java.lang.Short::parseShort)
-val IntegerStringSerializer = factoryFor(java.lang.Integer::parseInt)
-val LongStringSerializer = factoryFor(java.lang.Long::parseLong)
-val FloatStringSerializer = factoryFor(java.lang.Float::parseFloat)
-val DoubleStringSerializer = factoryFor(java.lang.Double::parseDouble)
-val BooleanStringSerializer = factoryFor(java.lang.Boolean::parseBoolean)
+val ByteStringSerializer = factoryFor(Byte::parseByte)
+val ShortStringSerializer = factoryFor(Short::parseShort)
+val IntegerStringSerializer = factoryFor(Integer::parseInt)
+val LongStringSerializer = factoryFor(Long::parseLong)
+val FloatStringSerializer = factoryFor(Float::parseFloat)
+val DoubleStringSerializer = factoryFor(Double::parseDouble)
+val BooleanStringSerializer = factoryFor(Boolean::parseBoolean)
 val CharStringSerializer = factoryFor(String::first)
 val UuidStringSerializer = factoryFor(UUID::fromString)
 
@@ -49,7 +55,7 @@ val DateStringSerializer = factoryFor<Date>(object : StringSerializer {
 
     override fun deserialize(s: String): Any? {
         try {
-            val ms = java.lang.Long.parseLong(s)
+            val ms = Long.parseLong(s)
             val instant = Instant.ofEpochMilli(ms)
             return Date.from(instant)
         } catch (ex: IllegalArgumentException) {

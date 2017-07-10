@@ -1,4 +1,4 @@
-package io.aconite.server.serializers
+package io.aconite.serializers
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder

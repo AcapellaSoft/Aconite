@@ -1,8 +1,8 @@
-package io.aconite.server.serializers
+package io.aconite.serializers
 
 import io.aconite.BodyBuffer
 import io.aconite.BodySerializer
-import io.aconite.server.EmptyAnnotations
+import io.aconite.EmptyAnnotations
 import org.junit.Assert
 import org.junit.Test
 import kotlin.reflect.KAnnotatedElement

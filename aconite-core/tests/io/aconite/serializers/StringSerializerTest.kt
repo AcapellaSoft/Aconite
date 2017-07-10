@@ -1,6 +1,6 @@
-package io.aconite.server.serializers
+package io.aconite.serializers
 
-import io.aconite.server.EmptyAnnotations
+import io.aconite.EmptyAnnotations
 import org.junit.Assert
 import org.junit.Test
 import java.util.*

@@ -4,8 +4,8 @@ import io.aconite.*
 import io.aconite.server.adapters.SuspendCallAdapter
 import io.aconite.server.errors.PassErrorHandler
 import io.aconite.server.filters.PassMethodFilter
-import io.aconite.server.serializers.BuildInStringSerializers
-import io.aconite.server.serializers.SimpleBodySerializer
+import io.aconite.serializers.BuildInStringSerializers
+import io.aconite.serializers.SimpleBodySerializer
 import java.util.concurrent.CompletableFuture
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
