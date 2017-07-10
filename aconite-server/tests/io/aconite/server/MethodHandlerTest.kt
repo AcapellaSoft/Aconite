@@ -1,5 +1,6 @@
 package io.aconite.server
 
+import io.aconite.AconiteException
 import io.aconite.ArgumentMissingException
 import io.aconite.Request
 import org.junit.Assert
@@ -86,7 +87,7 @@ class MethodHandlerTest {
         try {
             MethodHandler(server, "GET", fn)
             Assert.assertTrue(false)
-        } catch (ex: AconiteServerException) {
+        } catch (ex: AconiteException) {
             Assert.assertTrue(true)
         }
     }

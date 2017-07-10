@@ -1,5 +1,6 @@
 package io.aconite.server
 
+import io.aconite.AconiteException
 import io.aconite.Request
 import org.junit.Assert
 import org.junit.Test
@@ -49,7 +50,7 @@ class AconiteServerTest {
         try {
             server.register(RootModule(), RootModuleApi::class)
             Assert.assertTrue(false)
-        } catch (ex: AconiteServerException) {
+        } catch (ex: AconiteException) {
             Assert.assertTrue(true)
         }
     }

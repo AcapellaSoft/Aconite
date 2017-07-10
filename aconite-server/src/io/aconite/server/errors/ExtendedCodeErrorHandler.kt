@@ -34,10 +34,10 @@ object ExtendedCodeErrorHandler: ErrorHandler {
 
     fun <T: Any> register(cls: KClass<T>) {
         if (!cls.isSubclassOf(HttpException::class))
-            throw AconiteServerException("Trying to register exception '$cls' but only subclasses of HttpException is allowed")
+            throw AconiteException("Trying to register exception '$cls' but only subclasses of HttpException is allowed")
 
         val annotation = cls.findAnnotation<HttpErrorCode>()
-                ?: throw AconiteServerException("HttpErrorCode annotation not found in class '$cls'")
+                ?: throw AconiteException("HttpErrorCode annotation not found in class '$cls'")
 
         ex2error[cls] = annotation.extCode
     }

@@ -1,9 +1,6 @@
 package io.aconite.server
 
-import io.aconite.ArgumentMissingException
-import io.aconite.BodySerializer
-import io.aconite.Request
-import io.aconite.Response
+import io.aconite.*
 import io.aconite.annotations.*
 import io.aconite.utils.UrlTemplate
 import io.aconite.utils.asyncCall
@@ -103,11 +100,11 @@ private fun transformParam(server: AconiteServer, param: KParameter): ArgumentTr
     if (param.kind == KParameter.Kind.INSTANCE)
         return InstanceTransformer()
     if (param.kind == KParameter.Kind.EXTENSION_RECEIVER)
-        throw AconiteServerException("Extension methods are not allowed")
+        throw AconiteException("Extension methods are not allowed")
 
     val annotations = param.annotations.filter { it.annotationClass in PARAM_ANNOTATIONS }
-    if (annotations.isEmpty()) throw AconiteServerException("Parameter $param is not annotated")
-    if (annotations.size > 1) throw AconiteServerException("Parameter $param has more than one annotations")
+    if (annotations.isEmpty()) throw AconiteException("Parameter $param is not annotated")
+    if (annotations.size > 1) throw AconiteException("Parameter $param has more than one annotations")
     val annotation = annotations.first()
 
     return when (annotation) {
@@ -128,7 +125,7 @@ private interface ArgumentTransformer {
 private class BodyTransformer(server: AconiteServer, param: KParameter): ArgumentTransformer {
     private val isNullable = param.type.isMarkedNullable
     private val serializer = server.bodySerializer.create(param, param.type) ?:
-            throw AconiteServerException("No suitable serializer found for body parameter $param")
+            throw AconiteException("No suitable serializer found for body parameter $param")
 
     override val name = param.name!!
 
@@ -143,7 +140,7 @@ private class BodyTransformer(server: AconiteServer, param: KParameter): Argumen
 private class HeaderTransformer(server: AconiteServer, param: KParameter, name: String): ArgumentTransformer {
     private val isNullable = param.type.isMarkedNullable
     private val serializer = server.stringSerializer.create(param, param.type) ?:
-            throw AconiteServerException("No suitable serializer found for header parameter $param")
+            throw AconiteException("No suitable serializer found for header parameter $param")
 
     override val name = if (name.isEmpty()) param.name!! else name
 
@@ -159,7 +156,7 @@ private class HeaderTransformer(server: AconiteServer, param: KParameter, name: 
 private class PathTransformer(server: AconiteServer, param: KParameter, name: String): ArgumentTransformer {
     private val isNullable = param.type.isMarkedNullable
     private val serializer = server.stringSerializer.create(param, param.type) ?:
-            throw AconiteServerException("No suitable serializer found for path parameter $param")
+            throw AconiteException("No suitable serializer found for path parameter $param")
 
     override val name = if (name.isEmpty()) param.name!! else name
 
@@ -175,7 +172,7 @@ private class PathTransformer(server: AconiteServer, param: KParameter, name: St
 private class QueryTransformer(server: AconiteServer, param: KParameter, name: String): ArgumentTransformer {
     private val isNullable = param.type.isMarkedNullable
     private val serializer = server.stringSerializer.create(param, param.type) ?:
-            throw AconiteServerException("No suitable serializer found for query parameter $param")
+            throw AconiteException("No suitable serializer found for query parameter $param")
 
     override val name = if (name.isEmpty()) param.name!! else name
 
@@ -196,17 +193,17 @@ private class InstanceTransformer: ArgumentTransformer {
 
 private fun responseSerializer(server: AconiteServer, fn: KFunction<*>): BodySerializer {
     return server.bodySerializer.create(fn, fn.asyncReturnType()) ?:
-            throw AconiteServerException("No suitable serializer found for response body of method $fn")
+            throw AconiteException("No suitable serializer found for response body of method $fn")
 }
 
 private fun KFunction<*>.asyncReturnType(): KType {
-    if (!isSuspend) throw AconiteServerException("Method '$this' is not suspend")
+    if (!isSuspend) throw AconiteException("Method '$this' is not suspend")
     return returnType
 }
 
 internal fun KType.cls(): KClass<*> {
     return classifier as? KClass<*> ?:
-            throw AconiteServerException("Class of $this is not determined")
+            throw AconiteException("Class of $this is not determined")
 }
 
 private suspend fun KFunction<*>.httpCall(args: List<ArgumentTransformer>, obj: Any, request: Request): Any? {
@@ -225,13 +222,13 @@ private suspend fun KFunction<*>.httpCall(args: List<ArgumentTransformer>, obj: 
 
 private fun adaptFunction(server: AconiteServer, fn: KFunction<*>): KFunction<*> {
     return server.callAdapter.adapt(fn) ?:
-            throw AconiteServerException("No suitable adapter found for function $fn")
+            throw AconiteException("No suitable adapter found for function $fn")
 }
 
 private fun KFunction<*>.getHttpMethod(): Pair<String, String?> {
     val annotations = annotations.filter { it.annotationClass in METHOD_ANNOTATION }
-    if (annotations.isEmpty()) throw AconiteServerException("Method $this is not annotated")
-    if (annotations.size > 1) throw AconiteServerException("Method $this has more than one annotations")
+    if (annotations.isEmpty()) throw AconiteException("Method $this is not annotated")
+    if (annotations.size > 1) throw AconiteException("Method $this has more than one annotations")
     val annotation = annotations.first()
 
     return when (annotation) {

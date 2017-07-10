@@ -1,9 +1,6 @@
 package io.aconite.server
 
-import io.aconite.BodySerializer
-import io.aconite.Request
-import io.aconite.Response
-import io.aconite.StringSerializer
+import io.aconite.*
 import io.aconite.server.adapters.SuspendCallAdapter
 import io.aconite.server.errors.PassErrorHandler
 import io.aconite.server.filters.PassMethodFilter
@@ -50,12 +47,6 @@ interface ErrorHandler {
      */
     fun handle(ex: Throwable): Response
 }
-
-/**
- * Throws if something go wrong with HTTP interface registration. Most of the time this
- * exception means, that the interface is not satisfy some constraints.
- */
-class AconiteServerException(message: String): RuntimeException(message)
 
 /**
  * Main server class, that are used to register HTTP interfaces and accepts HTTP requests.
