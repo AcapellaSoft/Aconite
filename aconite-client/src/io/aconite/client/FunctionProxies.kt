@@ -19,29 +19,42 @@ private val PARAM_ANNOTATIONS = listOf(
 )
 
 internal interface FunctionProxy {
-    suspend fun call(request: Request, args: Array<Any?>): Any?
+    suspend fun call(url: String, request: Request, args: Array<Any?>): Any?
 }
 
-internal class FunctionModuleProxy(client: AconiteClient, fn: KFunction<*>): FunctionProxy {
+internal class FunctionModuleProxy(
+        client: AconiteClient,
+        fn: KFunction<*>,
+        val url: String
+): FunctionProxy {
     private val appliers = buildAppliers(client, fn)
     private val returnType = fn.returnType
     private val returnCls = returnType.cls()
 
-    override suspend fun call(request: Request, args: Array<Any?>): Any? {
+    override suspend fun call(url: String, request: Request, args: Array<Any?>): Any? {
         val appliedRequest = request.apply(appliers, args)
+        val appliedUrl = url + this.url
         val handler = ModuleProxy.create(returnType)
-        val module = KotlinProxyFactory.create(returnCls) { fn, innerArgs -> handler.invoke(fn, appliedRequest, innerArgs) }
+        val module = KotlinProxyFactory.create(returnCls) { fn, innerArgs ->
+            handler.invoke(fn, appliedUrl, appliedRequest, innerArgs)
+        }
         return module
     }
 }
 
-internal class FunctionMethodProxy(client: AconiteClient, fn: KFunction<*>): FunctionProxy {
+internal class FunctionMethodProxy(
+        client: AconiteClient,
+        fn: KFunction<*>,
+        val url: String,
+        val method: String
+): FunctionProxy {
     private val appliers = buildAppliers(client, fn)
     private val client = client.httpClient
 
-    override suspend fun call(request: Request, args: Array<Any?>): Response {
-        val appliedRequest = request.apply(appliers, args)
-        return client.makeRequest(appliedRequest)
+    override suspend fun call(url: String, request: Request, args: Array<Any?>): Response {
+        val appliedRequest = request.apply(appliers, args).copy(method = method)
+        val appliedUrl = url + this.url
+        return client.makeRequest(appliedUrl, appliedRequest)
     }
 }
 

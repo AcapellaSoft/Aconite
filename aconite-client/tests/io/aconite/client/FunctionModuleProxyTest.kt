@@ -10,8 +10,8 @@ class FunctionModuleProxyTest {
         val client = AconiteClient(httpClient = TestHttpClient())
         val fn = RootModuleApi::class.functions.first { it.name == "test" }
 
-        val proxy = FunctionModuleProxy(client, fn)
-        val result = proxy.call(Request("GET", body = body("foobar")), emptyArray())
+        val proxy = FunctionModuleProxy(client, fn, "/test/url")
+        val result = proxy.call("", Request("GET", body = body("foobar")), emptyArray())
 
         Assert.assertTrue(result is TestModuleApi)
     }

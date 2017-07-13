@@ -8,7 +8,7 @@ import io.aconite.serializers.BuildInStringSerializers
 import io.aconite.serializers.SimpleBodySerializer
 
 interface HttpClient {
-    suspend fun makeRequest(request: Request): Response
+    suspend fun makeRequest(url: String, request: Request): Response
 }
 
 class AconiteClient(

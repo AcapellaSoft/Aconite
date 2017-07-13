@@ -27,10 +27,10 @@ interface TestModuleApi {
     suspend fun post(@Path("key-in-path") key: String): String
 }
 
-class TestHttpClient(val handler: suspend (Request) -> Response): HttpClient {
-    constructor(): this({Response()})
+class TestHttpClient(val handler: suspend (String, Request) -> Response): HttpClient {
+    constructor(): this({ _, _ -> Response()})
 
-    suspend override fun makeRequest(request: Request) = handler(request)
+    suspend override fun makeRequest(url: String, request: Request) = handler(url, request)
 }
 
 fun body(s: String) = BodyBuffer(Buffer.wrap(s), "text/plain")
