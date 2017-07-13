@@ -24,11 +24,13 @@ internal interface FunctionProxy {
 
 internal class FunctionModuleProxy(client: AconiteClient, fn: KFunction<*>): FunctionProxy {
     private val appliers = buildAppliers(client, fn)
-    private val returnCls = fn.returnType.cls()
+    private val returnType = fn.returnType
+    private val returnCls = returnType.cls()
 
     override suspend fun call(request: Request, args: Array<Any?>): Any? {
         val appliedRequest = request.apply(appliers, args)
-        val module = KotlinProxyFactory.create(returnCls) { _, _ -> null }
+        val handler = ModuleProxy.create(returnType)
+        val module = KotlinProxyFactory.create(returnCls) { fn, innerArgs -> handler.invoke(fn, appliedRequest, innerArgs) }
         return module
     }
 }
