@@ -1,6 +1,8 @@
 package io.aconite.utils
 
 import java.lang.reflect.InvocationTargetException
+import kotlin.coroutines.experimental.Continuation
+import kotlin.coroutines.experimental.startCoroutine
 import kotlin.coroutines.experimental.suspendCoroutine
 import kotlin.reflect.KFunction
 
@@ -29,4 +31,9 @@ suspend fun <R> KFunction<R>.asyncCall(vararg args: Any?) = suspendCoroutine<R> 
     } catch (ex: InvocationTargetException) {
         throw ex.cause ?: ex
     }
+}
+
+fun <R> startCoroutine(continuation: Continuation<R>, block: suspend () -> R): Any? {
+    block.startCoroutine(continuation)
+    return COROUTINE_SUSPENDED
 }
