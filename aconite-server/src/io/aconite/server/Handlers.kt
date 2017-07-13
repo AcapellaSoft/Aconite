@@ -2,10 +2,7 @@ package io.aconite.server
 
 import io.aconite.*
 import io.aconite.annotations.*
-import io.aconite.utils.UrlTemplate
-import io.aconite.utils.asyncCall
-import io.aconite.utils.cls
-import io.aconite.utils.resolve
+import io.aconite.utils.*
 import kotlin.reflect.*
 import kotlin.reflect.full.functions
 
@@ -14,17 +11,6 @@ private val PARAM_ANNOTATIONS = listOf(
         Header::class,
         Path::class,
         Query::class
-)
-
-private val METHOD_ANNOTATION = listOf(
-        MODULE::class,
-        DELETE::class,
-        GET::class,
-        HEAD::class,
-        OPTIONS::class,
-        PATCH::class,
-        POST::class,
-        PUT::class
 )
 
 internal abstract class AbstractHandler : Comparable<AbstractHandler> {
@@ -219,20 +205,4 @@ private suspend fun KFunction<*>.httpCall(args: List<ArgumentTransformer>, obj: 
 private fun adaptFunction(server: AconiteServer, fn: KFunction<*>): KFunction<*> {
     return server.callAdapter.adapt(fn) ?:
             throw AconiteException("No suitable adapter found for function $fn")
-}
-
-private fun KFunction<*>.getHttpMethod(): Pair<String, String?> {
-    val annotations = annotations.filter { it.annotationClass in METHOD_ANNOTATION }
-    if (annotations.isEmpty()) throw AconiteException("Method $this is not annotated")
-    if (annotations.size > 1) throw AconiteException("Method $this has more than one annotations")
-    val annotation = annotations.first()
-
-    return when (annotation) {
-        is HTTP -> Pair(annotation.url, annotation.method)
-        is MODULE -> Pair(annotation.value, null)
-        else -> {
-            val getUrl = annotation.javaClass.getMethod("value")
-            Pair(getUrl.invoke(annotation) as String, annotation.annotationClass.simpleName)
-        }
-    }
 }

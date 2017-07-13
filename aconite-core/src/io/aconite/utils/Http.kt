@@ -1,7 +1,22 @@
 package io.aconite.utils
 
+import io.aconite.AconiteException
+import io.aconite.annotations.*
+import kotlin.reflect.KFunction
+
 private val URL_PARAM_REGEX = Regex("^\\{(?<param>[^/{}]+)}|^(?<text>[^{}]+)")
 private val URL_VALIDATION_REGEX = Regex("^(?:\\{[^/{}]+}|[^{}]+)+$")
+
+private val METHOD_ANNOTATION = listOf(
+        MODULE::class,
+        DELETE::class,
+        GET::class,
+        HEAD::class,
+        OPTIONS::class,
+        PATCH::class,
+        POST::class,
+        PUT::class
+)
 
 /**
  * Raises when string passed to [UrlTemplate] is not an url.
@@ -170,4 +185,20 @@ private object EmptyUrlPart: UrlPart {
     }
 
     override fun toRegex() = ""
+}
+
+fun KFunction<*>.getHttpMethod(): Pair<String, String?> {
+    val annotations = annotations.filter { it.annotationClass in METHOD_ANNOTATION }
+    if (annotations.isEmpty()) throw AconiteException("Method $this is not annotated")
+    if (annotations.size > 1) throw AconiteException("Method $this has more than one annotations")
+    val annotation = annotations.first()
+
+    return when (annotation) {
+        is HTTP -> Pair(annotation.url, annotation.method)
+        is MODULE -> Pair(annotation.value, null)
+        else -> {
+            val getUrl = annotation.javaClass.getMethod("value")
+            Pair(getUrl.invoke(annotation) as String, annotation.annotationClass.simpleName)
+        }
+    }
 }
