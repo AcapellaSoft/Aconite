@@ -78,3 +78,8 @@ fun KType.cls(): KClass<*> {
     return classifier as? KClass<*> ?:
             throw AconiteException("Class of $this is not determined")
 }
+
+fun KFunction<*>.asyncReturnType(): KType {
+    if (!isSuspend) throw AconiteException("Method '$this' is not suspend")
+    return returnType
+}

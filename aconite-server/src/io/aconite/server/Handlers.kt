@@ -183,11 +183,6 @@ private fun responseSerializer(server: AconiteServer, fn: KFunction<*>): BodySer
             throw AconiteException("No suitable serializer found for response body of method $fn")
 }
 
-private fun KFunction<*>.asyncReturnType(): KType {
-    if (!isSuspend) throw AconiteException("Method '$this' is not suspend")
-    return returnType
-}
-
 private suspend fun KFunction<*>.httpCall(args: List<ArgumentTransformer>, obj: Any, request: Request): Any? {
     val missingArgs = args
             .filter { !it.check(request) }
