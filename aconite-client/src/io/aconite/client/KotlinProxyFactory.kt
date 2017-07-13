@@ -31,7 +31,7 @@ internal object KotlinProxyFactory {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun create(iface: KClass<*>, handler: KotlinInvocationHandler): Any {
+    fun <T: Any> create(iface: KClass<T>, handler: KotlinInvocationHandler): T {
         val cls = iface.java
         val info = map.computeIfAbsent(cls) {
             val proxyCls = Proxy.getProxyClass(cls.classLoader, cls)
@@ -42,6 +42,6 @@ internal object KotlinProxyFactory {
                             .toMap()
             )
         }
-        return info.ctor.newInstance(ModuleProxyHandler(info, handler))
+        return info.ctor.newInstance(ModuleProxyHandler(info, handler)) as T
     }
 }
