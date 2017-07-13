@@ -28,7 +28,7 @@ internal class FunctionModuleProxy(client: AconiteClient, fn: KFunction<*>): Fun
 
     override suspend fun call(request: Request, args: Array<Any?>): Any? {
         val appliedRequest = request.apply(appliers, args)
-        val module = ModuleProxyFactory.create(returnCls.java, appliedRequest)
+        val module = KotlinProxyFactory.create(returnCls) { _, _ -> null }
         return module
     }
 }
