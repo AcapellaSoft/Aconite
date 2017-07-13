@@ -20,9 +20,6 @@ interface TestModuleApi {
     @GET("/kv/keys/{key}")
     suspend fun get(@Path key: String, @Query version: String, @Header opt: String? = null, @Body body: String? = null): String
 
-    @PUT("/kv/keys/{key}")
-    suspend fun putNotAnnotated(key: String): String
-
     @POST("/kv/keys2/{key-in-path}")
     suspend fun post(@Path("key-in-path") key: String): String
 }
