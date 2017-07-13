@@ -7,6 +7,7 @@ import io.aconite.annotations.Body
 import io.aconite.annotations.Header
 import io.aconite.annotations.Path
 import io.aconite.annotations.Query
+import io.aconite.utils.asyncReturnType
 import io.aconite.utils.cls
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
@@ -23,18 +24,18 @@ internal interface FunctionProxy {
 }
 
 internal class FunctionModuleProxy(
-        client: AconiteClient,
+        val client: AconiteClient,
         fn: KFunction<*>,
         val url: String
 ): FunctionProxy {
     private val appliers = buildAppliers(client, fn)
-    private val returnType = fn.returnType
+    private val returnType = fn.asyncReturnType()
     private val returnCls = returnType.cls()
 
     override suspend fun call(url: String, request: Request, args: Array<Any?>): Any? {
         val appliedRequest = request.apply(appliers, args)
         val appliedUrl = url + this.url
-        val handler = ModuleProxy.create(returnType)
+        val handler = client.moduleFactory.create(returnType)
         val module = KotlinProxyFactory.create(returnCls) { fn, innerArgs ->
             handler.invoke(fn, appliedUrl, appliedRequest, innerArgs)
         }

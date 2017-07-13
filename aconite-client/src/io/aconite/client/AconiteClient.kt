@@ -15,4 +15,6 @@ class AconiteClient(
         val httpClient: HttpClient,
         val bodySerializer: BodySerializer.Factory = SimpleBodySerializer.Factory,
         val stringSerializer: StringSerializer.Factory = BuildInStringSerializers
-)
+) {
+    internal val moduleFactory = ModuleProxy.Factory(this)
+}
