@@ -11,7 +11,7 @@ class FunctionModuleProxyTest {
         val fn = RootModuleApi::class.functions.first { it.name == "test" }
 
         val proxy = FunctionModuleProxy(client, fn)
-        val result = proxy.call(Request("GET", body = body("foobar")), emptyList())
+        val result = proxy.call(Request("GET", body = body("foobar")), emptyArray())
 
         Assert.assertTrue(result is TestModuleApi)
     }

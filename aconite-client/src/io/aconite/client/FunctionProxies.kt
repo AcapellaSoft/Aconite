@@ -19,14 +19,14 @@ private val PARAM_ANNOTATIONS = listOf(
 )
 
 internal interface FunctionProxy {
-    suspend fun call(request: Request, args: List<Any?>): Any?
+    suspend fun call(request: Request, args: Array<Any?>): Any?
 }
 
 internal class FunctionModuleProxy(client: AconiteClient, fn: KFunction<*>): FunctionProxy {
     private val appliers = buildAppliers(client, fn)
     private val returnCls = fn.returnType.cls()
 
-    override suspend fun call(request: Request, args: List<Any?>): Any? {
+    override suspend fun call(request: Request, args: Array<Any?>): Any? {
         val appliedRequest = request.apply(appliers, args)
         val module = ModuleProxyFactory.create(returnCls.java, appliedRequest)
         return module
@@ -37,7 +37,7 @@ internal class FunctionMethodProxy(client: AconiteClient, fn: KFunction<*>): Fun
     private val appliers = buildAppliers(client, fn)
     private val client = client.httpClient
 
-    override suspend fun call(request: Request, args: List<Any?>): Response {
+    override suspend fun call(request: Request, args: Array<Any?>): Response {
         val appliedRequest = request.apply(appliers, args)
         return client.makeRequest(appliedRequest)
     }
@@ -122,7 +122,7 @@ private class QueryApplier(client: AconiteClient, param: KParameter, name: Strin
     }
 }
 
-private fun Request.apply(appliers: List<ArgumentApplier>, values: List<Any?>): Request {
+private fun Request.apply(appliers: List<ArgumentApplier>, values: Array<Any?>): Request {
     var appliedRequest = this
     for (i in 0..appliers.size - 1)
         appliedRequest = appliers[i].apply(appliedRequest, values[i])

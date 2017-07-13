@@ -14,7 +14,7 @@ class FunctionMethodProxyTest {
         val fn = TestModuleApi::class.functions.first { it.name == "get" }
 
         val proxy = FunctionMethodProxy(client, fn)
-        val result = proxy.call(Request("GET"), listOf("foo", "bar", "baz", "qux"))
+        val result = proxy.call(Request("GET"), arrayOf("foo", "bar", "baz", "qux"))
 
         Assert.assertEquals("GET", result.body())
     }
@@ -26,7 +26,7 @@ class FunctionMethodProxyTest {
         val fn = TestModuleApi::class.functions.first { it.name == "get" }
 
         val proxy = FunctionMethodProxy(client, fn)
-        val result = proxy.call(Request(), listOf("foo", "bar", "baz", "qux"))
+        val result = proxy.call(Request(), arrayOf("foo", "bar", "baz", "qux"))
 
         Assert.assertEquals("qux", result.body())
     }
@@ -38,7 +38,7 @@ class FunctionMethodProxyTest {
         val fn = TestModuleApi::class.functions.first { it.name == "get" }
 
         val proxy = FunctionMethodProxy(client, fn)
-        val result = proxy.call(Request(), listOf("foo", "bar", "baz", "qux"))
+        val result = proxy.call(Request(), arrayOf("foo", "bar", "baz", "qux"))
 
         Assert.assertEquals("baz", result.body())
     }
@@ -50,7 +50,7 @@ class FunctionMethodProxyTest {
         val fn = TestModuleApi::class.functions.first { it.name == "get" }
 
         val proxy = FunctionMethodProxy(client, fn)
-        val result = proxy.call(Request(), listOf("foo", "bar", "baz", "qux"))
+        val result = proxy.call(Request(), arrayOf("foo", "bar", "baz", "qux"))
 
         Assert.assertEquals("foo", result.body())
     }
@@ -62,7 +62,7 @@ class FunctionMethodProxyTest {
         val fn = TestModuleApi::class.functions.first { it.name == "get" }
 
         val proxy = FunctionMethodProxy(client, fn)
-        val result = proxy.call(Request(), listOf("foo", "bar", "baz", "qux"))
+        val result = proxy.call(Request(), arrayOf("foo", "bar", "baz", "qux"))
 
         Assert.assertEquals("bar", result.body())
     }
