@@ -16,7 +16,7 @@ class FunctionMethodProxyTest {
         val proxy = FunctionMethodProxy(client, fn, "/test/url", "GET")
         val result = proxy.call("", Request(), arrayOf("foo", "bar", "baz", "qux"))
 
-        Assert.assertEquals("GET", result.body())
+        Assert.assertEquals("GET", result)
     }
 
     @Test fun testBodyParameter() = asyncTest {
@@ -28,7 +28,7 @@ class FunctionMethodProxyTest {
         val proxy = FunctionMethodProxy(client, fn, "/test/url", "GET")
         val result = proxy.call("", Request(), arrayOf("foo", "bar", "baz", "qux"))
 
-        Assert.assertEquals("qux", result.body())
+        Assert.assertEquals("qux", result)
     }
 
     @Test fun testHeaderParameter() = asyncTest {
@@ -40,7 +40,7 @@ class FunctionMethodProxyTest {
         val proxy = FunctionMethodProxy(client, fn, "/test/url", "GET")
         val result = proxy.call("", Request(), arrayOf("foo", "bar", "baz", "qux"))
 
-        Assert.assertEquals("baz", result.body())
+        Assert.assertEquals("baz", result)
     }
 
     @Test fun testPathParameter() = asyncTest {
@@ -52,7 +52,7 @@ class FunctionMethodProxyTest {
         val proxy = FunctionMethodProxy(client, fn, "/test/url", "GET")
         val result = proxy.call("", Request(), arrayOf("foo", "bar", "baz", "qux"))
 
-        Assert.assertEquals("foo", result.body())
+        Assert.assertEquals("foo", result)
     }
 
     @Test fun testQueryParameter() = asyncTest {
@@ -64,7 +64,7 @@ class FunctionMethodProxyTest {
         val proxy = FunctionMethodProxy(client, fn, "/test/url", "GET")
         val result = proxy.call("", Request(), arrayOf("foo", "bar", "baz", "qux"))
 
-        Assert.assertEquals("bar", result.body())
+        Assert.assertEquals("bar", result)
     }
 
     @Test fun testAppendUrl() = asyncTest {
@@ -76,6 +76,6 @@ class FunctionMethodProxyTest {
         val proxy = FunctionMethodProxy(client, fn, "/test/url", "GET")
         val result = proxy.call("/prefix", Request(), arrayOf("foo", "bar", "baz", "qux"))
 
-        Assert.assertEquals("/prefix/test/url", result.body())
+        Assert.assertEquals("/prefix/test/url", result)
     }
 }

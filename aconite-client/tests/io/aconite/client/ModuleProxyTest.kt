@@ -20,11 +20,11 @@ class ModuleProxyTest {
         val proxy = client.moduleFactory.create(RootModuleApi::class.createType())
         val fn = RootModuleApi::class.functions.first { it.name == "patch" }
 
-        val result = suspendCoroutine<Response> { c ->
+        val result = suspendCoroutine<Any?> { c ->
             proxy.invoke(fn, "/test/url", Request(), arrayOf("foobar", c))
         }
 
-        Assert.assertEquals("foobar", result.body())
+        Assert.assertEquals("foobar", result)
     }
 
     @Test fun testCallProxyModule() = asyncTest {

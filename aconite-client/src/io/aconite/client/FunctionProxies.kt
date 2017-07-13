@@ -2,7 +2,6 @@ package io.aconite.client
 
 import io.aconite.AconiteException
 import io.aconite.Request
-import io.aconite.Response
 import io.aconite.annotations.Body
 import io.aconite.annotations.Header
 import io.aconite.annotations.Path
@@ -50,12 +49,16 @@ internal class FunctionMethodProxy(
         val method: String
 ): FunctionProxy {
     private val appliers = buildAppliers(client, fn)
+    private val returnType = fn.asyncReturnType()
+    private val resultSerializer = client.bodySerializer.create(fn, returnType) ?:
+            throw AconiteException("No suitable serializer found for response body in function $fn")
     private val client = client.httpClient
 
-    override suspend fun call(url: String, request: Request, args: Array<Any?>): Response {
+    override suspend fun call(url: String, request: Request, args: Array<Any?>): Any? {
         val appliedRequest = request.apply(appliers, args).copy(method = method)
         val appliedUrl = url + this.url
-        return client.makeRequest(appliedUrl, appliedRequest)
+        val response = client.makeRequest(appliedUrl, appliedRequest)
+        return response.body?.let { resultSerializer.deserialize(it) }
     }
 }
 
