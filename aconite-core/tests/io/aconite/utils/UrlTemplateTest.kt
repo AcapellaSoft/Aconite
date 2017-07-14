@@ -102,4 +102,14 @@ class UrlTemplateTest {
         val result = template.parseEntire("/")!!
         Assert.assertNotNull(result)
     }
+
+    @Test
+    fun testFormat() {
+        val template = UrlTemplate("/foo/{arg1}/bar/{arg2}")
+        val url = template.format(mapOf(
+                "arg1" to "123",
+                "arg2" to "456"
+        ))
+        Assert.assertEquals("/foo/123/bar/456", url)
+    }
 }
