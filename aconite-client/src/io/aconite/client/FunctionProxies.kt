@@ -6,6 +6,7 @@ import io.aconite.annotations.Body
 import io.aconite.annotations.Header
 import io.aconite.annotations.Path
 import io.aconite.annotations.Query
+import io.aconite.utils.UrlTemplate
 import io.aconite.utils.asyncReturnType
 import io.aconite.utils.cls
 import kotlin.reflect.KFunction
@@ -25,15 +26,16 @@ internal interface FunctionProxy {
 internal class FunctionModuleProxy(
         val client: AconiteClient,
         fn: KFunction<*>,
-        val url: String
+        url: String
 ): FunctionProxy {
     private val appliers = buildAppliers(client, fn)
     private val returnType = fn.asyncReturnType()
     private val returnCls = returnType.cls()
+    private val url = UrlTemplate(url)
 
     override suspend fun call(url: String, request: Request, args: Array<Any?>): Any? {
         val appliedRequest = request.apply(appliers, args)
-        val appliedUrl = url + this.url
+        val appliedUrl = url + this.url.format(appliedRequest.path)
         val handler = client.moduleFactory.create(returnType)
         val module = KotlinProxyFactory.create(returnCls) { fn, innerArgs ->
             handler.invoke(fn, appliedUrl, appliedRequest, innerArgs)
@@ -45,7 +47,7 @@ internal class FunctionModuleProxy(
 internal class FunctionMethodProxy(
         client: AconiteClient,
         fn: KFunction<*>,
-        val url: String,
+        url: String,
         val method: String
 ): FunctionProxy {
     private val appliers = buildAppliers(client, fn)
@@ -53,10 +55,11 @@ internal class FunctionMethodProxy(
     private val resultSerializer = client.bodySerializer.create(fn, returnType) ?:
             throw AconiteException("No suitable serializer found for response body in function $fn")
     private val client = client.httpClient
+    private val url = UrlTemplate(url)
 
     override suspend fun call(url: String, request: Request, args: Array<Any?>): Any? {
         val appliedRequest = request.apply(appliers, args).copy(method = method)
-        val appliedUrl = url + this.url
+        val appliedUrl = url + this.url.format(appliedRequest.path)
         val response = client.makeRequest(appliedUrl, appliedRequest)
         return response.body?.let { resultSerializer.deserialize(it) }
     }

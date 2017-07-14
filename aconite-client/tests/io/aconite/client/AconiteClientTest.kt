@@ -41,4 +41,12 @@ class AconiteClientTest {
         val result = module.get("key", "version", "opt", "body")
         Assert.assertEquals("body", result)
     }
+
+    @Test fun testPathParameters() = asyncTest {
+        val client = AconiteClient(httpClient = TestHttpClient { url, _ -> Response(body = body(url)) })
+        val proxy = client.create<TestModuleApi>()
+
+        val result = proxy.get("param", "version")
+        Assert.assertEquals("/kv/keys/param", result)
+    }
 }
