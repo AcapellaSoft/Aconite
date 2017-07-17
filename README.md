@@ -30,23 +30,21 @@ server.register(HelloImpl(), HelloApi::class)
 VertxHandler.runServer(server, 8080)
 ```
 
-4) Generate an interface implementation for the client (not yet implemented):
+4) Generate an interface implementation for the client:
 
 ```kotlin
-val client = AconiteClient("http://localhost:8080")
-val api = client.create(HelloApi::class)
+val client = AconiteClient(VertxHttpClient(8080, "localhost"))
+val api = client.create<HelloApi>()
 ```
 
-5) Make a call (not yet implemented):
+5) Make a call:
 
 ```kotlin
-run(CommonPool) {
-    val response = api.hello("World")
-    println(response) // prints "Hello, World!"
-}
+val response = api.hello("World")
+println(response) // prints "Hello, World!"
 ```
 
-or test the server by curl:
+6) Test the server by curl:
 
 ```bash
 $ curl -XPOST http://localhost:8080/hello?name=World
