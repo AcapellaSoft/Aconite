@@ -24,7 +24,7 @@ private inline fun <reified T: Any> factoryFor(serializer: StringSerializer): St
 
 private inline fun <reified T: Any> factoryFor(noinline deserializer: (String) -> T): StringSerializer.Factory {
     return factoryFor<T>(object : StringSerializer {
-        override fun serialize(obj: Any?) = obj.toString()
+        override fun serialize(obj: Any?) = obj?.toString()
 
         override fun deserialize(s: String) = try {
             deserializer(s)

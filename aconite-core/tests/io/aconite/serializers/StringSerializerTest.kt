@@ -57,4 +57,12 @@ class StringSerializerTest {
         Assert.assertEquals(expected, actual)
         Assert.assertEquals(expected.toInstant().toEpochMilli().toString(), string)
     }
+
+    @Test fun testNull() {
+        val serializer = DefaultStringSerializer.create(EmptyAnnotations, String::class.createType())!!
+
+        val expected = null
+        val string = serializer.serialize(expected)
+        Assert.assertNull(string)
+    }
 }
