@@ -39,7 +39,7 @@ class AconiteServerTest {
         Assert.assertEquals(405, response?.code)
     }
 
-    @Test
+    @Test(expected = AconiteException::class)
     fun testRegisterFailed() = asyncTest {
         val server = AconiteServer(
                 bodySerializer = TestBodySerializer.Factory(),
@@ -47,11 +47,6 @@ class AconiteServerTest {
                 callAdapter = TestCallAdapter(),
                 methodFilter = MethodFilterPassAll()
         )
-        try {
-            server.register(RootModule(), RootModuleApi::class)
-            Assert.assertTrue(false)
-        } catch (ex: AconiteException) {
-            Assert.assertTrue(true)
-        }
+        server.register(RootModule(), RootModuleApi::class)
     }
 }

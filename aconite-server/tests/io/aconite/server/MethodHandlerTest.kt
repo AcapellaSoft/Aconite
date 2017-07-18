@@ -64,32 +64,24 @@ class MethodHandlerTest {
         Assert.assertEquals("key = abc, version = 123, opt = foobar, body = null", response.body())
     }
 
-    @Test
+    @Test(expected = ArgumentMissingException::class)
     fun testNotAccepted() = asyncTest {
         val obj = TestModule()
         val fn = TestModuleApi::class.functions.first { it.name == "get" }
         val handler = MethodHandler(server, "GET", fn)
 
-        try {
-            handler.accept(obj, "", Request(
-                    method = "GET",
-                    query = mapOf("version" to "123")
-            ))
-            Assert.assertTrue(false)
-        } catch (ex: ArgumentMissingException) {
-            Assert.assertTrue(true)
-        }
+        handler.accept(obj, "", Request(
+                method = "GET",
+                query = mapOf("version" to "123")
+        ))
+        Assert.assertTrue(false)
     }
 
-    @Test()
+    @Test(expected = AconiteException::class)
     fun testNotAnnotated() = asyncTest {
         val fn = TestModuleApi::class.functions.first { it.name == "putNotAnnotated" }
-        try {
-            MethodHandler(server, "GET", fn)
-            Assert.assertTrue(false)
-        } catch (ex: AconiteException) {
-            Assert.assertTrue(true)
-        }
+        MethodHandler(server, "GET", fn)
+        Assert.assertTrue(false)
     }
 
     @Test
