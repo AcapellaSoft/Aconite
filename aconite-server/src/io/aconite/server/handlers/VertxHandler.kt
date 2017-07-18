@@ -45,7 +45,8 @@ class VertxHandler(private val vertx: Vertx, private val server: AconiteServer):
         async(coroutineCtx) {
             try {
                 val request = makeRequest(routingCtx)
-                val response = server.accept(routingCtx.request().uri(), request)
+                val url = routingCtx.request().uri().substringBefore('?')
+                val response = server.accept(url, request)
                 if (response != null) {
                     makeResponse(routingCtx, response)
                 } else {
