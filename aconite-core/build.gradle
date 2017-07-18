@@ -72,6 +72,8 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
     compile group: 'com.google.code.gson', name: 'gson', version: '1.7.2'
     compile group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: '1.1.2-2'
+    compile group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-core', version: '0.16'
+    compile group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-jdk8', version: '0.16'
     testCompile 'junit:junit:4.12'
 }
 

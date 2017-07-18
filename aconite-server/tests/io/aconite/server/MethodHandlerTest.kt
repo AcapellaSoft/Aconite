@@ -3,6 +3,7 @@ package io.aconite.server
 import io.aconite.AconiteException
 import io.aconite.ArgumentMissingException
 import io.aconite.Request
+import kotlinx.coroutines.experimental.CancellationException
 import org.junit.Assert
 import org.junit.Test
 import kotlin.reflect.full.functions
@@ -96,5 +97,13 @@ class MethodHandlerTest {
         ))
 
         Assert.assertEquals("abc", response.body())
+    }
+
+    @Test(expected = CancellationException::class)
+    fun testMethodCallCancellation() = asyncTest(1) {
+        val obj = RootModule()
+        val fn = RootModuleApi::class.functions.first { it.name == "putInfinite" }
+        val handler = MethodHandler(server, "PUT", fn)
+        handler.accept(obj, "", Request("PUT"))
     }
 }

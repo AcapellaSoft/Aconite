@@ -1,6 +1,8 @@
 package io.aconite.client
 
 import io.aconite.Response
+import kotlinx.coroutines.experimental.CancellationException
+import kotlinx.coroutines.experimental.suspendCancellableCoroutine
 import org.junit.Assert
 import org.junit.Test
 
@@ -48,5 +50,14 @@ class AconiteClientTest {
 
         val result = proxy.get("param", "version")
         Assert.assertEquals("/kv/keys/param", result)
+    }
+
+    @Test(expected = CancellationException::class)
+    fun testMethodCancellation() = asyncTest(1) {
+        val client = AconiteClient(httpClient = TestHttpClient { _, _ ->
+            suspendCancellableCoroutine<Response> { /* will block forever */ }
+        })
+        val api = client.create<RootModuleApi>()
+        api.patch("foo")
     }
 }

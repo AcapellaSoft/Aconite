@@ -10,13 +10,13 @@ import io.vertx.core.buffer.Buffer
 import io.vertx.core.http.HttpMethod
 import io.vertx.ext.web.client.HttpResponse
 import io.vertx.ext.web.client.WebClient
+import kotlinx.coroutines.experimental.suspendCancellableCoroutine
 import kotlin.coroutines.experimental.Continuation
-import kotlin.coroutines.experimental.suspendCoroutine
 
 class VertxHttpClient(val port: Int, val host: String, vertx: Vertx = Vertx.vertx()) : io.aconite.client.HttpClient {
     private val client = WebClient.create(vertx)
 
-    suspend override fun makeRequest(url: String, request: Request) = suspendCoroutine<Response> { c ->
+    suspend override fun makeRequest(url: String, request: Request) = suspendCancellableCoroutine<Response> { c ->
         val handler = Handler<AsyncResult<HttpResponse<Buffer>>> { response ->
             handleResponse(c, response)
         }

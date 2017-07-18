@@ -1,9 +1,9 @@
 package io.aconite.utils
 
+import kotlinx.coroutines.experimental.suspendCancellableCoroutine
 import java.lang.reflect.InvocationTargetException
 import kotlin.coroutines.experimental.Continuation
 import kotlin.coroutines.experimental.startCoroutine
-import kotlin.coroutines.experimental.suspendCoroutine
 import kotlin.reflect.KFunction
 
 /**
@@ -24,7 +24,7 @@ val COROUTINE_SUSPENDED: Any = {
  * @param[args] arguments of the called function
  * @return result of the called function
  */
-suspend fun <R> KFunction<R>.asyncCall(vararg args: Any?) = suspendCoroutine<R> { c ->
+suspend fun <R> KFunction<R>.asyncCall(vararg args: Any?) = suspendCancellableCoroutine<R> { c ->
     try {
         val r = call(*args, c)
         if (r !== COROUTINE_SUSPENDED) c.resume(r)

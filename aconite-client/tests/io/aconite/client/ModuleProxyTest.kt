@@ -2,6 +2,7 @@ package io.aconite.client
 
 import io.aconite.Request
 import io.aconite.Response
+import kotlinx.coroutines.experimental.suspendCancellableCoroutine
 import org.junit.Assert
 import org.junit.Test
 import kotlin.coroutines.experimental.suspendCoroutine
@@ -20,7 +21,7 @@ class ModuleProxyTest {
         val proxy = client.moduleFactory.create(RootModuleApi::class.createType())
         val fn = RootModuleApi::class.functions.first { it.name == "patch" }
 
-        val result = suspendCoroutine<Any?> { c ->
+        val result = suspendCancellableCoroutine<Any?> { c ->
             proxy.invoke(fn, "/test/url", Request(), arrayOf("foobar", c))
         }
 
@@ -32,7 +33,7 @@ class ModuleProxyTest {
         val proxy = client.moduleFactory.create(RootModuleApi::class.createType())
         val fn = RootModuleApi::class.functions.first { it.name == "test" }
 
-        val result = suspendCoroutine<Any> { c ->
+        val result = suspendCancellableCoroutine<Any> { c ->
             proxy.invoke(fn, "/test/url", Request(), arrayOf(c))
         }
 
