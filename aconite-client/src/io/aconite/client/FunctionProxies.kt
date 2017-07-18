@@ -45,7 +45,7 @@ internal class FunctionModuleProxy(
 }
 
 internal class FunctionMethodProxy(
-        client: AconiteClient,
+        val client: AconiteClient,
         fn: KFunction<*>,
         url: String,
         val method: String
@@ -54,13 +54,15 @@ internal class FunctionMethodProxy(
     private val returnType = fn.asyncReturnType()
     private val resultSerializer = client.bodySerializer.create(fn, returnType) ?:
             throw AconiteException("No suitable serializer found for response body in function $fn")
-    private val client = client.httpClient
     private val url = UrlTemplate(url)
 
     override suspend fun call(url: String, request: Request, args: Array<Any?>): Any? {
         val appliedRequest = request.apply(appliers, args).copy(method = method)
         val appliedUrl = url + this.url.format(appliedRequest.path)
-        val response = client.makeRequest(appliedUrl, appliedRequest)
+        val response = client.httpClient.makeRequest(appliedUrl, appliedRequest)
+
+        if (response.code != 200)
+            throw client.errorHandler.handle(response)
         return response.body?.let { resultSerializer.deserialize(it) }
     }
 }
