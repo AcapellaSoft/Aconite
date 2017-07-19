@@ -3,9 +3,9 @@ package io.aconite.server
 import io.aconite.AconiteException
 import io.aconite.ArgumentMissingException
 import io.aconite.Request
-import kotlinx.coroutines.experimental.CancellationException
 import org.junit.Assert
 import org.junit.Test
+import java.util.concurrent.CancellationException
 import kotlin.reflect.full.functions
 
 private val server = AconiteServer(
