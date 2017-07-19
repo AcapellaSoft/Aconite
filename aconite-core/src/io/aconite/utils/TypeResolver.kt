@@ -36,6 +36,7 @@ fun <R> resolve(parent: KType, fn: KFunction<R>) = object: KFunction<R> by fn {
 
     override val returnType = resolve(parent, fn.returnType)
     override val parameters = fn.parameters.map(this::KResolvedParameter)
+    override fun toString() = fn.toString()
 }
 
 private fun resolveParam(parent: KType, param: KTypeParameter): KType? {
