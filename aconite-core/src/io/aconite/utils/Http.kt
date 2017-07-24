@@ -1,7 +1,22 @@
 package io.aconite.utils
 
+import io.aconite.AconiteException
+import io.aconite.annotations.*
+import kotlin.reflect.KFunction
+
 private val URL_PARAM_REGEX = Regex("^\\{(?<param>[^/{}]+)}|^(?<text>[^{}]+)")
 private val URL_VALIDATION_REGEX = Regex("^(?:\\{[^/{}]+}|[^{}]+)+$")
+
+private val METHOD_ANNOTATION = listOf(
+        MODULE::class,
+        DELETE::class,
+        GET::class,
+        HEAD::class,
+        OPTIONS::class,
+        PATCH::class,
+        POST::class,
+        PUT::class
+)
 
 /**
  * Raises when string passed to [UrlTemplate] is not an url.
@@ -73,6 +88,10 @@ class UrlTemplate(url: String): Comparable<UrlTemplate> {
         return parseInner(match, url).second
     }
 
+    fun format(params: Map<String, String>) = parts
+            .map { it.format(params) }
+            .joinToString("")
+
     private fun parseInner(match: MatchResult, url: String): Pair<String, Map<String, String>> {
         val values = params
                 .mapIndexed { idx, name -> Pair(name, match.groups[idx + 1]?.value) }
@@ -99,7 +118,7 @@ class UrlTemplate(url: String): Comparable<UrlTemplate> {
 
             assert(gParam != null || gText != null)
             if (gParam != null) {
-                parts.add(ParameterUrlPart())
+                parts.add(ParameterUrlPart(gParam.value))
                 params.add(gParam.value)
             } else if (gText != null) {
                 parts.add(TextUrlPart(gText.value))
@@ -131,6 +150,7 @@ class UrlTemplate(url: String): Comparable<UrlTemplate> {
 
 private interface UrlPart: Comparable<UrlPart> {
     fun toRegex(): String
+    fun format(params: Map<String, String>): String
 }
 
 private class TextUrlPart(val text: String): UrlPart {
@@ -144,9 +164,10 @@ private class TextUrlPart(val text: String): UrlPart {
     }
 
     override fun toRegex() = Regex.escape(text)
+    override fun format(params: Map<String, String>) = text
 }
 
-private class ParameterUrlPart: UrlPart {
+private class ParameterUrlPart(val name: String): UrlPart {
     override fun compareTo(other: UrlPart): Int {
         return when (other) {
             is TextUrlPart -> -1
@@ -157,6 +178,7 @@ private class ParameterUrlPart: UrlPart {
     }
 
     override fun toRegex() = "([^/]+)"
+    override fun format(params: Map<String, String>) = params[name]!!
 }
 
 private object EmptyUrlPart: UrlPart {
@@ -170,4 +192,21 @@ private object EmptyUrlPart: UrlPart {
     }
 
     override fun toRegex() = ""
+    override fun format(params: Map<String, String>) = ""
+}
+
+fun KFunction<*>.getHttpMethod(): Pair<String, String?> {
+    val annotations = annotations.filter { it.annotationClass in METHOD_ANNOTATION }
+    if (annotations.isEmpty()) throw AconiteException("Method $this is not annotated")
+    if (annotations.size > 1) throw AconiteException("Method $this has more than one annotations")
+    val annotation = annotations.first()
+
+    return when (annotation) {
+        is HTTP -> Pair(annotation.url, annotation.method)
+        is MODULE -> Pair(annotation.value, null)
+        else -> {
+            val getUrl = annotation.javaClass.getMethod("value")
+            Pair(getUrl.invoke(annotation) as String, annotation.annotationClass.simpleName)
+        }
+    }
 }

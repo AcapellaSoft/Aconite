@@ -1,6 +1,6 @@
-package io.aconite.server.serializers
+package io.aconite.serializers
 
-import io.aconite.server.EmptyAnnotations
+import io.aconite.EmptyAnnotations
 import io.aconite.StringSerializer
 import org.junit.Assert
 import org.junit.Test
@@ -23,25 +23,25 @@ class AnyOfStringSerializerTest {
     }
 
     @Test fun testFirstAcceptableSelected() {
-        val serializer = anyOf(
+        val serializer = oneOf(
                 TestStringSerializer(String::class),
-                SimpleStringSerializerFactory()
+                BuildInStringSerializers
         )
         val selected = serializer.create(EmptyAnnotations, String::class.createType())
         Assert.assertEquals(serializer.serializers.first(), selected)
     }
 
     @Test fun testSelectOtherIfNotAccepted() {
-        val serializer = anyOf(
+        val serializer = oneOf(
                 TestStringSerializer(String::class),
-                SimpleStringSerializerFactory()
+                BuildInStringSerializers
         )
         val selected = serializer.create(EmptyAnnotations, Long::class.createType())
         Assert.assertNotEquals(serializer.serializers.first(), selected)
     }
 
     @Test fun testNoOneAccepted() {
-        val serializer = anyOf(
+        val serializer = oneOf(
                 TestStringSerializer(String::class),
                 TestStringSerializer(Long::class)
         )

@@ -1,22 +1,22 @@
 package io.aconite.server.errors
 
 import com.google.gson.Gson
+import io.aconite.AconiteException
 import io.aconite.ArgumentMissingException
 import io.aconite.BadRequestException
 import io.aconite.MethodNotAllowedException
-import io.aconite.server.AconiteServerException
 import org.junit.Assert
 import org.junit.Test
 
 class ExtendedCodeErrorHandlerTest {
     val gson = Gson()
 
-    @Test(expected = AconiteServerException::class)
+    @Test(expected = AconiteException::class)
     fun testRegisterNotHttpException() {
         ExtendedCodeErrorHandler.register<NotHttpException>()
     }
 
-    @Test(expected = AconiteServerException::class)
+    @Test(expected = AconiteException::class)
     fun testRegisterWithoutAnnotation() {
         ExtendedCodeErrorHandler.register<WithoutAnnotationException>()
     }

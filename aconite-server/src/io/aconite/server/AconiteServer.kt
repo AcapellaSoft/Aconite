@@ -1,18 +1,15 @@
 package io.aconite.server
 
-import io.aconite.BodySerializer
-import io.aconite.Request
-import io.aconite.Response
-import io.aconite.StringSerializer
+import io.aconite.*
 import io.aconite.server.adapters.SuspendCallAdapter
 import io.aconite.server.errors.PassErrorHandler
 import io.aconite.server.filters.PassMethodFilter
-import io.aconite.server.serializers.SimpleBodySerializer
-import io.aconite.server.serializers.SimpleStringSerializerFactory
+import io.aconite.serializers.BuildInStringSerializers
+import io.aconite.serializers.SimpleBodySerializer
+import java.util.concurrent.CompletableFuture
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.createType
-import java.util.concurrent.CompletableFuture
 
 /**
  * Used to wrap functions, that are not `suspend`, but use some other form of an asynchronous call,
@@ -52,18 +49,12 @@ interface ErrorHandler {
 }
 
 /**
- * Throws if something go wrong with HTTP interface registration. Most of the time this
- * exception means, that the interface is not satisfy some constraints.
- */
-class AconiteServerException(message: String): RuntimeException(message)
-
-/**
  * Main server class, that are used to register HTTP interfaces and accepts HTTP requests.
  *
  */
 class AconiteServer(
         val bodySerializer: BodySerializer.Factory = SimpleBodySerializer.Factory,
-        val stringSerializer: StringSerializer.Factory = SimpleStringSerializerFactory(),
+        val stringSerializer: StringSerializer.Factory = BuildInStringSerializers,
         val callAdapter: CallAdapter = SuspendCallAdapter,
         val methodFilter: MethodFilter = PassMethodFilter,
         val errorHandler: ErrorHandler = PassErrorHandler

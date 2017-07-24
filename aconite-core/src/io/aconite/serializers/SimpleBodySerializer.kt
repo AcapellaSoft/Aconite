@@ -1,4 +1,4 @@
-package io.aconite.server.serializers
+package io.aconite.serializers
 
 import io.aconite.BodyBuffer
 import io.aconite.BodySerializer

@@ -1,4 +1,4 @@
-package io.aconite.server.serializers
+package io.aconite.serializers
 
 import io.aconite.StringSerializer
 import kotlin.reflect.KAnnotatedElement
@@ -10,4 +10,4 @@ class AnyOfStringSerializerFactory(vararg val serializers: StringSerializer.Fact
             .firstOrNull { it != null }
 }
 
-fun anyOf(vararg serializers: StringSerializer.Factory) = AnyOfStringSerializerFactory(*serializers)
+fun oneOf(vararg serializers: StringSerializer.Factory) = AnyOfStringSerializerFactory(*serializers)

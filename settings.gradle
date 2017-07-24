@@ -1,1 +1,1 @@
-include 'aconite-core', 'aconite-server'
+include 'aconite-core', 'aconite-server', 'aconite-client'

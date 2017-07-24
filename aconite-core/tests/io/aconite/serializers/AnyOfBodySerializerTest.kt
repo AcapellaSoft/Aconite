@@ -1,8 +1,8 @@
-package io.aconite.server.serializers
+package io.aconite.serializers
 
 import io.aconite.BodyBuffer
 import io.aconite.BodySerializer
-import io.aconite.server.EmptyAnnotations
+import io.aconite.EmptyAnnotations
 import org.junit.Assert
 import org.junit.Test
 import kotlin.reflect.KAnnotatedElement
@@ -24,7 +24,7 @@ class AnyOfBodySerializerTest {
     }
 
     @Test fun testFirstAcceptableSelected() {
-        val serializer = anyOf(
+        val serializer = oneOf(
                 TestBodySerializer(String::class),
                 GsonBodySerializer.Factory()
         )
@@ -33,7 +33,7 @@ class AnyOfBodySerializerTest {
     }
 
     @Test fun testSelectOtherIfNotAccepted() {
-        val serializer = anyOf(
+        val serializer = oneOf(
                 TestBodySerializer(String::class),
                 GsonBodySerializer.Factory()
         )
@@ -42,7 +42,7 @@ class AnyOfBodySerializerTest {
     }
 
     @Test fun testNoOneAccepted() {
-        val serializer = anyOf(
+        val serializer = oneOf(
                 TestBodySerializer(String::class),
                 TestBodySerializer(Long::class)
         )

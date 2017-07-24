@@ -1,13 +1,9 @@
-package io.aconite.server.serializers
+package io.aconite.serializers
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParseException
-import io.aconite.BadRequestException
-import io.aconite.UnsupportedMediaTypeException
-import io.aconite.BodyBuffer
-import io.aconite.BodySerializer
-import io.aconite.Buffer
+import io.aconite.*
 import io.aconite.utils.toJavaType
 import java.lang.reflect.Type
 import kotlin.reflect.KAnnotatedElement
@@ -26,8 +22,11 @@ class GsonBodySerializer(val gson: Gson, val type: Type): BodySerializer {
     )
 
     override fun deserialize(body: BodyBuffer): Any? {
+        if (body.content.bytes.isEmpty()) return null
+
         if (body.contentType.toLowerCase() != "application/json")
             throw UnsupportedMediaTypeException("Only 'application/json' media type supported")
+
         try {
             return gson.fromJson(body.content.string, type)
         } catch (ex: JsonParseException) {

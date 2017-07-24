@@ -2,7 +2,9 @@ package io.aconite.server
 
 import io.aconite.*
 import io.aconite.annotations.*
-import kotlinx.coroutines.experimental.future.future
+import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.experimental.suspendCancellableCoroutine
+import kotlinx.coroutines.experimental.withTimeout
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KAnnotatedElement
@@ -12,7 +14,9 @@ import kotlin.reflect.KType
 @Suppress("unused")
 interface RootModuleApi {
     @MODULE("/foo/bar") suspend fun test(): TestModuleApi
+    @MODULE("/foo/bar/inf") suspend fun testInfinite(): TestModuleApi
     @PATCH suspend fun patch(@Body newValue: String): String
+    @PUT suspend fun putInfinite(): String
 }
 
 interface TestModuleApi {
@@ -34,7 +38,9 @@ interface TestModuleMixedCallsApi {
 @Suppress("unused")
 class RootModule: RootModuleApi {
     override suspend fun test() = TestModule()
+    override suspend fun testInfinite() = suspendCancellableCoroutine<TestModuleApi> { /* will block forever */ }
     override suspend fun patch(newValue: String) = "newValue = $newValue"
+    override suspend fun putInfinite() = suspendCancellableCoroutine<String> { /* will block forever */ }
 }
 
 @Suppress("unused")
@@ -102,5 +108,6 @@ fun Response?.body() = this?.body?.content?.string!!
 
 fun body(s: String) = BodyBuffer(Buffer.wrap(s), "text/plain")
 
-fun asyncTest(timeout: Long = 10, unit: TimeUnit = TimeUnit.SECONDS, block: suspend () -> Unit)
-        = future { block() }.get(timeout, unit)!!
+fun asyncTest(timeout: Long = 10, unit: TimeUnit = TimeUnit.SECONDS, block: suspend () -> Unit) = runBlocking {
+    withTimeout(timeout, unit, block)
+}

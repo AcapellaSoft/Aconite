@@ -1,5 +1,6 @@
 package io.aconite.server
 
+import io.aconite.AconiteException
 import io.aconite.Request
 import org.junit.Assert
 import org.junit.Test
@@ -38,7 +39,7 @@ class AconiteServerTest {
         Assert.assertEquals(405, response?.code)
     }
 
-    @Test
+    @Test(expected = AconiteException::class)
     fun testRegisterFailed() = asyncTest {
         val server = AconiteServer(
                 bodySerializer = TestBodySerializer.Factory(),
@@ -46,11 +47,6 @@ class AconiteServerTest {
                 callAdapter = TestCallAdapter(),
                 methodFilter = MethodFilterPassAll()
         )
-        try {
-            server.register(RootModule(), RootModuleApi::class)
-            Assert.assertTrue(false)
-        } catch (ex: AconiteServerException) {
-            Assert.assertTrue(true)
-        }
+        server.register(RootModule(), RootModuleApi::class)
     }
 }

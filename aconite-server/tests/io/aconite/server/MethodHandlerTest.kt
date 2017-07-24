@@ -1,9 +1,11 @@
 package io.aconite.server
 
+import io.aconite.AconiteException
 import io.aconite.ArgumentMissingException
 import io.aconite.Request
 import org.junit.Assert
 import org.junit.Test
+import java.util.concurrent.CancellationException
 import kotlin.reflect.full.functions
 
 private val server = AconiteServer(
@@ -63,32 +65,24 @@ class MethodHandlerTest {
         Assert.assertEquals("key = abc, version = 123, opt = foobar, body = null", response.body())
     }
 
-    @Test
+    @Test(expected = ArgumentMissingException::class)
     fun testNotAccepted() = asyncTest {
         val obj = TestModule()
         val fn = TestModuleApi::class.functions.first { it.name == "get" }
         val handler = MethodHandler(server, "GET", fn)
 
-        try {
-            handler.accept(obj, "", Request(
-                    method = "GET",
-                    query = mapOf("version" to "123")
-            ))
-            Assert.assertTrue(false)
-        } catch (ex: ArgumentMissingException) {
-            Assert.assertTrue(true)
-        }
+        handler.accept(obj, "", Request(
+                method = "GET",
+                query = mapOf("version" to "123")
+        ))
+        Assert.assertTrue(false)
     }
 
-    @Test()
+    @Test(expected = AconiteException::class)
     fun testNotAnnotated() = asyncTest {
         val fn = TestModuleApi::class.functions.first { it.name == "putNotAnnotated" }
-        try {
-            MethodHandler(server, "GET", fn)
-            Assert.assertTrue(false)
-        } catch (ex: AconiteServerException) {
-            Assert.assertTrue(true)
-        }
+        MethodHandler(server, "GET", fn)
+        Assert.assertTrue(false)
     }
 
     @Test
@@ -103,5 +97,13 @@ class MethodHandlerTest {
         ))
 
         Assert.assertEquals("abc", response.body())
+    }
+
+    @Test(expected = CancellationException::class)
+    fun testMethodCallCancellation() = asyncTest(1) {
+        val obj = RootModule()
+        val fn = RootModuleApi::class.functions.first { it.name == "putInfinite" }
+        val handler = MethodHandler(server, "PUT", fn)
+        handler.accept(obj, "", Request("PUT"))
     }
 }

@@ -1,6 +1,7 @@
 package io.aconite.server
 
 import io.aconite.Request
+import kotlinx.coroutines.experimental.CancellationException
 import org.junit.Assert
 import org.junit.Test
 import kotlin.reflect.full.createType
@@ -38,5 +39,13 @@ class ModuleHandlerTest {
                 method = "POST"
         ))
         Assert.assertEquals("foobar", response.body())
+    }
+
+    @Test(expected = CancellationException::class)
+    fun testMethodCallCancellation() = asyncTest(1) {
+        val obj = RootModule()
+        val fn = RootModuleApi::class.functions.first { it.name == "testInfinite" }
+        val handler = ModuleHandler(server, TestModuleApi::class.createType(), fn)
+        handler.accept(obj, "/foo/bar/inf", Request("PUT"))
     }
 }

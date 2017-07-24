@@ -1,7 +1,7 @@
 package io.aconite
 
 data class Request (
-        val method: String,
+        val method: String = "",
         val path: Map<String, String> = emptyMap(),
         val query: Map<String, String> = emptyMap(),
         val headers: Map<String, String> = emptyMap(),
