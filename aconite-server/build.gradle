@@ -16,7 +16,7 @@ apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'kotlin'
 
 group = 'io.aconite'
-version = '0.0.1'
+version = '0.1.0'
 
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
