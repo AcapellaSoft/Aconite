@@ -2,3 +2,9 @@ build
 .gradle
 .idea
 aconite.iml
+aconite-server/build
+aconite-client/build
+aconite-core/build
+aconite-server/out
+aconite-client/out
+aconite-core/out
