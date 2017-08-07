@@ -2,12 +2,6 @@ package io.aconite.serializers
 
 import io.aconite.BadRequestException
 import io.aconite.StringSerializer
-import java.lang.Boolean
-import java.lang.Byte
-import java.lang.Double
-import java.lang.Float
-import java.lang.Long
-import java.lang.Short
 import java.time.Instant
 import java.util.*
 import kotlin.reflect.KAnnotatedElement
@@ -35,13 +29,13 @@ private inline fun <reified T: Any> factoryFor(noinline deserializer: (String) -
 }
 
 val DefaultStringSerializer = factoryFor { it }
-val ByteStringSerializer = factoryFor(Byte::parseByte)
-val ShortStringSerializer = factoryFor(Short::parseShort)
-val IntegerStringSerializer = factoryFor(Integer::parseInt)
-val LongStringSerializer = factoryFor(Long::parseLong)
-val FloatStringSerializer = factoryFor(Float::parseFloat)
-val DoubleStringSerializer = factoryFor(Double::parseDouble)
-val BooleanStringSerializer = factoryFor(Boolean::parseBoolean)
+val ByteStringSerializer = factoryFor(String::toByte)
+val ShortStringSerializer = factoryFor(String::toShort)
+val IntegerStringSerializer = factoryFor(String::toInt)
+val LongStringSerializer = factoryFor(String::toLong)
+val FloatStringSerializer = factoryFor(String::toFloat)
+val DoubleStringSerializer = factoryFor(String::toDouble)
+val BooleanStringSerializer = factoryFor(String::toBoolean)
 val CharStringSerializer = factoryFor(String::first)
 val UuidStringSerializer = factoryFor(UUID::fromString)
 
@@ -55,7 +49,7 @@ val DateStringSerializer = factoryFor<Date>(object : StringSerializer {
 
     override fun deserialize(s: String): Any? {
         try {
-            val ms = Long.parseLong(s)
+            val ms = s.toLong()
             val instant = Instant.ofEpochMilli(ms)
             return Date.from(instant)
         } catch (ex: IllegalArgumentException) {
