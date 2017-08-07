@@ -66,9 +66,10 @@ private fun resolveProjection(parent: KType, projection: KTypeProjection): KType
 fun KType.toJavaType(wrap: Boolean = false): Type = when {
     arguments.isNotEmpty() -> object : ParameterizedType {
         private val rawType = (classifier as KClass<*>).java
+        private val ownerType = rawType.enclosingClass
         private val args = arguments.map { it.type?.toJavaType(true) }.toTypedArray()
         override fun getRawType() = rawType
-        override fun getOwnerType() = null
+        override fun getOwnerType() = ownerType
         override fun getActualTypeArguments() = args
     }
     wrap -> Primitives.wrap((classifier as KClass<*>).java)
