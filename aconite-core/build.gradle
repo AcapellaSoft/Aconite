@@ -71,6 +71,8 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
     compile group: 'com.google.code.gson', name: 'gson', version: '1.7.2'
+    compile group: 'com.squareup.moshi', name: 'moshi', version: '1.5.0'
+    compile group: 'com.squareup.moshi', name: 'moshi-kotlin', version: '1.5.0'
     compile group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: '1.1.2-2'
     compile group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-core', version: '0.16'
     compile group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-jdk8', version: '0.16'
