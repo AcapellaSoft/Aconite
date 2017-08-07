@@ -1,9 +1,16 @@
 package io.aconite.server
 
 import io.aconite.*
-import io.aconite.annotations.*
+import io.aconite.annotations.Body
+import io.aconite.annotations.Header
+import io.aconite.annotations.Path
+import io.aconite.annotations.Query
 import io.aconite.utils.*
-import kotlin.reflect.*
+import java.util.*
+import kotlin.reflect.KCallable
+import kotlin.reflect.KFunction
+import kotlin.reflect.KParameter
+import kotlin.reflect.KType
 import kotlin.reflect.full.functions
 
 private val PARAM_ANNOTATIONS = listOf(
@@ -27,7 +34,7 @@ internal class MethodHandler(server: AconiteServer, private val method: String, 
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
         if (request.method != method) return null
         val result = fn.httpCall(args, obj, request)
-        return Response(body = responseSerializer.serialize(result))
+        return Response(body = responseSerializer?.serialize(result))
     }
 }
 
@@ -178,8 +185,11 @@ private class InstanceTransformer: ArgumentTransformer {
     override fun process(instance: Any, request: Request) = instance
 }
 
-private fun responseSerializer(server: AconiteServer, fn: KFunction<*>): BodySerializer {
-    return server.bodySerializer.create(fn, fn.asyncReturnType()) ?:
+private fun responseSerializer(server: AconiteServer, fn: KFunction<*>): BodySerializer? {
+    val returnType = fn.asyncReturnType()
+    if (returnType.classifier == Unit::class) return null
+
+    return server.bodySerializer.create(fn, returnType) ?:
             throw AconiteException("No suitable serializer found for response body of method $fn")
 }
 

@@ -4,7 +4,7 @@ import io.aconite.BodyBuffer
 import io.aconite.Buffer
 import io.aconite.Request
 import io.aconite.Response
-import io.aconite.server.*
+import io.aconite.server.AconiteServer
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
 import io.vertx.ext.web.Router
@@ -82,8 +82,14 @@ class VertxHandler(private val vertx: Vertx, private val server: AconiteServer):
             for ((k, v) in response.headers)
                 putHeader(k, v)
             statusCode = response.code
-            response.body?.let { putHeader("Content-Type", it.contentType) }
-            end(io.vertx.core.buffer.Buffer.buffer(response.body?.content?.bytes))
+
+            val body = response.body
+            if (body != null) {
+                putHeader("Content-Type", body.contentType)
+                end(io.vertx.core.buffer.Buffer.buffer(body.content.bytes))
+            } else {
+                end()
+            }
         }
     }
 }

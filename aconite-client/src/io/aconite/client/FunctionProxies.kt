@@ -1,6 +1,7 @@
 package io.aconite.client
 
 import io.aconite.AconiteException
+import io.aconite.BodySerializer
 import io.aconite.Request
 import io.aconite.annotations.Body
 import io.aconite.annotations.Header
@@ -51,9 +52,7 @@ internal class FunctionMethodProxy(
         val method: String
 ): FunctionProxy {
     private val appliers = buildAppliers(client, fn)
-    private val returnType = fn.asyncReturnType()
-    private val resultSerializer = client.bodySerializer.create(fn, returnType) ?:
-            throw AconiteException("No suitable serializer found for response body in function $fn")
+    private val responseDeserializer = responseDeserializer(client, fn)
     private val url = UrlTemplate(url)
 
     override suspend fun call(url: String, request: Request, args: Array<Any?>): Any? {
@@ -63,8 +62,16 @@ internal class FunctionMethodProxy(
 
         if (response.code != 200)
             throw client.errorHandler.handle(response)
-        return response.body?.let { resultSerializer.deserialize(it) }
+        return response.body?.let { responseDeserializer?.deserialize(it) }
     }
+}
+
+private fun responseDeserializer(client: AconiteClient, fn: KFunction<*>) : BodySerializer? {
+    val returnType = fn.asyncReturnType()
+    if (returnType.classifier == Unit::class) return null
+
+    return client.bodySerializer.create(fn, returnType) ?:
+            throw AconiteException("No suitable serializer found for response body in function $fn")
 }
 
 private fun buildAppliers(client: AconiteClient, fn: KFunction<*>)
