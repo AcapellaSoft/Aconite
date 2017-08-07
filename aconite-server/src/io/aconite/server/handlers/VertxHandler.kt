@@ -15,7 +15,7 @@ import kotlinx.coroutines.experimental.async
 import kotlin.coroutines.experimental.CoroutineContext
 
 class VertxHandler(private val vertx: Vertx, private val server: AconiteServer): Handler<RoutingContext> {
-    private val coroutineCtx = VertxCoroutineContext()
+    val coroutineCtx : CoroutineContext = VertxCoroutineContext()
 
     companion object {
         fun runServer(server: AconiteServer, port: Int) {
@@ -31,8 +31,10 @@ class VertxHandler(private val vertx: Vertx, private val server: AconiteServer):
     }
 
     private inner class VertxCoroutineContext: CoroutineDispatcher() {
+        private val ctx = vertx.getOrCreateContext()
+
         override fun dispatch(context: CoroutineContext, block: Runnable) {
-            vertx.runOnContext { block.run() }
+            ctx.runOnContext { block.run() }
         }
     }
 

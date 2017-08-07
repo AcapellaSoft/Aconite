@@ -10,11 +10,23 @@ import io.vertx.core.buffer.Buffer
 import io.vertx.core.http.HttpMethod
 import io.vertx.ext.web.client.HttpResponse
 import io.vertx.ext.web.client.WebClient
+import kotlinx.coroutines.experimental.CoroutineDispatcher
+import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.suspendCancellableCoroutine
 import kotlin.coroutines.experimental.Continuation
+import kotlin.coroutines.experimental.CoroutineContext
 
-class VertxHttpClient(val port: Int, val host: String, vertx: Vertx = Vertx.vertx()) : io.aconite.client.HttpClient {
+class VertxHttpClient(val port: Int, val host: String, private val vertx: Vertx = Vertx.vertx()) : io.aconite.client.HttpClient {
     private val client = WebClient.create(vertx)
+    private val coroutineCtx = VertxCoroutineContext()
+
+    private inner class VertxCoroutineContext: CoroutineDispatcher() {
+        private val ctx = vertx.getOrCreateContext()
+
+        override fun dispatch(context: CoroutineContext, block: Runnable) {
+            ctx.runOnContext { block.run() }
+        }
+    }
 
     suspend override fun makeRequest(url: String, request: Request) = suspendCancellableCoroutine<Response> { c ->
         val handler = Handler<AsyncResult<HttpResponse<Buffer>>> { response ->
@@ -25,19 +37,21 @@ class VertxHttpClient(val port: Int, val host: String, vertx: Vertx = Vertx.vert
 
     private fun sendRequest(url: String, request: Request, handler: Handler<AsyncResult<HttpResponse<Buffer>>>) {
         val method = HttpMethod.valueOf(request.method)
-        client.request(method, port, host, url).apply {
-            request.body?.contentType?.let { putHeader("Content-Type", it) }
+        async(coroutineCtx) {
+            client.request(method, port, host, url).apply {
+                request.body?.contentType?.let { putHeader("Content-Type", it) }
 
-            for ((name, value) in request.headers)
-                putHeader(name, value)
-            for ((name, value) in request.query)
-                addQueryParam(name, value)
+                for ((name, value) in request.headers)
+                    putHeader(name, value)
+                for ((name, value) in request.query)
+                    addQueryParam(name, value)
 
-            val body = request.body?.let { Buffer.buffer(it.content.bytes) }
-            if (body != null)
-                sendBuffer(body, handler)
-            else
-                send(handler)
+                val body = request.body?.let { Buffer.buffer(it.content.bytes) }
+                if (body != null)
+                    sendBuffer(body, handler)
+                else
+                    send(handler)
+            }
         }
     }
 
