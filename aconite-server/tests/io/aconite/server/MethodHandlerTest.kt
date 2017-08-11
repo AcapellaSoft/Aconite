@@ -23,7 +23,7 @@ class MethodHandlerTest {
         val fn = TestModuleApi::class.functions.first { it.name == "get" }
         val handler = MethodHandler(server, "GET", fn)
 
-        val response = handler.accept(obj, "", Request(
+        val response = handler.accept(obj, "/", Request(
                 method = "GET",
                 path = mapOf("key" to "abc"),
                 query = mapOf("version" to "123"),
@@ -56,7 +56,7 @@ class MethodHandlerTest {
         val fn = TestModuleApi::class.functions.first { it.name == "get" }
         val handler = MethodHandler(server, "GET", fn)
 
-        val response = handler.accept(obj, "", Request(
+        val response = handler.accept(obj, "/", Request(
                 method = "GET",
                 path = mapOf("key" to "abc"),
                 query = mapOf("version" to "123")
@@ -71,7 +71,7 @@ class MethodHandlerTest {
         val fn = TestModuleApi::class.functions.first { it.name == "get" }
         val handler = MethodHandler(server, "GET", fn)
 
-        handler.accept(obj, "", Request(
+        handler.accept(obj, "/", Request(
                 method = "GET",
                 query = mapOf("version" to "123")
         ))
@@ -91,7 +91,7 @@ class MethodHandlerTest {
         val fn = TestModuleApi::class.functions.first { it.name == "post" }
         val handler = MethodHandler(server, "POST", fn)
 
-        val response = handler.accept(obj, "", Request(
+        val response = handler.accept(obj, "/", Request(
                 method = "POST",
                 path = mapOf("key-in-path" to "abc")
         ))
@@ -104,6 +104,14 @@ class MethodHandlerTest {
         val obj = RootModule()
         val fn = RootModuleApi::class.functions.first { it.name == "putInfinite" }
         val handler = MethodHandler(server, "PUT", fn)
-        handler.accept(obj, "", Request("PUT"))
+        handler.accept(obj, "/", Request("PUT"))
+    }
+
+    @Test
+    fun testMethodCallNotFound() = asyncTest(1) {
+        val obj = RootModule()
+        val fn = RootModuleApi::class.functions.first { it.name == "patch" }
+        val handler = MethodHandler(server, "PATCH", fn)
+        Assert.assertNull(handler.accept(obj, "/foobar", Request("PATCH")))
     }
 }

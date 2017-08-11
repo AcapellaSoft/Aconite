@@ -32,6 +32,7 @@ internal class MethodHandler(server: AconiteServer, private val method: String, 
     override val argsCount = args.size
 
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
+        if (url != "/") return null
         if (request.method != method) return null
         val result = fn.httpCall(args, obj, request)
         return Response(body = responseSerializer?.serialize(result))
