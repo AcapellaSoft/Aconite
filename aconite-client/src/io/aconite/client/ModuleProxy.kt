@@ -39,11 +39,11 @@ private fun buildFunctionProxies(client: AconiteClient, iface: KType): Map<KFunc
     val proxies = hashMapOf<KFunction<*>, AdaptedFunctionProxy>()
 
     for (fn in cls.functions) {
+        val (url, method) = fn.getHttpMethod() ?: continue
         val resolved = resolve(iface, fn)
-        if (resolved.isOpen) continue // FIXME: simple solution for filter out functions from 'Any' class
+        if (resolved.isOpen) continue
         val adapter = adaptFunction(client, resolved)
         val adaptedFn = adapter.function
-        val (url, method) = adaptedFn.getHttpMethod()
         val proxy = when (method) {
             null -> FunctionModuleProxy(client, adaptedFn, url)
             else -> FunctionMethodProxy(client, adaptedFn, url, method)

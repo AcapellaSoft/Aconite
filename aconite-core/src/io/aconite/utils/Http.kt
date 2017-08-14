@@ -195,9 +195,9 @@ private object EmptyUrlPart: UrlPart {
     override fun format(params: Map<String, String>) = ""
 }
 
-fun KFunction<*>.getHttpMethod(): Pair<String, String?> {
+fun KFunction<*>.getHttpMethod(): Pair<String, String?>? {
     val annotations = annotations.filter { it.annotationClass in METHOD_ANNOTATION }
-    if (annotations.isEmpty()) throw AconiteException("Method $this is not annotated")
+    if (annotations.isEmpty()) return null
     if (annotations.size > 1) throw AconiteException("Method $this has more than one annotations")
     val annotation = annotations.first()
 

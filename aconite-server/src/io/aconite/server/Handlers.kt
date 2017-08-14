@@ -68,11 +68,10 @@ private fun buildRouters(server: AconiteServer, iface: KType): List<Router> {
     val allHandlers = hashMapOf<String, MutableList<AbstractHandler>>()
 
     for (fn in cls.functions) {
+        val (url, method) = fn.getHttpMethod() ?: continue
         val resolved = resolve(iface, fn)
-        if (resolved.isOpen) continue // FIXME: simple solution for filter out functions from 'Any' class
         if (!server.methodFilter.predicate(resolved)) continue
         val adapted = adaptFunction(server, resolved)
-        val (url, method) = adapted.getHttpMethod()
         val urlHandlers = allHandlers.computeIfAbsent(url) { ArrayList() }
         val handler = when (method) {
             null -> ModuleHandler(server, adapted.asyncReturnType(), adapted)
