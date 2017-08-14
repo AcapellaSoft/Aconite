@@ -188,6 +188,7 @@ private class InstanceTransformer: ArgumentTransformer {
 private fun responseSerializer(server: AconiteServer, fn: KFunction<*>): BodySerializer? {
     val returnType = fn.asyncReturnType()
     if (returnType.classifier == Unit::class) return null
+    if (returnType.classifier == Void::class) return null
 
     return server.bodySerializer.create(fn, returnType) ?:
             throw AconiteException("No suitable serializer found for response body of method $fn")

@@ -69,6 +69,7 @@ internal class FunctionMethodProxy(
 private fun responseDeserializer(client: AconiteClient, fn: KFunction<*>) : BodySerializer? {
     val returnType = fn.asyncReturnType()
     if (returnType.classifier == Unit::class) return null
+    if (returnType.classifier == Void::class) return null
 
     return client.bodySerializer.create(fn, returnType) ?:
             throw AconiteException("No suitable serializer found for response body in function $fn")
