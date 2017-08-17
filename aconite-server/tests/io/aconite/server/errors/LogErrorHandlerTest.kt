@@ -9,7 +9,7 @@ import org.junit.Test
 
 class LogErrorHandlerTest {
     @Test fun testConvertToInternalError() = asyncTest {
-        val server = AconiteServer(errorHandler = LogErrorHandler)
+        val server = AconiteServer(errorHandler = LogErrorHandler())
         server.register(ThrowsImpl { RuntimeException(it) }, ThrowsApi::class)
         val response = server.accept("/", Request(
                 method = "GET",
