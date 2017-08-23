@@ -30,8 +30,9 @@ fun resolve(parent: KType, child: KType): KType {
  * @return [fn] with resolved type parameters
  */
 fun <R> resolve(parent: KType, fn: KFunction<R>) = object: KFunction<R> by fn {
-    inner class KResolvedParameter(parameter: KParameter): KParameter by parameter {
+    inner class KResolvedParameter(private val parameter: KParameter): KParameter by parameter {
         override val type by lazy { resolve(parent, parameter.type) }
+        override fun toString() = parameter.toString()
     }
 
     override val returnType = resolve(parent, fn.returnType)

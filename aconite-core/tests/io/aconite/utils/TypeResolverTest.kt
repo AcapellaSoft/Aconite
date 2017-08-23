@@ -333,6 +333,14 @@ class TypeResolverTest {
     }
 
     @Test
+    fun testResolveFunctionParameterToString() {
+        val moduleA = Api::moduleA.returnType
+        val fn = FirstModule<*>::set
+        val resolved = resolve(moduleA, fn)
+        Assert.assertEquals(fn.parameters[1].toString(), resolved.parameters[1].toString())
+    }
+
+    @Test
     fun testResolveFunction_moduleA_set() {
         val moduleA = Api::moduleA.returnType
         val fn = FirstModule<*>::set
