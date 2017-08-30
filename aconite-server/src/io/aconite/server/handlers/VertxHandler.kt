@@ -13,16 +13,13 @@ import kotlinx.coroutines.experimental.CoroutineDispatcher
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
 import kotlin.coroutines.experimental.CoroutineContext
-import kotlin.coroutines.experimental.startCoroutine
 
-class VertxHandler(private val vertx: Vertx, private val server: AconiteServer): Handler<RoutingContext> {
-    val coroutineCtx : CoroutineContext = VertxCoroutineContext()
-
+class VertxHandler(private val server: AconiteServer): Handler<RoutingContext> {
     companion object {
         fun runServer(server: AconiteServer, port: Int) {
             val vertx = Vertx.vertx()
             val router = Router.router(vertx)
-            val handler = VertxHandler(vertx, server)
+            val handler = VertxHandler(server)
             router.route().handler(BodyHandler.create())
             router.route().handler(handler)
             vertx.createHttpServer()
@@ -31,7 +28,7 @@ class VertxHandler(private val vertx: Vertx, private val server: AconiteServer):
         }
     }
 
-    private inner class VertxCoroutineContext: CoroutineDispatcher() {
+    class VertxCoroutineContext(vertx: Vertx): CoroutineDispatcher() {
         private val ctx = vertx.getOrCreateContext()
 
         override fun dispatch(context: CoroutineContext, block: Runnable) {
@@ -45,7 +42,7 @@ class VertxHandler(private val vertx: Vertx, private val server: AconiteServer):
     }
 
     override fun handle(routingCtx: RoutingContext) {
-        async(coroutineCtx) {
+        async(server.coroutineContext) {
             try {
                 val request = makeRequest(routingCtx)
                 val url = routingCtx.request().uri().substringBefore('?')
@@ -83,10 +80,17 @@ class VertxHandler(private val vertx: Vertx, private val server: AconiteServer):
                 putHeader(k, v)
             statusCode = response.code
 
-            launch(coroutineCtx) {
-                for (part in response.body)
-                    write(io.vertx.core.buffer.Buffer.buffer(part.bytes))
-                end()
+            launch(server.coroutineContext) {
+                if (response.isChunked) {
+                    isChunked = true
+                    for (part in response.body)
+                        write(io.vertx.core.buffer.Buffer.buffer(part.bytes))
+                    end()
+                } else {
+                    isChunked = false
+                    val body = response.body.receiveOrNull() ?: Buffer.EMPTY
+                    end(io.vertx.core.buffer.Buffer.buffer(body.bytes))
+                }
             }
         }
     }
