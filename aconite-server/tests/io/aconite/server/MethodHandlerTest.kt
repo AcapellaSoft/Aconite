@@ -3,6 +3,9 @@ package io.aconite.server
 import io.aconite.AconiteException
 import io.aconite.ArgumentMissingException
 import io.aconite.Request
+import kotlinx.coroutines.experimental.Unconfined
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.channels.Channel
 import org.junit.Assert
 import org.junit.Test
 import java.util.concurrent.CancellationException
@@ -125,5 +128,19 @@ class MethodHandlerTest {
         Assert.assertEquals("bar", response.body.receive().string)
         Assert.assertEquals("baz", response.body.receive().string)
         Assert.assertNull(response.body.receiveOrNull())
+    }
+
+    @Test(expected = CancellationException::class)
+    fun testStreamingCallCancellation() = asyncTest(1) {
+        val obj = TestModule()
+        val fn = TestModuleApi::class.functions.first { it.name == "streaming" }
+        val handler = MethodHandler(server, "POST", fn)
+        val channel = Channel<String>()
+        val f = async(Unconfined) {
+            val response = handler.accept(obj, "/", Request("POST"))!!
+            for (part in response.body) channel.send(part.string)
+        }
+        f.cancel()
+        channel.receive()
     }
 }
