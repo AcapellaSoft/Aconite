@@ -1,5 +1,10 @@
 package io.aconite.utils
 
+import kotlinx.coroutines.experimental.channels.Channel
+import kotlinx.coroutines.experimental.channels.ChannelIterator
+import kotlinx.coroutines.experimental.channels.ClosedReceiveChannelException
+import kotlinx.coroutines.experimental.channels.ReceiveChannel
+import kotlinx.coroutines.experimental.selects.SelectInstance
 import kotlinx.coroutines.experimental.suspendCancellableCoroutine
 import java.lang.reflect.InvocationTargetException
 import kotlin.coroutines.experimental.Continuation
@@ -37,3 +42,42 @@ fun <R> startCoroutine(continuation: Continuation<R>, block: suspend () -> R): A
     block.startCoroutine(continuation)
     return COROUTINE_SUSPENDED
 }
+
+fun <T> channelOf(vararg items: T) = object : ReceiveChannel<T> {
+    private var index = 0
+
+    override val isClosedForReceive: Boolean
+        get() = index >= items.size
+    override val isEmpty: Boolean
+        get() = index >= items.size
+
+    override fun iterator() = object : ChannelIterator<T> {
+        suspend override fun hasNext() = !isEmpty
+        suspend override fun next() = receive()
+    }
+
+    override fun poll(): T? {
+        if (isEmpty) return null
+        val item = items[index]
+        ++index
+        return item
+    }
+
+    suspend override fun receive() = poll() ?: throw ClosedReceiveChannelException(null)
+    suspend override fun receiveOrNull() = poll()
+
+    override fun <R> registerSelectReceive(select: SelectInstance<R>, block: suspend (T) -> R) {
+        TODO("not implemented")
+    }
+
+    override fun <R> registerSelectReceiveOrNull(select: SelectInstance<R>, block: suspend (T?) -> R) {
+        TODO("not implemented")
+    }
+}
+
+fun <T> T?.toChannel(): ReceiveChannel<T> {
+    if (this == null) return emptyChannel()
+    return channelOf(this)
+}
+
+fun <T> emptyChannel(): ReceiveChannel<T> = Channel<T>().apply { close() }

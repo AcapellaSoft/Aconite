@@ -2,6 +2,7 @@ package io.aconite.server
 
 import io.aconite.*
 import io.aconite.utils.UrlTemplate
+import io.aconite.utils.toChannel
 import org.junit.Assert
 import org.junit.Test
 
@@ -9,7 +10,7 @@ private class TestHandler(override var argsCount: Int, val message: String): Abs
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
         if (request.path.size < argsCount) throw ArgumentMissingException("Too few arguments")
         return Response(
-                body = BodyBuffer(Buffer.wrap(message), "text/plain"),
+                body = Buffer.wrap(message).toChannel(),
                 headers = request.path
         )
     }
@@ -22,7 +23,7 @@ private class UrlToBodyHandler: AbstractHandler() {
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
         if (request.path.size < argsCount) throw ArgumentMissingException("Too few arguments")
         return Response(
-                body = BodyBuffer(Buffer.wrap(url), "text/plain"),
+                body = Buffer.wrap(url).toChannel(),
                 headers = request.path
         )
     }

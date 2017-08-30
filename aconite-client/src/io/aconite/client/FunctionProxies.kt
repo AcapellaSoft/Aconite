@@ -62,7 +62,8 @@ internal class FunctionMethodProxy(
 
         if (response.code != 200)
             throw client.errorHandler.handle(response)
-        return response.body?.let { responseDeserializer?.deserialize(it) }
+        // TODO: channel support
+        return response.body.receive().let { responseDeserializer?.deserialize(it) }
     }
 }
 

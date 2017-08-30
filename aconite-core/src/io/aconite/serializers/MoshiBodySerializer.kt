@@ -21,8 +21,7 @@ class MoshiBodySerializer(moshi: Moshi, type: Type): BodySerializer {
         )
 
         constructor(build: Moshi.Builder.() -> Unit): this(
-                Moshi.Builder()
-                        .apply(build)
+                Moshi.Builder().apply(build)
         )
 
         constructor(): this(Moshi.Builder())
@@ -30,19 +29,13 @@ class MoshiBodySerializer(moshi: Moshi, type: Type): BodySerializer {
         override fun create(annotations: KAnnotatedElement, type: KType) = MoshiBodySerializer(moshi, type.toJavaType())
     }
 
-    override fun serialize(obj: Any?) = BodyBuffer(
-            content = Buffer.wrap(adapter.toJson(obj)),
-            contentType = "application/json"
-    )
+    override fun serialize(obj: Any?) = Buffer.wrap(adapter.toJson(obj))
 
-    override fun deserialize(body: BodyBuffer): Any? {
-        if (body.content.bytes.isEmpty()) return null
-
-        if (body.contentType.toLowerCase() != "application/json")
-            throw UnsupportedMediaTypeException("Only 'application/json' media type supported")
+    override fun deserialize(body: Buffer): Any? {
+        if (body.bytes.isEmpty()) return null
 
         try {
-            return adapter.fromJson(body.content.string)
+            return adapter.fromJson(body.string)
         } catch (ex: JsonDataException) {
             throw BadRequestException("Bad JSON format. ${ex.message}")
         } catch (ex: JsonEncodingException) {

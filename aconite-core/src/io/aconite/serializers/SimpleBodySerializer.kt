@@ -1,6 +1,5 @@
 package io.aconite.serializers
 
-import io.aconite.BodyBuffer
 import io.aconite.BodySerializer
 import io.aconite.Buffer
 import kotlin.reflect.KAnnotatedElement
@@ -14,10 +13,7 @@ class SimpleBodySerializer: BodySerializer {
         }
     }
 
-    override fun serialize(obj: Any?) = BodyBuffer(
-            content = Buffer.wrap(if (obj != null) obj as String else ""),
-            contentType = "text/plain"
-    )
+    override fun serialize(obj: Any?) = Buffer.wrap(if (obj != null) obj as String else "")
 
-    override fun deserialize(body: BodyBuffer) = body.content.string
+    override fun deserialize(body: Buffer) = body.string
 }

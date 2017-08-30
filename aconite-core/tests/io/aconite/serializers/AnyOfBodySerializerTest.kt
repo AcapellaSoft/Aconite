@@ -1,7 +1,7 @@
 package io.aconite.serializers
 
-import io.aconite.BodyBuffer
 import io.aconite.BodySerializer
+import io.aconite.Buffer
 import io.aconite.EmptyAnnotations
 import org.junit.Assert
 import org.junit.Test
@@ -20,7 +20,7 @@ class AnyOfBodySerializerTest {
         }
 
         override fun serialize(obj: Any?) = throw NotImplementedError()
-        override fun deserialize(body: BodyBuffer) = throw NotImplementedError()
+        override fun deserialize(body: Buffer) = throw NotImplementedError()
     }
 
     @Test fun testFirstAcceptableSelected() {

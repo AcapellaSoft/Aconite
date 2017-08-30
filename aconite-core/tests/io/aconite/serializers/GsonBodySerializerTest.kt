@@ -2,7 +2,6 @@ package io.aconite.serializers
 
 import com.google.gson.GsonBuilder
 import com.google.gson.LongSerializationPolicy
-import io.aconite.BodyBuffer
 import io.aconite.Buffer
 import io.aconite.EmptyAnnotations
 import org.junit.Assert
@@ -25,21 +24,21 @@ class GsonBodySerializerTest {
 
     @Test fun testIntType() {
         val serializer = GsonBodySerializer.Factory().create(EmptyAnnotations, Int::class.createType())
-        Assert.assertEquals("123", serializer.serialize(123).content.string)
-        Assert.assertEquals(123, serializer.deserialize(BodyBuffer(Buffer.wrap("123"), "application/json")))
+        Assert.assertEquals("123", serializer.serialize(123).string)
+        Assert.assertEquals(123, serializer.deserialize(Buffer.wrap("123")))
     }
 
     @Test fun testLongType() {
         val serializer = GsonBodySerializer.Factory().create(EmptyAnnotations, Long::class.createType())
-        Assert.assertEquals("123", serializer.serialize(123L).content.string)
-        Assert.assertEquals(123L, serializer.deserialize(BodyBuffer(Buffer.wrap("123"), "application/json")))
+        Assert.assertEquals("123", serializer.serialize(123L).string)
+        Assert.assertEquals(123L, serializer.deserialize(Buffer.wrap("123")))
     }
 
     @Test fun testLongTypeWithStringPolicy() {
         val gson = GsonBuilder().setLongSerializationPolicy(LongSerializationPolicy.STRING)
         val serializer = GsonBodySerializer.Factory(gson).create(EmptyAnnotations, Long::class.createType())
-        Assert.assertEquals("\"123\"", serializer.serialize(123L).content.string)
-        Assert.assertEquals(123L, serializer.deserialize(BodyBuffer(Buffer.wrap("\"123\""), "application/json")))
+        Assert.assertEquals("\"123\"", serializer.serialize(123L).string)
+        Assert.assertEquals(123L, serializer.deserialize(Buffer.wrap("\"123\"")))
     }
 
     @Test fun testComplexType() {

@@ -2,6 +2,7 @@ package io.aconite.server.errors
 
 import io.aconite.*
 import io.aconite.server.*
+import io.aconite.utils.toChannel
 import org.slf4j.LoggerFactory
 
 class LogErrorHandler(cls: Class<*> = LogErrorHandler::class.java): ErrorHandler {
@@ -13,7 +14,7 @@ class LogErrorHandler(cls: Class<*> = LogErrorHandler::class.java): ErrorHandler
             logger.error("Internal server error", ex)
             Response(
                     code = 500,
-                    body = BodyBuffer(Buffer.wrap("Internal server error"), "text/plain")
+                    body = Buffer.wrap("Internal server error").toChannel()
             )
         }
     }

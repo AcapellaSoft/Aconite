@@ -1,8 +1,8 @@
 package io.aconite.client.clients
 
-import io.aconite.BodyBuffer
 import io.aconite.Request
 import io.aconite.Response
+import io.aconite.utils.toChannel
 import io.vertx.core.AsyncResult
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
@@ -39,14 +39,12 @@ class VertxHttpClient(val port: Int, val host: String, private val vertx: Vertx 
         val method = HttpMethod.valueOf(request.method)
         async(coroutineCtx) {
             client.request(method, port, host, url).apply {
-                request.body?.contentType?.let { putHeader("Content-Type", it) }
-
                 for ((name, value) in request.headers)
                     putHeader(name, value)
                 for ((name, value) in request.query)
                     addQueryParam(name, value)
 
-                val body = request.body?.let { Buffer.buffer(it.content.bytes) }
+                val body = request.body?.let { Buffer.buffer(it.bytes) }
                 if (body != null)
                     sendBuffer(body, handler)
                 else
@@ -61,17 +59,12 @@ class VertxHttpClient(val port: Int, val host: String, private val vertx: Vertx 
             val headers = result.headers()
                     .map { Pair(it.key, it.value) }
                     .toMap()
-            val body = result.body()?.let {
-                BodyBuffer(
-                        content = io.aconite.Buffer.wrap(it.bytes),
-                        contentType = result.getHeader("Content-Type") ?: ""
-                )
-            }
+            val body = result.body()?.let { io.aconite.Buffer.wrap(it.bytes) }
 
             val response = Response(
                     code = result.statusCode(),
                     headers = headers,
-                    body = body
+                    body = body.toChannel()
             )
             continuation.resume(response)
 

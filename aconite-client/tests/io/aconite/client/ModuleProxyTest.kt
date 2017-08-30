@@ -2,6 +2,7 @@ package io.aconite.client
 
 import io.aconite.Request
 import io.aconite.Response
+import io.aconite.utils.toChannel
 import kotlinx.coroutines.experimental.suspendCancellableCoroutine
 import org.junit.Assert
 import org.junit.Test
@@ -17,7 +18,7 @@ class ModuleProxyTest {
     }
 
     @Test fun testCallProxyMethod() = asyncTest {
-        val client = AconiteClient(httpClient = TestHttpClient { _, r -> Response(body = r.body)})
+        val client = AconiteClient(httpClient = TestHttpClient { _, r -> Response(body = r.body.toChannel())})
         val proxy = client.moduleFactory.create(RootModuleApi::class.createType())
         val fn = RootModuleApi::class.functions.first { it.name == "patch" }
 

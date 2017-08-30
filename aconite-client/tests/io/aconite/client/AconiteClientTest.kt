@@ -1,6 +1,7 @@
 package io.aconite.client
 
 import io.aconite.Response
+import io.aconite.utils.toChannel
 import kotlinx.coroutines.experimental.CancellationException
 import kotlinx.coroutines.experimental.suspendCancellableCoroutine
 import org.junit.Assert
@@ -20,7 +21,7 @@ class AconiteClientTest {
     }
 
     @Test fun testCallMethodWithProxy() = asyncTest {
-        val client = AconiteClient(httpClient = TestHttpClient { _, r -> Response(body = r.body) })
+        val client = AconiteClient(httpClient = TestHttpClient { _, r -> Response(body = r.body.toChannel()) })
         val proxy = client.create<RootModuleApi>()
 
         val result = proxy.patch("foobar")
@@ -28,7 +29,7 @@ class AconiteClientTest {
     }
 
     @Test fun testCallModuleWithProxy() = asyncTest {
-        val client = AconiteClient(httpClient = TestHttpClient { _, r -> Response(body = r.body) })
+        val client = AconiteClient(httpClient = TestHttpClient { _, r -> Response(body = r.body.toChannel()) })
         val proxy = client.create<RootModuleApi>()
 
         val result = proxy.test()
@@ -36,7 +37,7 @@ class AconiteClientTest {
     }
 
     @Test fun testCallMethodInModuleWithProxy() = asyncTest {
-        val client = AconiteClient(httpClient = TestHttpClient { _, r -> Response(body = r.body) })
+        val client = AconiteClient(httpClient = TestHttpClient { _, r -> Response(body = r.body.toChannel()) })
         val proxy = client.create<RootModuleApi>()
 
         val module = proxy.test()
@@ -45,7 +46,7 @@ class AconiteClientTest {
     }
 
     @Test fun testPathParameters() = asyncTest {
-        val client = AconiteClient(httpClient = TestHttpClient { url, _ -> Response(body = body(url)) })
+        val client = AconiteClient(httpClient = TestHttpClient { url, _ -> Response(body = respBody(url)) })
         val proxy = client.create<TestModuleApi>()
 
         val result = proxy.get("param", "version")

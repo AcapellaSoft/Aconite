@@ -1,7 +1,6 @@
 package io.aconite.serializers
 
 import io.aconite.BadRequestException
-import io.aconite.BodyBuffer
 import io.aconite.Buffer
 import io.aconite.EmptyAnnotations
 import org.junit.Assert
@@ -24,14 +23,14 @@ class MoshiBodySerializerTest {
 
     @Test fun testIntType() {
         val serializer = MoshiBodySerializer.Factory().create(EmptyAnnotations, Int::class.createType())
-        Assert.assertEquals("123", serializer.serialize(123).content.string)
-        Assert.assertEquals(123, serializer.deserialize(BodyBuffer(Buffer.wrap("123"), "application/json")))
+        Assert.assertEquals("123", serializer.serialize(123).string)
+        Assert.assertEquals(123, serializer.deserialize(Buffer.wrap("123")))
     }
 
     @Test fun testLongType() {
         val serializer = MoshiBodySerializer.Factory().create(EmptyAnnotations, Long::class.createType())
-        Assert.assertEquals("123", serializer.serialize(123L).content.string)
-        Assert.assertEquals(123L, serializer.deserialize(BodyBuffer(Buffer.wrap("123"), "application/json")))
+        Assert.assertEquals("123", serializer.serialize(123L).string)
+        Assert.assertEquals(123L, serializer.deserialize(Buffer.wrap("123")))
     }
 
     @Test fun testComplexGenericType() {
@@ -64,10 +63,7 @@ class MoshiBodySerializerTest {
         val type = Bar::class.createType()
         val serializer = MoshiBodySerializer.Factory().create(EmptyAnnotations, type)
 
-        val bodyWithError = BodyBuffer(
-                content = Buffer.wrap("!@^%"),
-                contentType = "application/json"
-        )
+        val bodyWithError = Buffer.wrap("!@^%")
         serializer.deserialize(bodyWithError)
     }
 
@@ -75,10 +71,7 @@ class MoshiBodySerializerTest {
         val type = Bar::class.createType()
         val serializer = MoshiBodySerializer.Factory().create(EmptyAnnotations, type)
 
-        val bodyWithError = BodyBuffer(
-                content = Buffer.wrap("{\"a\":100}"),
-                contentType = "application/json"
-        )
+        val bodyWithError = Buffer.wrap("{\"a\":100}")
         serializer.deserialize(bodyWithError)
     }
 

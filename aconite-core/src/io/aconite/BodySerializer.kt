@@ -4,7 +4,7 @@ import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KType
 
 /**
- * Used to serialize and deserialize object to [BodyBuffer].
+ * Used to serialize and deserialize object to [Buffer].
  */
 interface BodySerializer {
     /**
@@ -22,19 +22,18 @@ interface BodySerializer {
     }
 
     /**
-     * Serializes [obj] to [BodyBuffer]. The [obj] must be of type, that was passed
+     * Serializes [obj] to [Buffer]. The [obj] must be of type, that was passed
      * to [Factory.create] function.
      * @param[obj] to be serialized
      * @return serialized body
      */
-    fun serialize(obj: Any?): BodyBuffer
+    fun serialize(obj: Any?): Buffer
 
     /**
      * Deserializes [body] to object with type, that was passed to [Factory.create] function.
      * @param[body] to be deserialized
      * @return deserialized object
-     * @throws[UnsupportedMediaTypeException] if [body] content type is not supported
      * @throws[BadRequestException] if [body] content can not be deserialized
      */
-    fun deserialize(body: BodyBuffer): Any?
+    fun deserialize(body: Buffer): Any?
 }

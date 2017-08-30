@@ -1,22 +1,21 @@
 package io.aconite
 
+import io.aconite.utils.emptyChannel
+import io.aconite.utils.toChannel
+import kotlinx.coroutines.experimental.channels.ReceiveChannel
+
 data class Request (
         val method: String = "",
         val path: Map<String, String> = emptyMap(),
         val query: Map<String, String> = emptyMap(),
         val headers: Map<String, String> = emptyMap(),
-        val body: BodyBuffer? = null
+        val body: Buffer? = null
 )
 
 data class Response (
         val code: Int = 200,
         val headers: Map<String, String> = emptyMap(),
-        val body: BodyBuffer? = null
-)
-
-data class BodyBuffer(
-        val content: Buffer,
-        val contentType: String
+        val body: ReceiveChannel<Buffer> = emptyChannel()
 )
 
 interface Buffer {
@@ -38,8 +37,5 @@ interface Buffer {
 
 fun HttpException.toResponse() = Response(
         code = this.code,
-        body = BodyBuffer(
-                content = Buffer.wrap(this.message ?: ""),
-                contentType = "text/plain"
-        )
+        body = Buffer.wrap(this.message ?: "").toChannel()
 )

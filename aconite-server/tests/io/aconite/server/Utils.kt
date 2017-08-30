@@ -63,12 +63,12 @@ class TestBodySerializer: BodySerializer {
                 = if (type.classifier == String::class) TestBodySerializer() else null
     }
 
-    override fun serialize(obj: Any?): BodyBuffer {
-        return BodyBuffer(Buffer.wrap(obj as String), "plain/text")
+    override fun serialize(obj: Any?): Buffer {
+        return Buffer.wrap(obj as String)
     }
 
-    override fun deserialize(body: BodyBuffer): Any? {
-        return body.content.string
+    override fun deserialize(body: Buffer): Any? {
+        return body.string
     }
 }
 
@@ -104,9 +104,9 @@ object EmptyAnnotations: KAnnotatedElement {
     override val annotations: List<Annotation> get() = emptyList()
 }
 
-fun Response?.body() = this?.body?.content?.string!!
+fun Response?.body() = this?.body?.poll()?.string!!
 
-fun body(s: String) = BodyBuffer(Buffer.wrap(s), "text/plain")
+fun body(s: String) = Buffer.wrap(s)
 
 fun asyncTest(timeout: Long = 10, unit: TimeUnit = TimeUnit.SECONDS, block: suspend () -> Unit) = runBlocking {
     withTimeout(timeout, unit, block)

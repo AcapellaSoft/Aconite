@@ -35,7 +35,7 @@ internal class MethodHandler(server: AconiteServer, private val method: String, 
         if (url != "/") return null
         if (request.method != method) return null
         val result = fn.httpCall(args, obj, request)
-        return Response(body = responseSerializer?.serialize(result))
+        return Response(body = responseSerializer?.serialize(result).toChannel())
     }
 }
 

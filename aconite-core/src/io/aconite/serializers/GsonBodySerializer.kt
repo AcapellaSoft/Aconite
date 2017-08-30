@@ -9,26 +9,20 @@ import java.lang.reflect.Type
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KType
 
-class GsonBodySerializer(val gson: Gson, val type: Type): BodySerializer {
+class GsonBodySerializer(private val gson: Gson, val type: Type): BodySerializer {
 
-    class Factory(val gson: Gson = Gson()): BodySerializer.Factory {
+    class Factory(private val gson: Gson = Gson()): BodySerializer.Factory {
         constructor(builder: GsonBuilder): this(builder.create())
         override fun create(annotations: KAnnotatedElement, type: KType) = GsonBodySerializer(gson, type.toJavaType())
     }
 
-    override fun serialize(obj: Any?) = BodyBuffer(
-            content = Buffer.wrap(gson.toJson(obj, type)),
-            contentType = "application/json"
-    )
+    override fun serialize(obj: Any?) = Buffer.wrap(gson.toJson(obj, type))
 
-    override fun deserialize(body: BodyBuffer): Any? {
-        if (body.content.bytes.isEmpty()) return null
-
-        if (body.contentType.toLowerCase() != "application/json")
-            throw UnsupportedMediaTypeException("Only 'application/json' media type supported")
+    override fun deserialize(body: Buffer): Any? {
+        if (body.bytes.isEmpty()) return null
 
         try {
-            return gson.fromJson(body.content.string, type)
+            return gson.fromJson(body.string, type)
         } catch (ex: JsonParseException) {
             throw BadRequestException("Bad JSON format. ${ex.message}")
         }

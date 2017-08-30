@@ -8,7 +8,7 @@ import org.junit.Test
 
 class PassErrorHandlerTest {
     @Test fun transformResponseToEx() {
-        val response = Response(404, body = body("message"))
+        val response = Response(404, body = respBody("message"))
         val ex = PassErrorHandler.handle(response)
         Assert.assertEquals(404, ex.code)
         Assert.assertEquals("message", ex.message)

@@ -1,10 +1,10 @@
 package io.aconite.client
 
-import io.aconite.BodyBuffer
 import io.aconite.Buffer
 import io.aconite.Request
 import io.aconite.Response
 import io.aconite.annotations.*
+import io.aconite.utils.toChannel
 import kotlinx.coroutines.experimental.runBlocking
 import kotlinx.coroutines.experimental.withTimeout
 import java.util.concurrent.TimeUnit
@@ -31,9 +31,11 @@ class TestHttpClient(val handler: suspend (String, Request) -> Response): HttpCl
     suspend override fun makeRequest(url: String, request: Request) = handler(url, request)
 }
 
-fun body(s: String) = BodyBuffer(Buffer.wrap(s), "text/plain")
+fun reqBody(s: String) = Buffer.wrap(s)
 
-fun Response?.body() = this?.body?.content?.string!!
+fun respBody(s: String) = Buffer.wrap(s).toChannel()
+
+fun Response?.body() = this?.body?.poll()?.string!!
 
 fun asyncTest(timeout: Long = 10, unit: TimeUnit = TimeUnit.SECONDS, block: suspend () -> Unit) = runBlocking {
     withTimeout(timeout, unit, block)

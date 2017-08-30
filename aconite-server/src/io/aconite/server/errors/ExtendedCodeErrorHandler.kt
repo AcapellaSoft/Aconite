@@ -3,6 +3,7 @@ package io.aconite.server.errors
 import com.google.gson.Gson
 import io.aconite.*
 import io.aconite.server.*
+import io.aconite.utils.toChannel
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
@@ -50,14 +51,17 @@ object ExtendedCodeErrorHandler: ErrorHandler {
                 val cls = ex::class
                 val extCode = ex2error[cls] ?: throw NotRegisteredException("Exception of class '$cls' is not registered")
                 val body = ErrorResponseBody(extCode, ex.message ?: "")
-                Response(code = ex.code, body = BodyBuffer(
-                        content = Buffer.wrap(gson.toJson(body, ErrorResponseBody::class.java)),
-                        contentType = "application/json"
-                ))
+                Response(
+                        code = ex.code,
+                        body = Buffer.wrap(gson.toJson(body, ErrorResponseBody::class.java)).toChannel()
+                )
             }
             else -> {
                 logger.error("Internal server error", ex)
-                Response(code = 500, body = BodyBuffer(Buffer.wrap("Internal server error"), "plain/text"))
+                Response(
+                        code = 500,
+                        body = Buffer.wrap("Internal server error").toChannel()
+                )
             }
         }
     }
