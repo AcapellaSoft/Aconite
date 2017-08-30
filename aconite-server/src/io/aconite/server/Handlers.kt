@@ -158,8 +158,7 @@ private class BodyTransformer(server: AconiteServer, param: KParameter): Argumen
     override fun check(request: Request) = isNullable || request.body != null
 
     override fun process(instance: Any, request: Request): Any? {
-        val data = serializer.deserialize(request.body ?: return null)
-        return data
+        return serializer.deserialize(request.body ?: return null)
     }
 }
 
@@ -174,8 +173,7 @@ private class HeaderTransformer(server: AconiteServer, param: KParameter, name: 
 
     override fun process(instance: Any, request: Request): Any? {
         val header = request.headers[name] ?: return null
-        val data = serializer.deserialize(header)
-        return data
+        return serializer.deserialize(header)
     }
 }
 
@@ -190,8 +188,7 @@ private class PathTransformer(server: AconiteServer, param: KParameter, name: St
 
     override fun process(instance: Any, request: Request): Any? {
         val header = request.path[name] ?: return null
-        val data = serializer.deserialize(header)
-        return data
+        return serializer.deserialize(header)
     }
 }
 
@@ -206,8 +203,7 @@ private class QueryTransformer(server: AconiteServer, param: KParameter, name: S
 
     override fun process(instance: Any, request: Request): Any? {
         val header = request.query[name] ?: return null
-        val data = serializer.deserialize(header)
-        return data
+        return serializer.deserialize(header)
     }
 }
 
