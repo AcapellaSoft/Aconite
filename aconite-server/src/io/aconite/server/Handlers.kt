@@ -33,6 +33,7 @@ internal class MethodHandler(server: AconiteServer, private val method: String, 
     private val args = transformParams(server, fn)
     private val responseSerializer = responseSerializer(server, fn)
     private val responseMapper = responseMapper(fn)
+    private val isChunked = fn.isReturnsChannel
     private val ctx = server.coroutineContext
     override val argsCount = args.size
 
@@ -41,13 +42,15 @@ internal class MethodHandler(server: AconiteServer, private val method: String, 
         if (request.method != method) return null
         val objResult = fn.httpCall(args, obj, request)
         val bufferResult = responseMapper(objResult)
-        return Response(body = bufferResult)
+        return Response(
+                isChunked = isChunked,
+                body = bufferResult
+        )
     }
 
     private fun responseMapper(fn: KFunction<*>): ResponseMapper {
-        val type = fn.asyncReturnType()
         return when {
-            ReceiveChannel::class.isSuperclassOf(type.classifier as KClass<*>) -> responseChannelMapper()
+            fn.isReturnsChannel -> responseChannelMapper()
             else -> responseSimpleMapper()
         }
     }

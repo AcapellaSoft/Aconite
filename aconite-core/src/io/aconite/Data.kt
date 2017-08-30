@@ -15,6 +15,7 @@ data class Request (
 data class Response (
         val code: Int = 200,
         val headers: Map<String, String> = emptyMap(),
+        val isChunked: Boolean = false,
         val body: ReceiveChannel<Buffer> = emptyChannel()
 )
 
@@ -23,6 +24,8 @@ interface Buffer {
     val bytes: ByteArray
 
     companion object Factory {
+        val EMPTY = wrap(ByteArray(0))
+
         fun wrap(string: String) = object: Buffer {
             override val string = string
             override val bytes by lazy { string.toByteArray() }

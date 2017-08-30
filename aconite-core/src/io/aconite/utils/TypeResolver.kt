@@ -89,14 +89,14 @@ fun KFunction<*>.asyncReturnType(): KType {
     return returnType
 }
 
+val KFunction<*>.isReturnsChannel get() = ReceiveChannel::class.isSubclassOf(returnType.classifier as KClass<*>)
+
 fun KFunction<*>.channelReturnType(): KType {
     if (!isSuspend)
         throw AconiteException("Method '$this' is not suspend")
 
     var type = returnType
-
-    if (ReceiveChannel::class.isSubclassOf(returnType.classifier as KClass<*>))
-        type = type.arguments[0].type!!
+    if (isReturnsChannel) type = type.arguments[0].type!!
 
     return type
 }

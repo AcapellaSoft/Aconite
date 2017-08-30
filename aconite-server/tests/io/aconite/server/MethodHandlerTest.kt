@@ -68,6 +68,21 @@ class MethodHandlerTest {
         Assert.assertEquals("key = abc, version = 123, opt = foobar, body = null", response.body())
     }
 
+    @Test
+    fun testSimpleResponseNotChunked() = asyncTest {
+        val obj = TestModule()
+        val fn = TestModuleApi::class.functions.first { it.name == "get" }
+        val handler = MethodHandler(server, "GET", fn)
+
+        val response = handler.accept(obj, "/", Request(
+                method = "GET",
+                path = mapOf("key" to "abc"),
+                query = mapOf("version" to "123")
+        ))
+
+        Assert.assertFalse(response!!.isChunked)
+    }
+
     @Test(expected = ArgumentMissingException::class)
     fun testNotAccepted() = asyncTest {
         val obj = TestModule()
@@ -124,6 +139,7 @@ class MethodHandlerTest {
         val fn = TestModuleApi::class.functions.first { it.name == "streaming" }
         val handler = MethodHandler(server, "POST", fn)
         val response = handler.accept(obj, "/", Request("POST"))!!
+        Assert.assertTrue(response.isChunked)
         Assert.assertEquals("foo", response.body.receive().string)
         Assert.assertEquals("bar", response.body.receive().string)
         Assert.assertEquals("baz", response.body.receive().string)
