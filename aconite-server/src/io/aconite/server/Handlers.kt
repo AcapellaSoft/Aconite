@@ -9,11 +9,9 @@ import io.aconite.utils.*
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.channels.ReceiveChannel
 import java.util.*
-import kotlin.reflect.KCallable
-import kotlin.reflect.KFunction
-import kotlin.reflect.KParameter
-import kotlin.reflect.KType
+import kotlin.reflect.*
 import kotlin.reflect.full.functions
+import kotlin.reflect.full.isSuperclassOf
 
 private val PARAM_ANNOTATIONS = listOf(
         Body::class,
@@ -28,20 +26,32 @@ internal abstract class AbstractHandler : Comparable<AbstractHandler> {
     final override fun compareTo(other: AbstractHandler) = argsCount.compareTo(other.argsCount)
 }
 
+private typealias ResponseMapper = suspend (Any?) -> ReceiveChannel<Buffer>
+
 internal class MethodHandler(server: AconiteServer, private val method: String, private val fn: KFunction<*>) : AbstractHandler() {
     private val args = transformParams(server, fn)
     private val responseSerializer = responseSerializer(server, fn)
+    private val responseMapper = responseMapper(fn)
     override val argsCount = args.size
 
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
         if (url != "/") return null
         if (request.method != method) return null
-        val objResult = fn.httpCall(args, obj, request) as ReceiveChannel<*>
-        val binResult = pipeResponse(objResult)
-        return Response(body = binResult)
+        val objResult = fn.httpCall(args, obj, request)
+        val bufferResult = responseMapper(objResult)
+        return Response(body = bufferResult)
     }
 
-    private suspend fun pipeResponse(input: ReceiveChannel<*>): ReceiveChannel<Buffer> {
+    private fun responseMapper(fn: KFunction<*>): ResponseMapper {
+        val type = fn.asyncReturnType()
+        return when {
+            ReceiveChannel::class.isSuperclassOf(type.classifier as KClass<*>) -> responseChannelMapper()
+            else -> responseSimpleMapper()
+        }
+    }
+
+    private fun responseChannelMapper(): ResponseMapper = { result ->
+        val input = result as ReceiveChannel<*>
         val output = Channel<Buffer>()
         launch {
             for (part in input) {
@@ -50,7 +60,12 @@ internal class MethodHandler(server: AconiteServer, private val method: String, 
             }
             output.close()
         }
-        return output
+        output
+    }
+
+    private fun responseSimpleMapper(): ResponseMapper = { result ->
+        val buffer = responseSerializer?.serialize(result)
+        buffer.toChannel()
     }
 }
 
@@ -61,7 +76,7 @@ internal class ModuleHandler(server: AconiteServer, iface: KType, fn: KFunction<
     override val argsCount = args.size
 
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
-        val nextObj = (fn.httpCall(args, obj, request) as ReceiveChannel<*>).receive()
+        val nextObj = fn.httpCall(args, obj, request)
         for (router in routers)
             return router.accept(nextObj!!, url, request) ?: continue
         return null
@@ -89,7 +104,7 @@ private fun buildRouters(server: AconiteServer, iface: KType): List<Router> {
         val adapted = adaptFunction(server, resolved)
         val urlHandlers = allHandlers.computeIfAbsent(url) { ArrayList() }
         val handler = when (method) {
-            null -> ModuleHandler(server, adapted.channelReturnType(), adapted)
+            null -> ModuleHandler(server, adapted.asyncReturnType(), adapted)
             else -> MethodHandler(server, method, adapted)
         }
         urlHandlers.add(handler)

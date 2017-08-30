@@ -90,7 +90,7 @@ class TestStringSerializer: StringSerializer {
 }
 
 object TestCallAdapter: CallAdapter {
-    override fun adapt(fn: KFunction<*>) = SuspendCallAdapter.adapt(fn)
+    override fun adapt(fn: KFunction<*>) = fn
 }
 
 class MethodFilterPassAll: MethodFilter {

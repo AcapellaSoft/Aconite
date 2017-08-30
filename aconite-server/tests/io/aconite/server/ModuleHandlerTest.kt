@@ -19,7 +19,7 @@ class ModuleHandlerTest {
     @Test
     fun testGet() = asyncTest {
         val test = RootModuleApi::class.functions.first { it.name == "test" }
-        val module = ModuleHandler(server, TestModuleApi::class.createType(), TestCallAdapter.adapt(test)!!)
+        val module = ModuleHandler(server, TestModuleApi::class.createType(), test)
         val root = RootModule()
         val response = module.accept(root, "/kv/keys/abc", Request(
                 method = "GET",
@@ -33,7 +33,7 @@ class ModuleHandlerTest {
     @Test
     fun testPost() = asyncTest {
         val test = RootModuleApi::class.functions.first { it.name == "test" }
-        val module = ModuleHandler(server, TestModuleApi::class.createType(), TestCallAdapter.adapt(test)!!)
+        val module = ModuleHandler(server, TestModuleApi::class.createType(), test)
         val root = RootModule()
         val response = module.accept(root, "/kv/keys2/foobar", Request(
                 method = "POST"

@@ -21,7 +21,7 @@ class MethodHandlerTest {
     fun testAllParams() = asyncTest {
         val obj = TestModule()
         val fn = TestModuleApi::class.functions.first { it.name == "get" }
-        val handler = MethodHandler(server, "GET", TestCallAdapter.adapt(fn)!!)
+        val handler = MethodHandler(server, "GET", fn)
 
         val response = handler.accept(obj, "/", Request(
                 method = "GET",
@@ -38,7 +38,7 @@ class MethodHandlerTest {
     fun testAllParamsWrongMethod() = asyncTest {
         val obj = TestModule()
         val fn = TestModuleApi::class.functions.first { it.name == "get" }
-        val handler = MethodHandler(server, "GET", TestCallAdapter.adapt(fn)!!)
+        val handler = MethodHandler(server, "GET", fn)
 
         val response = handler.accept(obj, "", Request(
                 method = "POST",
@@ -54,7 +54,7 @@ class MethodHandlerTest {
     fun testDefaultValues() = asyncTest {
         val obj = TestModule()
         val fn = TestModuleApi::class.functions.first { it.name == "get" }
-        val handler = MethodHandler(server, "GET", TestCallAdapter.adapt(fn)!!)
+        val handler = MethodHandler(server, "GET", fn)
 
         val response = handler.accept(obj, "/", Request(
                 method = "GET",
@@ -69,7 +69,7 @@ class MethodHandlerTest {
     fun testNotAccepted() = asyncTest {
         val obj = TestModule()
         val fn = TestModuleApi::class.functions.first { it.name == "get" }
-        val handler = MethodHandler(server, "GET", TestCallAdapter.adapt(fn)!!)
+        val handler = MethodHandler(server, "GET", fn)
 
         handler.accept(obj, "/", Request(
                 method = "GET",
@@ -89,7 +89,7 @@ class MethodHandlerTest {
     fun testNotDefaultName() = asyncTest {
         val obj = TestModule()
         val fn = TestModuleApi::class.functions.first { it.name == "post" }
-        val handler = MethodHandler(server, "POST", TestCallAdapter.adapt(fn)!!)
+        val handler = MethodHandler(server, "POST", fn)
 
         val response = handler.accept(obj, "/", Request(
                 method = "POST",
@@ -103,7 +103,7 @@ class MethodHandlerTest {
     fun testMethodCallCancellation() = asyncTest(1) {
         val obj = RootModule()
         val fn = RootModuleApi::class.functions.first { it.name == "putInfinite" }
-        val handler = MethodHandler(server, "PUT", TestCallAdapter.adapt(fn)!!)
+        val handler = MethodHandler(server, "PUT", fn)
         handler.accept(obj, "/", Request("PUT"))
     }
 
@@ -111,7 +111,7 @@ class MethodHandlerTest {
     fun testMethodCallNotFound() = asyncTest(1) {
         val obj = RootModule()
         val fn = RootModuleApi::class.functions.first { it.name == "patch" }
-        val handler = MethodHandler(server, "PATCH", TestCallAdapter.adapt(fn)!!)
+        val handler = MethodHandler(server, "PATCH", fn)
         Assert.assertNull(handler.accept(obj, "/foobar", Request("PATCH")))
     }
 }
