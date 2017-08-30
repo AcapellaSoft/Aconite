@@ -8,7 +8,7 @@ import kotlin.reflect.full.createType
 private val server = AconiteServer(
         bodySerializer = TestBodySerializer.Factory(),
         stringSerializer = TestStringSerializer.Factory(),
-        callAdapter = TestCallAdapter(),
+        callAdapter = TestCallAdapter,
         methodFilter = MethodFilterPassSpecified("get", "post", "test", "patch")
 )
 

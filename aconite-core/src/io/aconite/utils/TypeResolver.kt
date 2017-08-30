@@ -1,10 +1,12 @@
 package io.aconite.utils
 
 import io.aconite.AconiteException
+import kotlinx.coroutines.experimental.channels.ReceiveChannel
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import kotlin.reflect.*
 import kotlin.reflect.full.createType
+import kotlin.reflect.full.isSubclassOf
 
 /**
  * Function for resolving type parameters of [child] type into real types
@@ -85,4 +87,13 @@ fun KType.cls(): KClass<*> {
 fun KFunction<*>.asyncReturnType(): KType {
     if (!isSuspend) throw AconiteException("Method '$this' is not suspend")
     return returnType
+}
+
+fun KFunction<*>.channelReturnType(): KType {
+    if (!isSuspend)
+        throw AconiteException("Method '$this' is not suspend")
+    if (!ReceiveChannel::class.isSubclassOf(returnType.classifier as KClass<*>))
+        throw AconiteException("Method '$this' return type is not Channel<*>")
+
+    return returnType.arguments[0].type!!
 }

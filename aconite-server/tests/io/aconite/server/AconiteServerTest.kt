@@ -12,7 +12,7 @@ class AconiteServerTest {
         val server = AconiteServer(
                 bodySerializer = TestBodySerializer.Factory(),
                 stringSerializer = TestStringSerializer.Factory(),
-                callAdapter = TestCallAdapter(),
+                callAdapter = TestCallAdapter,
                 methodFilter = MethodFilterPassSpecified("get", "post", "test", "patch")
         )
         server.register(RootModule(), RootModuleApi::class)
@@ -28,7 +28,7 @@ class AconiteServerTest {
         val server = AconiteServer(
                 bodySerializer = TestBodySerializer.Factory(),
                 stringSerializer = TestStringSerializer.Factory(),
-                callAdapter = TestCallAdapter(),
+                callAdapter = TestCallAdapter,
                 methodFilter = MethodFilterPassSpecified("get", "post", "test", "patch")
         )
         server.register(RootModule(), RootModuleApi::class)
@@ -44,7 +44,7 @@ class AconiteServerTest {
         val server = AconiteServer(
                 bodySerializer = TestBodySerializer.Factory(),
                 stringSerializer = TestStringSerializer.Factory(),
-                callAdapter = TestCallAdapter(),
+                callAdapter = TestCallAdapter,
                 methodFilter = MethodFilterPassAll()
         )
         server.register(RootModule(), RootModuleApi::class)

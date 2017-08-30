@@ -1,6 +1,7 @@
 package io.aconite.server
 
 import io.aconite.*
+import io.aconite.utils.toChannel
 import io.aconite.server.adapters.SuspendCallAdapter
 import io.aconite.server.errors.PassErrorHandler
 import io.aconite.server.filters.PassMethodFilter
@@ -10,6 +11,7 @@ import java.util.concurrent.CompletableFuture
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.createType
+import kotlinx.coroutines.experimental.channels.ReceiveChannel
 
 /**
  * Used to wrap functions, that are not `suspend`, but use some other form of an asynchronous call,
@@ -18,7 +20,8 @@ import kotlin.reflect.full.createType
 interface CallAdapter {
     /**
      * Wrap [fn] to make it `suspend`. If this adapter does not support such type of functions,
-     * then it must return `null`.
+     * then it must return `null`. Return value of the function must be [ReceiveChannel] for
+     * streaming support. If it returns only one value, then [toChannel] can be used.
      * @param[fn] function to wrap
      * @return wrapped function or `null` if not supported
      */

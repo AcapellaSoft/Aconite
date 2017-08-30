@@ -2,6 +2,7 @@ package io.aconite.server
 
 import io.aconite.*
 import io.aconite.annotations.*
+import io.aconite.server.adapters.SuspendCallAdapter
 import kotlinx.coroutines.experimental.runBlocking
 import kotlinx.coroutines.experimental.suspendCancellableCoroutine
 import kotlinx.coroutines.experimental.withTimeout
@@ -88,8 +89,8 @@ class TestStringSerializer: StringSerializer {
     }
 }
 
-class TestCallAdapter: CallAdapter {
-    override fun adapt(fn: KFunction<*>) = fn
+object TestCallAdapter: CallAdapter {
+    override fun adapt(fn: KFunction<*>) = SuspendCallAdapter.adapt(fn)
 }
 
 class MethodFilterPassAll: MethodFilter {
@@ -104,7 +105,7 @@ object EmptyAnnotations: KAnnotatedElement {
     override val annotations: List<Annotation> get() = emptyList()
 }
 
-fun Response?.body() = this?.body?.poll()?.string!!
+suspend fun Response?.body() = this?.body?.receive()?.string!!
 
 fun body(s: String) = Buffer.wrap(s)
 

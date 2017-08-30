@@ -6,6 +6,8 @@ import io.aconite.annotations.Header
 import io.aconite.annotations.Path
 import io.aconite.annotations.Query
 import io.aconite.utils.*
+import kotlinx.coroutines.experimental.channels.Channel
+import kotlinx.coroutines.experimental.channels.ReceiveChannel
 import java.util.*
 import kotlin.reflect.KCallable
 import kotlin.reflect.KFunction
@@ -34,8 +36,21 @@ internal class MethodHandler(server: AconiteServer, private val method: String, 
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
         if (url != "/") return null
         if (request.method != method) return null
-        val result = fn.httpCall(args, obj, request)
-        return Response(body = responseSerializer?.serialize(result).toChannel())
+        val objResult = fn.httpCall(args, obj, request) as ReceiveChannel<*>
+        val binResult = pipeResponse(objResult)
+        return Response(body = binResult)
+    }
+
+    private suspend fun pipeResponse(input: ReceiveChannel<*>): ReceiveChannel<Buffer> {
+        val output = Channel<Buffer>()
+        launch {
+            for (part in input) {
+                val buffer = responseSerializer?.serialize(part)
+                buffer?.let { output.send(buffer) }
+            }
+            output.close()
+        }
+        return output
     }
 }
 
@@ -46,7 +61,7 @@ internal class ModuleHandler(server: AconiteServer, iface: KType, fn: KFunction<
     override val argsCount = args.size
 
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
-        val nextObj = fn.httpCall(args, obj, request)
+        val nextObj = (fn.httpCall(args, obj, request) as ReceiveChannel<*>).receive()
         for (router in routers)
             return router.accept(nextObj!!, url, request) ?: continue
         return null
@@ -74,7 +89,7 @@ private fun buildRouters(server: AconiteServer, iface: KType): List<Router> {
         val adapted = adaptFunction(server, resolved)
         val urlHandlers = allHandlers.computeIfAbsent(url) { ArrayList() }
         val handler = when (method) {
-            null -> ModuleHandler(server, adapted.asyncReturnType(), adapted)
+            null -> ModuleHandler(server, adapted.channelReturnType(), adapted)
             else -> MethodHandler(server, method, adapted)
         }
         urlHandlers.add(handler)
@@ -186,7 +201,7 @@ private class InstanceTransformer: ArgumentTransformer {
 }
 
 private fun responseSerializer(server: AconiteServer, fn: KFunction<*>): BodySerializer? {
-    val returnType = fn.asyncReturnType()
+    val returnType = fn.channelReturnType()
     if (returnType.classifier == Unit::class) return null
     if (returnType.classifier == Void::class) return null
 
@@ -204,8 +219,7 @@ private suspend fun KFunction<*>.httpCall(args: List<ArgumentTransformer>, obj: 
     }
 
     val values = args.map { it.process(obj, request) }
-    val result = asyncCall(*values.toTypedArray())
-    return result
+    return asyncCall(*values.toTypedArray())
 }
 
 private fun adaptFunction(server: AconiteServer, fn: KFunction<*>): KFunction<*> {
