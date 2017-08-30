@@ -8,6 +8,7 @@ import io.aconite.annotations.Query
 import io.aconite.utils.*
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.channels.ReceiveChannel
+import kotlinx.coroutines.experimental.launch
 import java.util.*
 import kotlin.reflect.*
 import kotlin.reflect.full.functions
@@ -32,6 +33,7 @@ internal class MethodHandler(server: AconiteServer, private val method: String, 
     private val args = transformParams(server, fn)
     private val responseSerializer = responseSerializer(server, fn)
     private val responseMapper = responseMapper(fn)
+    private val ctx = server.coroutineContext
     override val argsCount = args.size
 
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
@@ -53,7 +55,7 @@ internal class MethodHandler(server: AconiteServer, private val method: String, 
     private fun responseChannelMapper(): ResponseMapper = { result ->
         val input = result as ReceiveChannel<*>
         val output = Channel<Buffer>()
-        launch {
+        launch(ctx) {
             for (part in input) {
                 val buffer = responseSerializer?.serialize(part)
                 buffer?.let { output.send(buffer) }

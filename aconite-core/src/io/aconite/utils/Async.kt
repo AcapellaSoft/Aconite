@@ -1,15 +1,12 @@
 package io.aconite.utils
 
-import kotlinx.coroutines.experimental.*
-import kotlinx.coroutines.experimental.channels.Channel
-import kotlinx.coroutines.experimental.channels.ChannelIterator
-import kotlinx.coroutines.experimental.channels.ClosedReceiveChannelException
-import kotlinx.coroutines.experimental.channels.ReceiveChannel
+import kotlinx.coroutines.experimental.channels.*
 import kotlinx.coroutines.experimental.selects.SelectInstance
+import kotlinx.coroutines.experimental.suspendCancellableCoroutine
 import java.lang.reflect.InvocationTargetException
 import kotlin.coroutines.experimental.Continuation
+import kotlin.coroutines.experimental.CoroutineContext
 import kotlin.coroutines.experimental.startCoroutine
-import kotlin.coroutines.experimental.suspendCoroutine
 import kotlin.reflect.KFunction
 
 /**
@@ -83,10 +80,11 @@ fun <T> T?.toChannel(): ReceiveChannel<T> {
 
 fun <T> emptyChannel(): ReceiveChannel<T> = Channel<T>().apply { close() }
 
-/**
- * Works like [kotlinx.coroutines.experimental.launch], but implicitly use current coroutine context.
- */
-suspend fun launch(block: suspend CoroutineScope.() -> Unit): Job = suspendCoroutine { c ->
-    val job = launch(c.context, CoroutineStart.DEFAULT, block)
-    c.resume(job)
+suspend fun <T> buildChannel(
+        context: CoroutineContext, capacity: Int = 0, builder: suspend ProducerScope<T>.() -> Unit
+): ReceiveChannel<T> {
+    return produce(context, capacity) {
+        builder()
+        close()
+    }.channel
 }

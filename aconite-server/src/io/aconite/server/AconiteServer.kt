@@ -7,11 +7,13 @@ import io.aconite.server.errors.PassErrorHandler
 import io.aconite.server.filters.PassMethodFilter
 import io.aconite.serializers.BuildInStringSerializers
 import io.aconite.serializers.SimpleBodySerializer
+import kotlinx.coroutines.experimental.Unconfined
 import java.util.concurrent.CompletableFuture
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.createType
 import kotlinx.coroutines.experimental.channels.ReceiveChannel
+import kotlin.coroutines.experimental.CoroutineContext
 
 /**
  * Used to wrap functions, that are not `suspend`, but use some other form of an asynchronous call,
@@ -60,7 +62,8 @@ class AconiteServer(
         val stringSerializer: StringSerializer.Factory = BuildInStringSerializers,
         val callAdapter: CallAdapter = SuspendCallAdapter,
         val methodFilter: MethodFilter = PassMethodFilter,
-        val errorHandler: ErrorHandler = PassErrorHandler
+        val errorHandler: ErrorHandler = PassErrorHandler,
+        val coroutineContext: CoroutineContext = Unconfined
 ) {
     private val modules = mutableListOf<RootHandler>()
 
