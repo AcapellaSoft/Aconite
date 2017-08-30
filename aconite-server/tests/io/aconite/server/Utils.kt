@@ -1,11 +1,13 @@
 package io.aconite.server
 
-import io.aconite.*
+import io.aconite.BodySerializer
+import io.aconite.Buffer
+import io.aconite.Response
+import io.aconite.StringSerializer
 import io.aconite.annotations.*
-import io.aconite.server.adapters.SuspendCallAdapter
-import kotlinx.coroutines.experimental.runBlocking
-import kotlinx.coroutines.experimental.suspendCancellableCoroutine
-import kotlinx.coroutines.experimental.withTimeout
+import io.aconite.utils.buildChannel
+import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.channels.ReceiveChannel
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KAnnotatedElement
@@ -29,6 +31,9 @@ interface TestModuleApi {
 
     @POST("/kv/keys2/{key-in-path}")
     suspend fun post(@Path("key-in-path") key: String): String
+
+    @POST("/streaming")
+    suspend fun streaming(): ReceiveChannel<String>
 }
 
 interface TestModuleMixedCallsApi {
@@ -50,6 +55,15 @@ open class TestModule: TestModuleApi {
             = "key = $key, version = $version, opt = ${opt ?: "foobar"}, body = $body"
     override suspend fun putNotAnnotated(key: String) = key
     override suspend fun post(key: String) = key
+
+    override suspend fun streaming() = buildChannel(Unconfined) {
+        send("foo")
+        delay(1)
+        send("bar")
+        delay(1)
+        send("baz")
+        delay(1)
+    }
 }
 
 @Suppress("unused")

@@ -114,4 +114,16 @@ class MethodHandlerTest {
         val handler = MethodHandler(server, "PATCH", fn)
         Assert.assertNull(handler.accept(obj, "/foobar", Request("PATCH")))
     }
+
+    @Test
+    fun testStreamingCall() = asyncTest {
+        val obj = TestModule()
+        val fn = TestModuleApi::class.functions.first { it.name == "streaming" }
+        val handler = MethodHandler(server, "POST", fn)
+        val response = handler.accept(obj, "/", Request("POST"))!!
+        Assert.assertEquals("foo", response.body.receive().string)
+        Assert.assertEquals("bar", response.body.receive().string)
+        Assert.assertEquals("baz", response.body.receive().string)
+        Assert.assertNull(response.body.receiveOrNull())
+    }
 }
