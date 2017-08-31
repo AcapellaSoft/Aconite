@@ -16,11 +16,15 @@ import kotlinx.coroutines.experimental.suspendCancellableCoroutine
 import kotlin.coroutines.experimental.Continuation
 import kotlin.coroutines.experimental.CoroutineContext
 
-class VertxHttpClient(val port: Int, val host: String, private val vertx: Vertx = Vertx.vertx()) : io.aconite.client.HttpClient {
+class VertxHttpClient(
+        private val port: Int,
+        private val host: String,
+        private val coroutineContext: CoroutineContext,
+        vertx: Vertx = Vertx.vertx()
+) : io.aconite.client.HttpClient {
     private val client = WebClient.create(vertx)
-    private val coroutineCtx = VertxCoroutineContext()
 
-    private inner class VertxCoroutineContext: CoroutineDispatcher() {
+    class VertxCoroutineContext(vertx: Vertx): CoroutineDispatcher() {
         private val ctx = vertx.getOrCreateContext()
 
         override fun dispatch(context: CoroutineContext, block: Runnable) {
@@ -37,7 +41,7 @@ class VertxHttpClient(val port: Int, val host: String, private val vertx: Vertx 
 
     private fun sendRequest(url: String, request: Request, handler: Handler<AsyncResult<HttpResponse<Buffer>>>) {
         val method = HttpMethod.valueOf(request.method)
-        async(coroutineCtx) {
+        async(coroutineContext) {
             client.request(method, port, host, url).apply {
                 for ((name, value) in request.headers)
                     putHeader(name, value)
