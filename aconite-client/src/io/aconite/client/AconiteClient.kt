@@ -5,6 +5,8 @@ import io.aconite.serializers.BuildInStringSerializers
 import io.aconite.serializers.SimpleBodySerializer
 import io.aconite.client.adapters.SuspendCallAdapter
 import io.aconite.client.errors.PassErrorHandler
+import kotlinx.coroutines.experimental.Unconfined
+import kotlin.coroutines.experimental.CoroutineContext
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.createType
@@ -31,7 +33,8 @@ class AconiteClient(
         val bodySerializer: BodySerializer.Factory = SimpleBodySerializer.Factory,
         val stringSerializer: StringSerializer.Factory = BuildInStringSerializers,
         val callAdapter: CallAdapter.Factory = SuspendCallAdapter.Factory,
-        val errorHandler: ErrorHandler = PassErrorHandler
+        val errorHandler: ErrorHandler = PassErrorHandler,
+        val coroutineContext: CoroutineContext = Unconfined
 ) {
     internal val moduleFactory = ModuleProxy.Factory(this)
 

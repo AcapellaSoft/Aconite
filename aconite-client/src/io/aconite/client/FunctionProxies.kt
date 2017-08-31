@@ -2,14 +2,16 @@ package io.aconite.client
 
 import io.aconite.AconiteException
 import io.aconite.BodySerializer
+import io.aconite.Buffer
 import io.aconite.Request
 import io.aconite.annotations.Body
 import io.aconite.annotations.Header
 import io.aconite.annotations.Path
 import io.aconite.annotations.Query
-import io.aconite.utils.UrlTemplate
-import io.aconite.utils.asyncReturnType
-import io.aconite.utils.cls
+import io.aconite.utils.*
+import kotlinx.coroutines.experimental.channels.Channel
+import kotlinx.coroutines.experimental.channels.ReceiveChannel
+import kotlinx.coroutines.experimental.launch
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
 
@@ -45,14 +47,18 @@ internal class FunctionModuleProxy(
     }
 }
 
+private typealias ResponseMapper = suspend (ReceiveChannel<Buffer>) -> Any?
+
 internal class FunctionMethodProxy(
-        val client: AconiteClient,
+        private val client: AconiteClient,
         fn: KFunction<*>,
         url: String,
-        val method: String
+        private val method: String
 ): FunctionProxy {
     private val appliers = buildAppliers(client, fn)
     private val responseDeserializer = responseDeserializer(client, fn)
+    private val responseMapper = responseMapper(fn)
+    private val ctx = client.coroutineContext
     private val url = UrlTemplate(url)
 
     override suspend fun call(url: String, request: Request, args: Array<Any?>): Any? {
@@ -62,13 +68,36 @@ internal class FunctionMethodProxy(
 
         if (response.code != 200)
             throw client.errorHandler.handle(response)
-        // TODO: channel support
-        return response.body.receive().let { responseDeserializer?.deserialize(it) }
+        return responseMapper(response.body)
+    }
+
+    private fun responseMapper(fn: KFunction<*>): ResponseMapper {
+        return when {
+            fn.isReturnsChannel -> responseChannelMapper()
+            else -> responseSimpleMapper()
+        }
+    }
+
+    private fun responseChannelMapper(): ResponseMapper = { input ->
+        val output = Channel<Any?>()
+        launch(ctx) {
+            for (buffer in input) {
+                val data = responseDeserializer?.deserialize(buffer)
+                data?.let { output.send(data) }
+            }
+            output.close()
+        }
+        output
+    }
+
+    private fun responseSimpleMapper(): ResponseMapper = { input ->
+        val buffer = input.receiveOrNull()
+        buffer?.let { responseDeserializer?.deserialize(it) }
     }
 }
 
 private fun responseDeserializer(client: AconiteClient, fn: KFunction<*>) : BodySerializer? {
-    val returnType = fn.asyncReturnType()
+    val returnType = fn.channelReturnType()
     if (returnType.classifier == Unit::class) return null
     if (returnType.classifier == Void::class) return null
 
@@ -157,7 +186,7 @@ private class QueryApplier(client: AconiteClient, param: KParameter, name: Strin
 
 private fun Request.apply(appliers: List<ArgumentApplier>, values: Array<Any?>): Request {
     var appliedRequest = this
-    for (i in 0..appliers.size - 1)
+    for (i in 0 until appliers.size)
         appliedRequest = appliers[i].apply(appliedRequest, values[i])
     return appliedRequest
 }

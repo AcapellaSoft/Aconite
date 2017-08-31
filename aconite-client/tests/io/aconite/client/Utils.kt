@@ -4,7 +4,9 @@ import io.aconite.Buffer
 import io.aconite.Request
 import io.aconite.Response
 import io.aconite.annotations.*
+import io.aconite.utils.channelOf
 import io.aconite.utils.toChannel
+import kotlinx.coroutines.experimental.channels.ReceiveChannel
 import kotlinx.coroutines.experimental.runBlocking
 import kotlinx.coroutines.experimental.withTimeout
 import java.util.concurrent.TimeUnit
@@ -23,12 +25,25 @@ interface TestModuleApi {
 
     @POST("/kv/keys2/{key-in-path}")
     suspend fun post(@Path("key-in-path") key: String): String
+
+    @POST("/streaming")
+    suspend fun streaming(): ReceiveChannel<String>
 }
 
 class TestHttpClient(val handler: suspend (String, Request) -> Response): HttpClient {
     constructor(): this({ _, _ -> Response()})
 
     suspend override fun makeRequest(url: String, request: Request) = handler(url, request)
+}
+
+class StreamingTestHttpClient(private vararg val parts: String): HttpClient {
+    suspend override fun makeRequest(url: String, request: Request): Response {
+        return Response(
+                body = channelOf(*parts.map { Buffer.wrap(it) }.toTypedArray()),
+                isChunked = true
+        )
+    }
+
 }
 
 fun reqBody(s: String) = Buffer.wrap(s)
