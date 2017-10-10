@@ -4,8 +4,8 @@ import io.aconite.*
 import io.aconite.server.*
 import org.slf4j.LoggerFactory
 
-object LogErrorHandler: ErrorHandler {
-    private val logger = LoggerFactory.getLogger(LogErrorHandler::class.java)
+class LogErrorHandler(cls: Class<*> = LogErrorHandler::class.java): ErrorHandler {
+    private val logger = LoggerFactory.getLogger(cls)
 
     override fun handle(ex: Throwable) = when (ex) {
         is HttpException -> ex.toResponse()

@@ -72,7 +72,7 @@ private fun responseDeserializer(client: AconiteClient, fn: KFunction<*>) : Body
     if (returnType.classifier == Void::class) return null
 
     return client.bodySerializer.create(fn, returnType) ?:
-            throw AconiteException("No suitable serializer found for response body in function $fn")
+            throw AconiteException("No suitable serializer found for response body in function '$fn'")
 }
 
 private fun buildAppliers(client: AconiteClient, fn: KFunction<*>)
@@ -85,8 +85,8 @@ private fun buildApplier(client: AconiteClient, param: KParameter): ArgumentAppl
         throw AconiteException("Extension methods are not allowed")
 
     val annotations = param.annotations.filter { it.annotationClass in PARAM_ANNOTATIONS }
-    if (annotations.isEmpty()) throw AconiteException("Parameter $param is not annotated")
-    if (annotations.size > 1) throw AconiteException("Parameter $param has more than one annotations")
+    if (annotations.isEmpty()) throw AconiteException("Parameter '$param' is not annotated")
+    if (annotations.size > 1) throw AconiteException("Parameter '$param' has more than one annotations")
     val annotation = annotations.first()
 
     return when (annotation) {
@@ -104,7 +104,7 @@ private interface ArgumentApplier {
 
 private class BodyApplier(client: AconiteClient, param: KParameter): ArgumentApplier {
     private val serializer = client.bodySerializer.create(param, param.type) ?:
-            throw AconiteException("No suitable serializer found for body parameter $param")
+            throw AconiteException("No suitable serializer found for body parameter '$param'")
 
     override fun apply(request: Request, value: Any?): Request {
         val serialized = serializer.serialize(value)
@@ -114,7 +114,7 @@ private class BodyApplier(client: AconiteClient, param: KParameter): ArgumentApp
 
 private class HeaderApplier(client: AconiteClient, param: KParameter, name: String): ArgumentApplier {
     private val serializer = client.stringSerializer.create(param, param.type) ?:
-            throw AconiteException("No suitable serializer found for header parameter $param")
+            throw AconiteException("No suitable serializer found for header parameter '$param'")
 
     val name = if (name.isEmpty()) param.name!! else name
 
@@ -128,7 +128,7 @@ private class HeaderApplier(client: AconiteClient, param: KParameter, name: Stri
 
 private class PathApplier(client: AconiteClient, param: KParameter, name: String): ArgumentApplier {
     private val serializer = client.stringSerializer.create(param, param.type) ?:
-            throw AconiteException("No suitable serializer found for path parameter $param")
+            throw AconiteException("No suitable serializer found for path parameter '$param'")
 
     val name = if (name.isEmpty()) param.name!! else name
 
@@ -142,7 +142,7 @@ private class PathApplier(client: AconiteClient, param: KParameter, name: String
 
 private class QueryApplier(client: AconiteClient, param: KParameter, name: String): ArgumentApplier {
     private val serializer = client.stringSerializer.create(param, param.type) ?:
-            throw AconiteException("No suitable serializer found for query parameter $param")
+            throw AconiteException("No suitable serializer found for query parameter '$param'")
 
     val name = if (name.isEmpty()) param.name!! else name
 
