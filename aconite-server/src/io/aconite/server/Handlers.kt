@@ -21,15 +21,15 @@ private val PARAM_ANNOTATIONS = listOf(
 )
 
 internal abstract class AbstractHandler : Comparable<AbstractHandler> {
-    abstract val argsCount: Int
+    abstract val requiredArgsCount: Int
     abstract suspend fun accept(obj: Any, url: String, request: Request): Response?
-    final override fun compareTo(other: AbstractHandler) = argsCount.compareTo(other.argsCount)
+    final override fun compareTo(other: AbstractHandler) = requiredArgsCount.compareTo(other.requiredArgsCount)
 }
 
 internal class MethodHandler(server: AconiteServer, private val method: String, private val fn: KFunction<*>) : AbstractHandler() {
     private val args = transformParams(server, fn)
     private val responseSerializer = responseSerializer(server, fn)
-    override val argsCount = args.size
+    override val requiredArgsCount = args.count { !it.isNullable }
 
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
         if (url != "/") return null
@@ -43,7 +43,7 @@ internal class ModuleHandler(server: AconiteServer, iface: KType, fn: KFunction<
     private val fn = resolve(iface, fn)
     private val args = transformParams(server, fn)
     private val routers = buildRouters(server, iface)
-    override val argsCount = args.size
+    override val requiredArgsCount = args.count { !it.isNullable }
 
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
         val nextObj = fn.httpCall(args, obj, request)
@@ -111,13 +111,14 @@ private fun transformParam(server: AconiteServer, param: KParameter): ArgumentTr
 }
 
 private interface ArgumentTransformer {
+    val isNullable: Boolean
     val name: String
     fun check(request: Request): Boolean
     fun process(instance: Any, request: Request): Any?
 }
 
 private class BodyTransformer(server: AconiteServer, param: KParameter): ArgumentTransformer {
-    private val isNullable = param.type.isMarkedNullable
+    override val isNullable = param.type.isMarkedNullable
     private val serializer = server.bodySerializer.create(param, param.type) ?:
             throw AconiteException("No suitable serializer found for body parameter '$param'")
 
@@ -132,7 +133,7 @@ private class BodyTransformer(server: AconiteServer, param: KParameter): Argumen
 }
 
 private class HeaderTransformer(server: AconiteServer, param: KParameter, name: String): ArgumentTransformer {
-    private val isNullable = param.type.isMarkedNullable
+    override val isNullable = param.type.isMarkedNullable
     private val serializer = server.stringSerializer.create(param, param.type) ?:
             throw AconiteException("No suitable serializer found for header parameter '$param'")
 
@@ -148,7 +149,7 @@ private class HeaderTransformer(server: AconiteServer, param: KParameter, name: 
 }
 
 private class PathTransformer(server: AconiteServer, param: KParameter, name: String): ArgumentTransformer {
-    private val isNullable = param.type.isMarkedNullable
+    override val isNullable = param.type.isMarkedNullable
     private val serializer = server.stringSerializer.create(param, param.type) ?:
             throw AconiteException("No suitable serializer found for path parameter '$param'")
 
@@ -164,7 +165,7 @@ private class PathTransformer(server: AconiteServer, param: KParameter, name: St
 }
 
 private class QueryTransformer(server: AconiteServer, param: KParameter, name: String): ArgumentTransformer {
-    private val isNullable = param.type.isMarkedNullable
+    override val isNullable = param.type.isMarkedNullable
     private val serializer = server.stringSerializer.create(param, param.type) ?:
             throw AconiteException("No suitable serializer found for query parameter '$param'")
 
@@ -180,6 +181,7 @@ private class QueryTransformer(server: AconiteServer, param: KParameter, name: S
 }
 
 private class InstanceTransformer: ArgumentTransformer {
+    override val isNullable = false
     override val name = "instance"
     override fun check(request: Request) = true
     override fun process(instance: Any, request: Request) = instance
