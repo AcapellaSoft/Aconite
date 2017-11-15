@@ -5,9 +5,9 @@ import io.aconite.utils.UrlTemplate
 import org.junit.Assert
 import org.junit.Test
 
-private class TestHandler(override var argsCount: Int, val message: String): AbstractHandler() {
+private class TestHandler(override var requiredArgsCount: Int, val message: String): AbstractHandler() {
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
-        if (request.path.size < argsCount) throw ArgumentMissingException("Too few arguments")
+        if (request.path.size < requiredArgsCount) throw ArgumentMissingException("Too few arguments")
         return Response(
                 body = BodyBuffer(Buffer.wrap(message), "text/plain"),
                 headers = request.path
@@ -16,11 +16,11 @@ private class TestHandler(override var argsCount: Int, val message: String): Abs
 }
 
 private class UrlToBodyHandler: AbstractHandler() {
-    override val argsCount: Int
+    override val requiredArgsCount: Int
         get() = 0
 
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
-        if (request.path.size < argsCount) throw ArgumentMissingException("Too few arguments")
+        if (request.path.size < requiredArgsCount) throw ArgumentMissingException("Too few arguments")
         return Response(
                 body = BodyBuffer(Buffer.wrap(url), "text/plain"),
                 headers = request.path
