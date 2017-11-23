@@ -21,7 +21,7 @@ class AconiteClientTest {
 
     @Test fun testCallMethodWithProxy() = asyncTest {
         val client = AconiteClient(httpClient = TestHttpClient { _, r -> Response(body = r.body) })
-        val proxy = client.create<RootModuleApi>()
+        val proxy = client.create<RootModuleApi>()["http://localhost"]
 
         val result = proxy.patch("foobar")
         Assert.assertEquals("foobar", result)
@@ -29,7 +29,7 @@ class AconiteClientTest {
 
     @Test fun testCallModuleWithProxy() = asyncTest {
         val client = AconiteClient(httpClient = TestHttpClient { _, r -> Response(body = r.body) })
-        val proxy = client.create<RootModuleApi>()
+        val proxy = client.create<RootModuleApi>()["http://localhost"]
 
         val result = proxy.test()
         Assert.assertNotNull(result)
@@ -37,7 +37,7 @@ class AconiteClientTest {
 
     @Test fun testCallMethodInModuleWithProxy() = asyncTest {
         val client = AconiteClient(httpClient = TestHttpClient { _, r -> Response(body = r.body) })
-        val proxy = client.create<RootModuleApi>()
+        val proxy = client.create<RootModuleApi>()["http://localhost"]
 
         val module = proxy.test()
         val result = module.get("key", "version", "opt", "body")
@@ -46,10 +46,10 @@ class AconiteClientTest {
 
     @Test fun testPathParameters() = asyncTest {
         val client = AconiteClient(httpClient = TestHttpClient { url, _ -> Response(body = body(url)) })
-        val proxy = client.create<TestModuleApi>()
+        val proxy = client.create<TestModuleApi>()["http://localhost"]
 
         val result = proxy.get("param", "version")
-        Assert.assertEquals("/kv/keys/param", result)
+        Assert.assertEquals("http://localhost/kv/keys/param", result)
     }
 
     @Test(expected = CancellationException::class)
@@ -57,7 +57,7 @@ class AconiteClientTest {
         val client = AconiteClient(httpClient = TestHttpClient { _, _ ->
             suspendCancellableCoroutine<Response> { /* will block forever */ }
         })
-        val api = client.create<RootModuleApi>()
+        val api = client.create<RootModuleApi>()["http://localhost"]
         api.patch("foo")
     }
 }

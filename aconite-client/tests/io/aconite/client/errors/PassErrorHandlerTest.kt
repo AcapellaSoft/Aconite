@@ -29,7 +29,7 @@ class PassErrorHandlerTest {
                 httpClient = TestHttpClient { _, _ -> Response(code = 404) },
                 errorHandler = PassErrorHandler
         )
-        val api = client.create<TestModuleApi>()
+        val api = client.create<TestModuleApi>()["http://localhost"]
         api.get("foo", "bar")
     }
 }
