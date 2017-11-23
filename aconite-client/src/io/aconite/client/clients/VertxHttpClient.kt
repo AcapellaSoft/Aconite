@@ -13,11 +13,21 @@ import io.vertx.ext.web.client.WebClient
 import kotlinx.coroutines.experimental.CoroutineDispatcher
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.suspendCancellableCoroutine
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.experimental.Continuation
 import kotlin.coroutines.experimental.CoroutineContext
 
-class VertxHttpClient(private val vertx: Vertx = Vertx.vertx()) : io.aconite.client.HttpClient {
-    private val client = WebClient.create(vertx)
+/**
+ * Vertx http client.
+ * Can process requests in many connections.
+ * @param[connectionsCount] number of connections
+ */
+class VertxHttpClient(
+        private val connectionsCount: Int = 1,
+        private val vertx: Vertx = Vertx.vertx()
+) : io.aconite.client.HttpClient {
+    private val clients = (1..connectionsCount).map { WebClient.create(vertx) }
+    private val clientIndex = AtomicInteger()
     private val coroutineCtx = VertxCoroutineContext()
 
     private inner class VertxCoroutineContext: CoroutineDispatcher() {
@@ -35,8 +45,14 @@ class VertxHttpClient(private val vertx: Vertx = Vertx.vertx()) : io.aconite.cli
         sendRequest(url, request, handler)
     }
 
+    private fun selectClient(): WebClient {
+        val index = clientIndex.incrementAndGet() % connectionsCount
+        return clients[index]
+    }
+
     private fun sendRequest(url: String, request: Request, handler: Handler<AsyncResult<HttpResponse<Buffer>>>) {
         val method = HttpMethod.valueOf(request.method)
+        val client = selectClient()
         async(coroutineCtx) {
             client.requestAbs(method, url).apply {
                 request.body?.contentType?.let { putHeader("Content-Type", it) }
