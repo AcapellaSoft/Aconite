@@ -5,7 +5,6 @@ import io.aconite.Response
 import kotlinx.coroutines.experimental.suspendCancellableCoroutine
 import org.junit.Assert
 import org.junit.Test
-import kotlin.coroutines.experimental.suspendCoroutine
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.functions
 

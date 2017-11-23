@@ -55,7 +55,7 @@ class AconiteClientTest {
     @Test(expected = CancellationException::class)
     fun testMethodCancellation() = asyncTest(1) {
         val client = AconiteClient(httpClient = TestHttpClient { _, _ ->
-            suspendCancellableCoroutine<Response> { /* will block forever */ }
+            suspendCancellableCoroutine { /* will block forever */ }
         })
         val api = client.create<RootModuleApi>()["http://localhost"]
         api.patch("foo")

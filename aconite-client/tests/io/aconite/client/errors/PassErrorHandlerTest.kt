@@ -10,7 +10,6 @@ class PassErrorHandlerTest {
     @Test fun transformResponseToEx() {
         val response = Response(404, body = body("message"))
         val ex = PassErrorHandler.handle(response)
-        Assert.assertTrue(ex is HttpException)
         Assert.assertEquals(404, ex.code)
         Assert.assertEquals("message", ex.message)
     }
@@ -18,7 +17,6 @@ class PassErrorHandlerTest {
     @Test fun transformResponseWithoutBodyToEx() {
         val response = Response(404)
         val ex = PassErrorHandler.handle(response)
-        Assert.assertTrue(ex is HttpException)
         Assert.assertEquals(404, ex.code)
         Assert.assertEquals(null, ex.message)
     }
