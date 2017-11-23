@@ -35,9 +35,9 @@ class AconiteClient(
 ) {
     internal val moduleFactory = ModuleProxy.Factory(this)
 
-    fun <T: Any> create(iface: KClass<T>): T {
+    fun <T: Any> create(iface: KClass<T>): Service<T> {
         val module = moduleFactory.create(iface.createType())
-        return KotlinProxyFactory.create(iface) { fn, args -> module.invoke(fn, "", Request(), args) }
+        return ServiceImpl(module, iface)
     }
 
     inline fun <reified T: Any> create() = create(T::class)

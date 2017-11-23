@@ -2,9 +2,10 @@ package io.aconite.client
 
 import io.aconite.AconiteException
 import io.aconite.Request
-import io.aconite.utils.*
+import io.aconite.utils.cls
+import io.aconite.utils.getHttpMethod
+import io.aconite.utils.resolve
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.coroutines.experimental.Continuation
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
 import kotlin.reflect.full.functions

@@ -5,9 +5,10 @@ import io.aconite.Buffer
 import io.aconite.Request
 import io.aconite.Response
 import io.aconite.annotations.*
-import kotlinx.coroutines.experimental.runBlocking
-import kotlinx.coroutines.experimental.withTimeout
+import kotlinx.coroutines.experimental.*
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 @Suppress("unused")
 interface RootModuleApi {
@@ -35,6 +36,22 @@ fun body(s: String) = BodyBuffer(Buffer.wrap(s), "text/plain")
 
 fun Response?.body() = this?.body?.content?.string!!
 
-fun asyncTest(timeout: Long = 10, unit: TimeUnit = TimeUnit.SECONDS, block: suspend () -> Unit) = runBlocking {
-    withTimeout(timeout, unit, block)
+fun asyncTest(timeout: Long = 10, unit: TimeUnit = TimeUnit.SECONDS, block: suspend () -> Unit) {
+    val f = CompletableFuture<Void>()
+    var ex: Throwable? = null
+    launch(Unconfined) {
+        try {
+            block()
+        } catch (e: Throwable) {
+            ex = e
+        } finally {
+            f.complete(null)
+        }
+    }
+    try {
+        f.get(timeout, unit)
+    } catch (ex: TimeoutException) {
+        throw CancellationException()
+    }
+    ex?.let { throw it }
 }

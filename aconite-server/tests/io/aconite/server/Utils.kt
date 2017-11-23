@@ -2,11 +2,13 @@ package io.aconite.server
 
 import io.aconite.*
 import io.aconite.annotations.*
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.experimental.CancellationException
+import kotlinx.coroutines.experimental.Unconfined
+import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.suspendCancellableCoroutine
-import kotlinx.coroutines.experimental.withTimeout
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
@@ -108,6 +110,23 @@ fun Response?.body() = this?.body?.content?.string!!
 
 fun body(s: String) = BodyBuffer(Buffer.wrap(s), "text/plain")
 
-fun asyncTest(timeout: Long = 10, unit: TimeUnit = TimeUnit.SECONDS, block: suspend () -> Unit) = runBlocking {
-    withTimeout(timeout, unit, block)
+fun asyncTest(timeout: Long = 10, unit: TimeUnit = TimeUnit.SECONDS, block: suspend () -> Unit) {
+    //withTimeout(timeout, unit) { block(); println("445") }
+    val f = CompletableFuture<Void>()
+    var ex: Throwable? = null
+    launch(Unconfined) {
+        try {
+            block()
+        } catch (e: Throwable) {
+            ex = e
+        } finally {
+            f.complete(null)
+        }
+    }
+    try {
+        f.get(timeout, unit)
+    } catch (ex: TimeoutException) {
+        throw CancellationException()
+    }
+    ex?.let { throw it }
 }
