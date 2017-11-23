@@ -5,6 +5,7 @@ import io.aconite.Buffer
 import io.aconite.Request
 import io.aconite.Response
 import io.aconite.annotations.*
+import kotlinx.coroutines.experimental.CoroutineScope
 import kotlinx.coroutines.experimental.runBlocking
 import kotlinx.coroutines.experimental.withTimeout
 import java.util.concurrent.TimeUnit
@@ -35,6 +36,6 @@ fun body(s: String) = BodyBuffer(Buffer.wrap(s), "text/plain")
 
 fun Response?.body() = this?.body?.content?.string!!
 
-fun asyncTest(timeout: Long = 10, unit: TimeUnit = TimeUnit.SECONDS, block: suspend () -> Unit) = runBlocking {
+fun asyncTest(timeout: Long = 10, unit: TimeUnit = TimeUnit.SECONDS, block: suspend CoroutineScope.() -> Unit) = runBlocking {
     withTimeout(timeout, unit, block)
 }
