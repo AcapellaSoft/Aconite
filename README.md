@@ -33,8 +33,8 @@ VertxHandler.runServer(server, 8080)
 4) Generate an interface implementation for the client:
 
 ```kotlin
-val client = AconiteClient(VertxHttpClient(8080, "localhost"))
-val api = client.create<HelloApi>()
+val client = AconiteClient(VertxHttpClient())
+val api = client.create<HelloApi>()["http://localhost:8080"]
 ```
 
 5) Make a call:
