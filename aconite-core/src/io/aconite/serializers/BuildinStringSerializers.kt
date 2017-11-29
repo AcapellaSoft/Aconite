@@ -2,9 +2,11 @@ package io.aconite.serializers
 
 import io.aconite.BadRequestException
 import io.aconite.StringSerializer
+import java.lang.reflect.InvocationTargetException
 import java.time.Instant
 import java.util.*
 import kotlin.reflect.KAnnotatedElement
+import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
 private inline fun <reified T: Any> factoryFor(serializer: StringSerializer): StringSerializer.Factory {
@@ -58,6 +60,31 @@ val DateStringSerializer = factoryFor<Date>(object : StringSerializer {
     }
 })
 
+class EnumStringSerializer(clazz: Class<*>) : StringSerializer {
+    private val valueOfFn = clazz.getMethod("valueOf", String::class.java)
+
+    object Factory : StringSerializer.Factory {
+        override fun create(annotations: KAnnotatedElement, type: KType): StringSerializer? {
+            val clazz = (type.classifier as? KClass<*>)?.java
+            if (clazz?.isEnum == true) {
+                return EnumStringSerializer(clazz)
+            }
+            return null
+        }
+    }
+
+    override fun deserialize(s: String): Any? = try {
+        valueOfFn.invoke(null, s)
+    } catch (ex: InvocationTargetException) {
+        if (ex.cause is IllegalArgumentException)
+            throw BadRequestException(cause = ex.cause)
+        else
+            throw ex
+    }
+
+    override fun serialize(obj: Any?): String? = obj.toString()
+}
+
 val BuildInStringSerializers = oneOf(
         DefaultStringSerializer,
         ByteStringSerializer,
@@ -69,5 +96,6 @@ val BuildInStringSerializers = oneOf(
         BooleanStringSerializer,
         CharStringSerializer,
         UuidStringSerializer,
-        DateStringSerializer
+        DateStringSerializer,
+        EnumStringSerializer.Factory
 )
