@@ -5,6 +5,7 @@ import io.aconite.Buffer
 import io.aconite.Request
 import io.aconite.Response
 import io.aconite.server.AconiteServer
+import io.aconite.utils.parseContentType
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
 import io.vertx.ext.web.Router
@@ -61,6 +62,8 @@ class VertxHandler(private val vertx: Vertx, private val server: AconiteServer):
     }
 
     private fun makeRequest(ctx: RoutingContext): Request {
+        val contentType = ctx.request().getHeader("Content-Type")?.let { parseContentType(it) } ?: ""
+
         return Request(
                 method = ctx.request().rawMethod(),
                 path = ctx.pathParams(),
@@ -74,7 +77,7 @@ class VertxHandler(private val vertx: Vertx, private val server: AconiteServer):
                         .toMap(),
                 body = BodyBuffer(
                         content = VertxBuffer(ctx.body),
-                        contentType = ctx.request().getHeader("Content-Type") ?: ""
+                        contentType = contentType
                 )
         )
     }
