@@ -9,10 +9,16 @@ data class Request (
 )
 
 data class Response (
-        val code: Int = 200,
+        val code: Int? = null,
         val headers: Map<String, String> = emptyMap(),
         val body: BodyBuffer? = null
-)
+) {
+    operator fun plus(other: Response) = Response(
+            code = other.code ?: this.code,
+            headers = this.headers + other.headers,
+            body = other.body ?: this.body
+    )
+}
 
 data class BodyBuffer(
         val content: Buffer,

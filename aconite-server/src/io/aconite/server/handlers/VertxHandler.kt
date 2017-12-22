@@ -86,7 +86,7 @@ class VertxHandler(private val vertx: Vertx, private val server: AconiteServer):
         ctx.response().apply {
             for ((k, v) in response.headers)
                 putHeader(k, v)
-            statusCode = response.code
+            statusCode = response.code ?: 200
 
             val body = response.body
             if (body != null) {
