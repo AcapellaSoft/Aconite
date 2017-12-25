@@ -10,6 +10,9 @@ import org.junit.Test
 interface ContextTestRoot {
     @MODULE("/foo")
     suspend fun foo(@Header first: String?): ContextTestModule
+
+    @GET("/cookie")
+    suspend fun cookie()
 }
 
 interface ContextTestModule {
@@ -25,6 +28,21 @@ class ContextTestRootImpl : ContextTestRoot {
         if (first != null)
             response.putHeader("header", first)
         return ContextTestModuleImpl()
+    }
+
+    suspend override fun cookie() {
+        response.setCookie(
+                maxAge = 10,
+                domain = "foo-bar.com",
+                path = "/abc",
+                sameSite = SameSiteType.STRICT,
+                secure = true,
+                httpOnly = true,
+                cookies = mapOf(
+                        "foo" to "bar",
+                        "baz" to "123"
+                )
+        )
     }
 }
 
@@ -101,5 +119,18 @@ class ResponseContextTest {
         ))
 
         Assert.assertEquals(123, response?.code)
+    }
+
+    @Test
+    fun testSetCookie() = asyncTest {
+        val aconite = AconiteServer()
+        aconite.register(ContextTestRootImpl(), ContextTestRoot::class)
+
+        val response = aconite.accept("/cookie", Request(
+                method = "GET"
+        ))
+
+        val expected = "foo=bar; baz=123; MaxAge=10; Domain=foo-bar.com; Path=/abc; SameSite=STRICT; Secure; HttpOnly; "
+        Assert.assertEquals(expected, response?.headers?.get("Set-Cookie"))
     }
 }
