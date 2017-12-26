@@ -87,4 +87,13 @@ class StringSerializerTest {
         val serializer = EnumStringSerializer.Factory.create(EmptyAnnotations, TestEnum::class.createType())!!
         serializer.deserialize("baz")
     }
+
+    @Test
+    fun testCookieDeserialization() {
+        val cookieStr = "foo=123; bar=baz"
+        val serializer = CookieStringSerializer.create(EmptyAnnotations, Cookie::class.createType())!!
+        val expected = Cookie(mapOf("foo" to "123", "bar" to "baz"))
+        val actual = serializer.deserialize(cookieStr)
+        Assert.assertEquals(expected, actual)
+    }
 }
