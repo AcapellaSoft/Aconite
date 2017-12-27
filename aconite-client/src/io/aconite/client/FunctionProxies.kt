@@ -60,7 +60,7 @@ internal class FunctionMethodProxy(
         val appliedUrl = url + this.url.format(appliedRequest.path)
         val response = client.httpClient.makeRequest(appliedUrl, appliedRequest)
 
-        if (response.code != 200)
+        if (response.code ?: 200 != 200)
             throw client.errorHandler.handle(response)
         return response.body?.let { responseDeserializer?.deserialize(it) }
     }

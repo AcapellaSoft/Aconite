@@ -2,10 +2,16 @@ package io.aconite.serializers
 
 import io.aconite.BadRequestException
 import io.aconite.StringSerializer
+import java.lang.reflect.InvocationTargetException
 import java.time.Instant
 import java.util.*
 import kotlin.reflect.KAnnotatedElement
+import kotlin.reflect.KClass
 import kotlin.reflect.KType
+
+data class Cookie(
+        val data: Map<String, String>
+)
 
 private inline fun <reified T: Any> factoryFor(serializer: StringSerializer): StringSerializer.Factory {
     val cls = T::class
@@ -58,6 +64,47 @@ val DateStringSerializer = factoryFor<Date>(object : StringSerializer {
     }
 })
 
+val CookieStringSerializer = factoryFor<Cookie>(object : StringSerializer {
+    override fun serialize(obj: Any?): String? {
+        TODO("not implemented")
+    }
+
+    override fun deserialize(s: String): Cookie {
+        // todo: parse other fields
+        val data = s.split(";")
+                .map { it.trim().split("=") }
+                .filter { it.size == 2 }
+                .map { Pair(it[0], it[1]) }
+                .toMap()
+        return Cookie(data)
+    }
+})
+
+class EnumStringSerializer(clazz: Class<*>) : StringSerializer {
+    private val valueOfFn = clazz.getMethod("valueOf", String::class.java)
+
+    object Factory : StringSerializer.Factory {
+        override fun create(annotations: KAnnotatedElement, type: KType): StringSerializer? {
+            val clazz = (type.classifier as? KClass<*>)?.java
+            if (clazz?.isEnum == true) {
+                return EnumStringSerializer(clazz)
+            }
+            return null
+        }
+    }
+
+    override fun deserialize(s: String): Any? = try {
+        valueOfFn.invoke(null, s)
+    } catch (ex: InvocationTargetException) {
+        if (ex.cause is IllegalArgumentException)
+            throw BadRequestException(cause = ex.cause)
+        else
+            throw ex
+    }
+
+    override fun serialize(obj: Any?): String? = obj.toString()
+}
+
 val BuildInStringSerializers = oneOf(
         DefaultStringSerializer,
         ByteStringSerializer,
@@ -69,5 +116,7 @@ val BuildInStringSerializers = oneOf(
         BooleanStringSerializer,
         CharStringSerializer,
         UuidStringSerializer,
-        DateStringSerializer
+        DateStringSerializer,
+        CookieStringSerializer,
+        EnumStringSerializer.Factory
 )

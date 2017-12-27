@@ -210,3 +210,6 @@ fun KFunction<*>.getHttpMethod(): Pair<String, String?>? {
         }
     }
 }
+
+// todo: parse encoding
+fun parseContentType(header: String): String = header.split(';').first().trim().toLowerCase()

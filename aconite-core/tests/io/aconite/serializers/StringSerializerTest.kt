@@ -1,5 +1,6 @@
 package io.aconite.serializers
 
+import io.aconite.BadRequestException
 import io.aconite.EmptyAnnotations
 import org.junit.Assert
 import org.junit.Test
@@ -7,6 +8,11 @@ import java.util.*
 import kotlin.reflect.full.createType
 
 class StringSerializerTest {
+    enum class TestEnum {
+        foo,
+        bar
+    }
+
     @Test fun testString() {
         val serializer = DefaultStringSerializer.create(EmptyAnnotations, String::class.createType())!!
 
@@ -64,5 +70,30 @@ class StringSerializerTest {
         val expected = null
         val string = serializer.serialize(expected)
         Assert.assertNull(string)
+    }
+
+    @Test fun testEnumSuccess() {
+        val serializer = EnumStringSerializer.Factory.create(EmptyAnnotations, TestEnum::class.createType())!!
+
+        val expected = TestEnum.bar
+        val string = serializer.serialize(expected)!!
+        val actual = serializer.deserialize(string)
+        Assert.assertEquals(expected, actual)
+        Assert.assertEquals("bar", string)
+    }
+
+    @Test(expected = BadRequestException::class)
+    fun testEnumFailed() {
+        val serializer = EnumStringSerializer.Factory.create(EmptyAnnotations, TestEnum::class.createType())!!
+        serializer.deserialize("baz")
+    }
+
+    @Test
+    fun testCookieDeserialization() {
+        val cookieStr = "foo=123; bar=baz"
+        val serializer = CookieStringSerializer.create(EmptyAnnotations, Cookie::class.createType())!!
+        val expected = Cookie(mapOf("foo" to "123", "bar" to "baz"))
+        val actual = serializer.deserialize(cookieStr)
+        Assert.assertEquals(expected, actual)
     }
 }

@@ -34,8 +34,9 @@ internal class MethodHandler(server: AconiteServer, private val method: String, 
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
         if (url != "/") return null
         if (request.method != method) return null
-        val result = fn.httpCall(args, obj, request)
-        return Response(body = responseSerializer?.serialize(result))
+        val response = CoroutineResponseReference(Response())
+        val result = fn.httpCall(args, obj, request, response)
+        return Response(body = responseSerializer?.serialize(result)) + response.response
     }
 }
 
@@ -46,9 +47,12 @@ internal class ModuleHandler(server: AconiteServer, iface: KType, fn: KFunction<
     override val requiredArgsCount = args.count { !it.isNullable }
 
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
-        val nextObj = fn.httpCall(args, obj, request)
-        for (router in routers)
-            return router.accept(nextObj!!, url, request) ?: continue
+        val response = CoroutineResponseReference(Response())
+        val nextObj = fn.httpCall(args, obj, request, response)
+        for (router in routers) {
+            val innerResponse = router.accept(nextObj!!, url, request) ?: continue
+            return response.response + innerResponse
+        }
         return null
     }
 }
@@ -196,7 +200,12 @@ private fun responseSerializer(server: AconiteServer, fn: KFunction<*>): BodySer
             throw AconiteException("No suitable serializer found for response body of method '$fn'")
 }
 
-private suspend fun KFunction<*>.httpCall(args: List<ArgumentTransformer>, obj: Any, request: Request): Any? {
+private suspend fun KFunction<*>.httpCall(
+        args: List<ArgumentTransformer>,
+        obj: Any,
+        request: Request,
+        response: CoroutineResponseReference
+): Any? {
     val missingArgs = args
             .filter { !it.check(request) }
             .map { it.name }
@@ -206,7 +215,7 @@ private suspend fun KFunction<*>.httpCall(args: List<ArgumentTransformer>, obj: 
     }
 
     val values = args.map { it.process(obj, request) }
-    val result = asyncCall(*values.toTypedArray())
+    val result = asyncCall(response, *values.toTypedArray())
     return result
 }
 
