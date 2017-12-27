@@ -66,7 +66,15 @@ val DateStringSerializer = factoryFor<Date>(object : StringSerializer {
 
 val CookieStringSerializer = factoryFor<Cookie>(object : StringSerializer {
     override fun serialize(obj: Any?): String? {
-        TODO("not implemented")
+        if (obj !is Cookie) return null
+        return buildString {
+            obj.data.forEach { k, v ->
+                append(k)
+                append('=')
+                append(v)
+                append(';')
+            }
+        }
     }
 
     override fun deserialize(s: String): Cookie {
