@@ -57,10 +57,11 @@ internal class ModuleHandler(server: AconiteServer, iface: KType, fn: KFunction<
     }
 }
 
-internal class RootHandler(server: AconiteServer, private val obj: Any, iface: KType) {
+internal class RootHandler(server: AconiteServer, private val factory: () -> Any, iface: KType) {
     private val routers = buildRouters(server, iface)
 
     suspend fun accept(url: String, request: Request): Response? {
+        val obj = factory()
         for (router in routers)
             return router.accept(obj, url, request) ?: continue
         return null

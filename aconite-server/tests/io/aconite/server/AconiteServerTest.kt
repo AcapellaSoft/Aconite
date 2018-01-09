@@ -49,4 +49,30 @@ class AconiteServerTest {
         )
         server.register(RootModule(), RootModuleApi::class)
     }
+
+    @Test
+    fun testRegisterFactory() = asyncTest {
+        val server = AconiteServer(
+                bodySerializer = TestBodySerializer.Factory(),
+                stringSerializer = TestStringSerializer.Factory(),
+                callAdapter = TestCallAdapter(),
+                methodFilter = MethodFilterPassSpecified("get", "post", "test", "patch")
+        )
+
+        var counter = 0
+
+        server.register<RootModuleApi> {
+            ++counter
+            RootModule()
+        }
+
+        for (i in 1..2) {
+            server.accept("/foo/bar/kv/keys/abc", Request(
+                    method = "GET",
+                    query = mapOf("version" to "123")
+            ))
+        }
+
+        Assert.assertEquals(2, counter)
+    }
 }

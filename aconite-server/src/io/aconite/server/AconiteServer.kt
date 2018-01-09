@@ -62,13 +62,28 @@ class AconiteServer(
     private val modules = mutableListOf<RootHandler>()
 
     /**
-     * Register [obj] implementation of [iface] HTTP interface. All functions wrapped by
-     * [callAdapter] and filtered by [methodFilter]. After this call, handlers, that are
-     * represented as functions of the [iface] and all it submodules, will be accessible
-     * through the HTTP requests to this server.
+     * Register factory [factory] of [iface] HTTP interface's implementations. All
+     * functions wrapped by [callAdapter] and filtered by [methodFilter]. After this
+     * call, handlers, that are represented as functions of the [iface] and all it
+     * submodules, will be accessible through the HTTP requests to this server.
+     */
+    fun <T: Any> register(iface: KClass<T>, factory: () -> T) {
+        modules.add(RootHandler(this, factory, iface.createType()))
+    }
+
+    /**
+     * Shortcut with reified type [T].
+     */
+    inline fun <reified T: Any> register(noinline factory: () -> T) {
+        register(T::class, factory)
+    }
+
+    /**
+     * This function is like register(iface, factory), but with constant factory, that
+     * always returns [obj].
      */
     fun <T: Any> register(obj: T, iface: KClass<T>) {
-        modules.add(RootHandler(this, obj, iface.createType()))
+        register(iface) { obj }
     }
 
     /**
