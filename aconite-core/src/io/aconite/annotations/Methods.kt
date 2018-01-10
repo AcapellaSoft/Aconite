@@ -77,3 +77,13 @@ annotation class PUT(
         /** relative (in module) url */
         val value: String = ""
 )
+
+/** Called before every request */
+@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.FUNCTION)
+annotation class BeforeRequest
+
+/** Called after every request */
+@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.FUNCTION)
+annotation class AfterRequest

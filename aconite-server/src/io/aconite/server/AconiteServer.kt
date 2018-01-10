@@ -1,11 +1,14 @@
 package io.aconite.server
 
-import io.aconite.*
+import io.aconite.BodySerializer
+import io.aconite.Request
+import io.aconite.Response
+import io.aconite.StringSerializer
+import io.aconite.serializers.BuildInStringSerializers
+import io.aconite.serializers.SimpleBodySerializer
 import io.aconite.server.adapters.SuspendCallAdapter
 import io.aconite.server.errors.PassErrorHandler
 import io.aconite.server.filters.PassMethodFilter
-import io.aconite.serializers.BuildInStringSerializers
-import io.aconite.serializers.SimpleBodySerializer
 import java.util.concurrent.CompletableFuture
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
@@ -60,6 +63,7 @@ class AconiteServer(
         val errorHandler: ErrorHandler = PassErrorHandler
 ) {
     private val modules = mutableListOf<RootHandler>()
+    internal val interceptors = Interceptors(this)
 
     /**
      * Register factory [factory] of [iface] HTTP interface's implementations. All
