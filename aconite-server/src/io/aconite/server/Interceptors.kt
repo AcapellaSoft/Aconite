@@ -42,7 +42,7 @@ internal class Interceptors(private val server: AconiteServer) {
 }
 
 internal class InterceptWrapper(server: AconiteServer, private val fn: KFunction<*>) {
-    private val args = transformParams(server, fn)
+    private val args = transformRequestParams(server, fn)
 
     suspend operator fun invoke(obj: Any, request: Request) {
         val response = CoroutineResponseReference(Response()) // todo: remove this

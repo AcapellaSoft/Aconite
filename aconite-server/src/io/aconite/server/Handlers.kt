@@ -1,13 +1,15 @@
 package io.aconite.server
 
 import io.aconite.AconiteException
-import io.aconite.BodySerializer
 import io.aconite.Request
 import io.aconite.Response
+import io.aconite.annotations.ResponseClass
 import io.aconite.utils.*
 import java.util.*
+import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
+import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.functions
 
 internal abstract class AbstractHandler : Comparable<AbstractHandler> {
@@ -17,7 +19,7 @@ internal abstract class AbstractHandler : Comparable<AbstractHandler> {
 }
 
 internal class MethodHandler(server: AconiteServer, private val method: String, private val fn: KFunction<*>) : AbstractHandler() {
-    private val args = transformParams(server, fn)
+    private val args = transformRequestParams(server, fn)
     private val responseSerializer = responseSerializer(server, fn)
     override val requiredArgsCount = args.count { !it.isNullable }
 
@@ -26,14 +28,14 @@ internal class MethodHandler(server: AconiteServer, private val method: String, 
         if (request.method != method) return null
         val response = CoroutineResponseReference(Response())
         val result = fn.httpCall(args, obj, request, response)
-        return Response(body = responseSerializer?.serialize(result)) + response.response
+        return responseSerializer(result) + response.response
     }
 }
 
 internal class ModuleHandler(server: AconiteServer, iface: KType, fn: KFunction<*>): AbstractHandler() {
     private val interceptors = server.interceptors
     private val fn = resolve(iface, fn)
-    private val args = transformParams(server, fn)
+    private val args = transformRequestParams(server, fn)
     private val routers = buildRouters(server, iface)
     override val requiredArgsCount = args.count { !it.isNullable }
 
@@ -99,11 +101,31 @@ private fun buildRouters(server: AconiteServer, iface: KType): List<Router> {
             .reversed()
 }
 
-private fun responseSerializer(server: AconiteServer, fn: KFunction<*>): BodySerializer? {
-    val returnType = fn.asyncReturnType()
-    if (returnType.classifier == Unit::class) return null
-    if (returnType.classifier == Void::class) return null
+typealias ResponseSerializer = (Any?) -> Response
 
-    return server.bodySerializer.create(fn, returnType) ?:
-            throw AconiteException("No suitable serializer found for response body of method '$fn'")
+private val emptyResponseSerializer: ResponseSerializer = { Response() }
+
+private fun responseSerializer(server: AconiteServer, fn: KFunction<*>): ResponseSerializer {
+    val returnType = fn.asyncReturnType()
+    if (returnType.classifier == Unit::class) return emptyResponseSerializer
+    if (returnType.classifier == Void::class) return emptyResponseSerializer
+
+    val clazz = returnType.classifier as KClass<*>
+    val serializer: ResponseSerializer
+
+    if (clazz.findAnnotation<ResponseClass>() != null) {
+        if (returnType.isMarkedNullable)
+            throw AconiteException("Return type of method '$fn' must not be nullable")
+        val transformers = transformResponseParams(server, returnType)
+        serializer = { r ->
+            transformers.map { it.process(r!!) }
+                    .reduce { a, b -> a + b }
+        }
+    } else {
+        val bodySerializer = server.bodySerializer.create(fn, returnType) ?:
+                throw AconiteException("No suitable serializer found for response body of method '$fn'")
+        serializer = { r -> Response(body = bodySerializer.serialize(r)) }
+    }
+
+    return serializer
 }
