@@ -186,8 +186,7 @@ private class HeaderResponseTransformer(server: AconiteServer, property: KProper
 internal suspend fun KFunction<*>.httpCall(
         args: List<RequestTransformer>,
         obj: Any,
-        request: Request,
-        response: CoroutineResponseReference
+        request: Request
 ): Any? {
     val missingArgs = args
             .filter { !it.check(request) }
@@ -198,7 +197,7 @@ internal suspend fun KFunction<*>.httpCall(
     }
 
     val values = args.map { it.process(obj, request) }
-    val result = asyncCall(response, *values.toTypedArray())
+    val result = asyncCall(*values.toTypedArray())
     return result
 }
 

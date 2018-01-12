@@ -3,15 +3,38 @@ package io.aconite.serializers
 import io.aconite.BadRequestException
 import io.aconite.StringSerializer
 import java.lang.reflect.InvocationTargetException
+import java.text.SimpleDateFormat
 import java.time.Instant
 import java.util.*
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
+enum class SameSiteType {
+    STRICT,
+    LAX
+}
+
 data class Cookie(
-        val data: Map<String, String>
+        val data: Map<String, String>,
+        val expires: Date? = null,
+        val maxAge: Long? = null,
+        val domain: String? = null,
+        val path: String? = null,
+        val sameSite: SameSiteType? = null,
+        val secure: Boolean = false,
+        val httpOnly: Boolean = false
 )
+
+private val expireDateFormat = SimpleDateFormat("EEE, dd-MMM-yyyy HH:mm:ss zzz", Locale.ROOT)
+
+private val EXPIRES_KEY = "Expires"
+private val MAX_AGE_KEY = "MaxAge"
+private val DOMAIN_KEY = "Domain"
+private val PATH_KEY = "Path"
+private val SAME_SITE_KEY = "SameSite"
+private val SECURE_FLAG = "Secure"
+private val HTTP_ONLY_FLAG = "HttpOnly"
 
 private inline fun <reified T: Any> factoryFor(serializer: StringSerializer): StringSerializer.Factory {
     val cls = T::class
@@ -68,23 +91,50 @@ val CookieStringSerializer = factoryFor<Cookie>(object : StringSerializer {
     override fun serialize(obj: Any?): String? {
         if (obj !is Cookie) return null
         return buildString {
-            obj.data.forEach { k, v ->
-                append(k)
-                append('=')
-                append(v)
-                append(';')
-            }
+            obj.data.forEach { k, v -> appendToCookie(k, v) }
+            appendToCookie(EXPIRES_KEY, obj.expires?.let { expireDateFormat.format(it) })
+            appendToCookie(MAX_AGE_KEY, obj.maxAge?.toString())
+            appendToCookie(DOMAIN_KEY, obj.domain)
+            appendToCookie(PATH_KEY, obj.path)
+            appendToCookie(SAME_SITE_KEY, obj.sameSite?.toString())
+            if (obj.secure) append("$SECURE_FLAG; ")
+            if (obj.httpOnly) append("$HTTP_ONLY_FLAG; ")
         }
     }
 
     override fun deserialize(s: String): Cookie {
-        // todo: parse other fields
-        val data = s.split(";")
+        val parts = s.split(";")
                 .map { it.trim().split("=") }
+
+        val kvs = parts
                 .filter { it.size == 2 }
-                .map { Pair(it[0], it[1]) }
+                .map { (k, v) -> Pair(k, v) }
                 .toMap()
-        return Cookie(data)
+
+        val flags = parts
+                .filter { it.size == 1 }
+                .map { it.first() }
+                .toSet()
+
+        return Cookie(
+                data = kvs,
+                expires = kvs[EXPIRES_KEY]?.let { expireDateFormat.parse(it) },
+                maxAge = kvs[MAX_AGE_KEY]?.toLong(),
+                domain = kvs[EXPIRES_KEY],
+                path = kvs[PATH_KEY],
+                sameSite = kvs[SAME_SITE_KEY]?.let { SameSiteType.valueOf(it) },
+                secure = flags.contains(SECURE_FLAG),
+                httpOnly = flags.contains(HTTP_ONLY_FLAG)
+        )
+    }
+
+    private fun StringBuilder.appendToCookie(key: String, value: String?) {
+        if (value != null) {
+            append(key)
+            append('=')
+            append(value)
+            append("; ")
+        }
     }
 })
 

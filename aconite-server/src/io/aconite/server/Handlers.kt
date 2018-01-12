@@ -26,9 +26,8 @@ internal class MethodHandler(server: AconiteServer, private val method: String, 
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
         if (url != "/") return null
         if (request.method != method) return null
-        val response = CoroutineResponseReference(Response())
-        val result = fn.httpCall(args, obj, request, response)
-        return responseSerializer(result) + response.response
+        val result = fn.httpCall(args, obj, request)
+        return responseSerializer(result)
     }
 }
 
@@ -40,10 +39,8 @@ internal class ModuleHandler(server: AconiteServer, iface: KType, fn: KFunction<
     override val requiredArgsCount = args.count { !it.isNullable }
 
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
-        val response = CoroutineResponseReference(Response())
-        val nextObj = fn.httpCall(args, obj, request, response)!!
-        val result = processHandlerRouters(interceptors, routers, nextObj, url, request)
-        return result?.let { response.response + it }
+        val nextObj = fn.httpCall(args, obj, request)!!
+        return processHandlerRouters(interceptors, routers, nextObj, url, request)
     }
 }
 

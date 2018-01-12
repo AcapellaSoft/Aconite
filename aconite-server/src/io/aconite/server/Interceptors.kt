@@ -1,7 +1,6 @@
 package io.aconite.server
 
 import io.aconite.Request
-import io.aconite.Response
 import io.aconite.annotations.AfterRequest
 import io.aconite.annotations.BeforeRequest
 import java.util.concurrent.ConcurrentHashMap
@@ -45,7 +44,6 @@ internal class InterceptWrapper(server: AconiteServer, private val fn: KFunction
     private val args = transformRequestParams(server, fn)
 
     suspend operator fun invoke(obj: Any, request: Request) {
-        val response = CoroutineResponseReference(Response()) // todo: remove this
-        fn.httpCall(args, obj, request, response)
+        fn.httpCall(args, obj, request)
     }
 }
