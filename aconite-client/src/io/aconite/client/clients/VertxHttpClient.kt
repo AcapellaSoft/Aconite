@@ -56,6 +56,7 @@ class VertxHttpClient(
         async(coroutineCtx) {
             client.requestAbs(method, url).apply {
                 request.body?.contentType?.let { putHeader("Content-Type", it) }
+                putHeader("Accept", "*/*")
 
                 for ((name, value) in request.headers)
                     putHeader(name, value)
