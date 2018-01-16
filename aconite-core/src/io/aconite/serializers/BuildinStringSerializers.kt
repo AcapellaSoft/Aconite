@@ -16,7 +16,7 @@ enum class SameSiteType {
 }
 
 data class Cookie(
-        val data: Map<String, String>,
+        val data: Map<String, String> = emptyMap(),
         val expires: Date? = null,
         val maxAge: Long? = null,
         val domain: String? = null,
