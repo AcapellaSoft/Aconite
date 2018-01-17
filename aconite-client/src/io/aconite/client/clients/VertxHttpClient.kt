@@ -3,6 +3,7 @@ package io.aconite.client.clients
 import io.aconite.BodyBuffer
 import io.aconite.Request
 import io.aconite.Response
+import io.aconite.utils.parseContentType
 import io.vertx.core.AsyncResult
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
@@ -56,6 +57,7 @@ class VertxHttpClient(
         async(coroutineCtx) {
             client.requestAbs(method, url).apply {
                 request.body?.contentType?.let { putHeader("Content-Type", it) }
+                putHeader("Accept", "*/*")
 
                 for ((name, value) in request.headers)
                     putHeader(name, value)
@@ -80,7 +82,7 @@ class VertxHttpClient(
             val body = result.body()?.let {
                 BodyBuffer(
                         content = io.aconite.Buffer.wrap(it.bytes),
-                        contentType = result.getHeader("Content-Type") ?: ""
+                        contentType = result.getHeader("Content-Type")?.let { parseContentType(it) } ?: ""
                 )
             }
 

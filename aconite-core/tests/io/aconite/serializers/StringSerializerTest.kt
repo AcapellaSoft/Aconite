@@ -4,6 +4,7 @@ import io.aconite.BadRequestException
 import io.aconite.EmptyAnnotations
 import org.junit.Assert
 import org.junit.Test
+import java.time.Instant
 import java.util.*
 import kotlin.reflect.full.createType
 
@@ -90,10 +91,29 @@ class StringSerializerTest {
 
     @Test
     fun testCookieDeserialization() {
-        val cookieStr = "foo=123; bar=baz"
         val serializer = CookieStringSerializer.create(EmptyAnnotations, Cookie::class.createType())!!
-        val expected = Cookie(mapOf("foo" to "123", "bar" to "baz"))
-        val actual = serializer.deserialize(cookieStr)
-        Assert.assertEquals(expected, actual)
+
+        val expected = Cookie(
+                mapOf("foo" to "123", "bar" to "baz"),
+                expires = Date.from(Instant.ofEpochSecond(1234567)),
+                maxAge = 10,
+                domain = "foo-bar.com",
+                path = "/abc",
+                sameSite = SameSiteType.STRICT,
+                secure = true,
+                httpOnly = true
+        )
+
+        val str = serializer.serialize(expected)!!
+        val actual = serializer.deserialize(str) as Cookie
+
+        Assert.assertEquals(expected.data["foo"], actual.data["foo"])
+        Assert.assertEquals(expected.data["bar"], actual.data["bar"])
+        Assert.assertEquals(expected.expires, actual.expires)
+        Assert.assertEquals(expected.maxAge, actual.maxAge)
+        Assert.assertEquals(expected.path, actual.path)
+        Assert.assertEquals(expected.sameSite, actual.sameSite)
+        Assert.assertEquals(expected.secure, actual.secure)
+        Assert.assertEquals(expected.httpOnly, actual.httpOnly)
     }
 }

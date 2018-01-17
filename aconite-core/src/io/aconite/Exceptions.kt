@@ -6,7 +6,11 @@ package io.aconite
  */
 open class AconiteException(message: String? = null, cause: Throwable? = null): RuntimeException(message, cause)
 
-open class HttpException(val code: Int, message: String? = null, cause: Throwable? = null): Exception(message, cause)
+open class HttpException(val code: Int, message: String? = null, cause: Throwable? = null): Exception(message, cause) {
+    override fun toString(): String {
+        return "HttpException(code=$code, message=$message)"
+    }
+}
 
 open class BadRequestException(message: String? = null, cause: Throwable? = null): HttpException(400, message, cause)
 

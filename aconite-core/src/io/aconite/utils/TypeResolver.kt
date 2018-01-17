@@ -40,6 +40,17 @@ fun <R> resolve(parent: KType, fn: KFunction<R>) = object: KFunction<R> by fn {
     override fun toString() = fn.toString()
 }
 
+/**
+ * Function for resolving return type of [property].
+ * This function can by repeatedly applied to the [property] for resolving types
+ * from many sources.
+ * @return [property] with resolved return type
+ */
+fun <R> resolve(parent: KType, property: KProperty<R>) = object : KProperty<R> by property {
+    override val returnType = resolve(parent, property.returnType)
+    override fun toString() = property.toString()
+}
+
 private fun resolveParam(parent: KType, param: KTypeParameter): KType? {
     val cls = (parent.classifier as KClass<*>)
     return cls.typeParameters.indices

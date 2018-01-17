@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.1.60'
+    ext.kotlin_version = '1.2.10'
     repositories {
         mavenCentral()
         jcenter()
@@ -96,9 +96,9 @@ dependencies {
     compile group: 'com.google.code.gson', name: 'gson', version: '1.7.2'
     compile group: 'com.squareup.moshi', name: 'moshi', version: '1.5.0'
     compile group: 'com.squareup.moshi', name: 'moshi-kotlin', version: '1.5.0'
-    compile group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: '1.1.2-2'
-    compile group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-core', version: '0.19'
-    compile group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-jdk8', version: '0.19'
+    compile group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: '1.2.0'
+    compile group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-core', version: '0.21.2'
+    compile group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-jdk8', version: '0.21.2'
     testCompile 'junit:junit:4.12'
 }
 

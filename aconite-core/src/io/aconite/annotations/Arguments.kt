@@ -51,3 +51,12 @@ annotation class Path(val name: String = "")
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.VALUE_PARAMETER)
 annotation class Query(val name: String = "")
+
+/**
+ * Indicates, that annotated class is a complex response.
+ * The class must have primary constructor, that accepts all properties as parameters.
+ * Properties of the class can be annotated with [Body] or [Header].
+ */
+@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.CLASS)
+annotation class ResponseClass
