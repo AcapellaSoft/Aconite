@@ -1,10 +1,12 @@
 package io.aconite.server.errors
 
 import io.aconite.*
-import io.aconite.server.*
+import io.aconite.server.RequestAcceptor
 
-object PassErrorHandler: ErrorHandler {
-    override fun handle(ex: Throwable) = when (ex) {
+class PassErrorHandler(inner: RequestAcceptor) : ErrorHandler(inner) {
+    companion object : RequestAcceptor.DelegatedFactory<Unit>({ inner, _ -> PassErrorHandler(inner) })
+
+    override fun handle(ex: Exception) = when (ex) {
         is HttpException -> ex.toResponse()
         else -> Response(
                 code = 500,

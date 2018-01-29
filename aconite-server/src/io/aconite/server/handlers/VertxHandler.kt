@@ -50,11 +50,7 @@ class VertxHandler(private val vertx: Vertx, private val server: AconiteServer):
                 val request = makeRequest(routingCtx)
                 val url = routingCtx.request().uri().substringBefore('?')
                 val response = server.accept(url, request)
-                if (response != null) {
-                    makeResponse(routingCtx, response)
-                } else {
-                    routingCtx.next()
-                }
+                makeResponse(routingCtx, response)
             } catch (ex: Throwable) {
                 ex.printStackTrace()
             }

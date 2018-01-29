@@ -1,13 +1,22 @@
 package io.aconite.server.errors
 
 import io.aconite.*
-import io.aconite.server.*
+import io.aconite.server.RequestAcceptor
 import org.slf4j.LoggerFactory
 
-class LogErrorHandler(cls: Class<*> = LogErrorHandler::class.java): ErrorHandler {
-    private val logger = LoggerFactory.getLogger(cls)
+class LogErrorHandler(clazz: Class<*>, inner: RequestAcceptor): ErrorHandler(inner) {
+    companion object : RequestAcceptor.DelegatedFactory<Configuration>({ inner, builder ->
+        val config = Configuration().apply(builder)
+        LogErrorHandler(config.clazz, inner)
+    })
 
-    override fun handle(ex: Throwable) = when (ex) {
+    class Configuration {
+        var clazz: Class<*> = LogErrorHandler::class.java
+    }
+
+    private val logger = LoggerFactory.getLogger(clazz)
+
+    override fun handle(ex: Exception) = when (ex) {
         is HttpException -> ex.toResponse()
         else -> {
             logger.error("Internal server error", ex)

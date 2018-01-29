@@ -7,7 +7,6 @@ import io.aconite.StringSerializer
 import io.aconite.serializers.BuildInStringSerializers
 import io.aconite.serializers.SimpleBodySerializer
 import io.aconite.server.adapters.SuspendCallAdapter
-import io.aconite.server.errors.PassErrorHandler
 import io.aconite.server.filters.PassMethodFilter
 import java.util.concurrent.CompletableFuture
 import kotlin.reflect.KClass
@@ -41,17 +40,6 @@ interface MethodFilter {
 }
 
 /**
- * Used to convert exception, that was thrown from handler, into error HTTP response.
- * Simplest example is to convert all exceptions into `500 Internal Server Error`.
- */
-interface ErrorHandler {
-    /**
-     * Converts [ex] to error [Response].
-     */
-    fun handle(ex: Throwable): Response
-}
-
-/**
  * Main server class, that are used to register HTTP interfaces and accepts HTTP requests.
  *
  */
@@ -60,8 +48,41 @@ class AconiteServer(
         val stringSerializer: StringSerializer.Factory = BuildInStringSerializers,
         val callAdapter: CallAdapter = SuspendCallAdapter,
         val methodFilter: MethodFilter = PassMethodFilter,
-        val errorHandler: ErrorHandler = PassErrorHandler
-) {
+        private val inner: RequestAcceptor = NotFoundRequestAcceptor
+) : RequestAcceptor {
+    companion object : RequestAcceptor.Factory<Configuration> {
+        override fun create(inner: RequestAcceptor, configurator: Configuration.() -> Unit): RequestAcceptor {
+            return Configuration().apply(configurator).build(inner)
+        }
+    }
+
+    class Configuration {
+        var bodySerializer: BodySerializer.Factory = SimpleBodySerializer.Factory
+        var stringSerializer: StringSerializer.Factory = BuildInStringSerializers
+        var callAdapter: CallAdapter = SuspendCallAdapter
+        var methodFilter: MethodFilter = PassMethodFilter
+
+        private val registrations = mutableListOf<(AconiteServer) -> Unit>()
+
+        fun <T : Any> register(iface: KClass<T>, factory: () -> T) {
+            registrations.add { it.register(iface, factory) }
+        }
+
+        inline fun <reified T : Any> register(noinline factory: () -> T) {
+            register(T::class, factory)
+        }
+
+        fun <T : Any> register(obj: T, iface: KClass<T>) {
+            register(iface) { obj }
+        }
+
+        fun build(inner: RequestAcceptor) = AconiteServer(
+                bodySerializer, stringSerializer, callAdapter, methodFilter, inner
+        ).apply {
+            registrations.forEach { it(this) }
+        }
+    }
+
     private val modules = mutableListOf<RootHandler>()
     internal val interceptors = Interceptors(this)
 
@@ -92,19 +113,14 @@ class AconiteServer(
 
     /**
      * Accepts HTTP request and routes it to the corresponding handler. Serialization and
-     * deserialization performed by the [bodySerializer] and [stringSerializer]. If handler
-     * fails with exception, function will return error response, that are built by [errorHandler].
+     * deserialization performed by the [bodySerializer] and [stringSerializer].
      * @param[url] url of requested handler
      * @param[request] HTTP request
      * @return HTTP response if handler was found, otherwise - `null`.
      */
-    suspend fun accept(url: String, request: Request): Response? {
-        try {
-            for (router in modules)
-                return router.accept(url, request) ?: continue
-            return null
-        } catch (ex: Throwable) {
-            return errorHandler.handle(ex)
-        }
+    override suspend fun accept(url: String, request: Request): Response {
+        for (router in modules)
+            return router.accept(url, request) ?: continue
+        return inner.accept(url, request)
     }
 }
