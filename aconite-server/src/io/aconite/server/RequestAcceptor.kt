@@ -8,16 +8,14 @@ import io.aconite.Response
  * Can some how use inner acceptor to process request.
  */
 interface RequestAcceptor {
-    interface Factory<out C> {
-        fun create(inner: RequestAcceptor, configurator: C.() -> Unit): RequestAcceptor
+    companion object {
+        operator fun invoke(accept: suspend (url: String, request: Request) -> Response) = object: RequestAcceptor {
+            override suspend fun accept(url: String, request: Request) = accept(url, request)
+        }
     }
 
-    abstract class DelegatedFactory<out C>(
-            private val fn: (RequestAcceptor, C.() -> Unit) -> RequestAcceptor
-    ) : Factory<C> {
-        override fun create(inner: RequestAcceptor, configurator: C.() -> Unit): RequestAcceptor {
-            return fn(inner, configurator)
-        }
+    interface Factory<out C> {
+        fun create(inner: RequestAcceptor, configurator: C.() -> Unit): RequestAcceptor
     }
 
     suspend fun accept(url: String, request: Request): Response
