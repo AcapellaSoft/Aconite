@@ -25,8 +25,11 @@ class HelloImpl : HelloApi {
 3) Create and run the server using default vertx handler
 
 ```kotlin
-val server = AconiteServer()
-server.register(HelloImpl(), HelloApi::class)
+val server = serverPipeline {
+    install(AconiteServer) {
+        register(HelloImpl(), HelloApi::class)
+    }
+}
 VertxHandler.runServer(server, 8080)
 ```
 
