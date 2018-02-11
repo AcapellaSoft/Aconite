@@ -23,22 +23,60 @@ fun resolve(parent: KType, child: KType): KType {
     }
 }
 
+private class ResolvedFunction<R>(private val parent: KType, private val fn: KFunction<R>) : KFunction<R> by fn {
+    override val returnType = resolve(parent, fn.returnType)
+    override val parameters = fn.parameters.map(this::KResolvedParameter)
+    override fun toString() = fn.toString()
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ResolvedFunction<*>
+
+        if (parent != other.parent) return false
+        if (fn != other.fn) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = parent.hashCode()
+        result = 31 * result + fn.hashCode()
+        return result
+    }
+
+    inner class KResolvedParameter(private val parameter: KParameter): KParameter by parameter {
+        override val type by lazy { resolve(parent, parameter.type) }
+        override fun toString() = parameter.toString()
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as ResolvedFunction<*>.KResolvedParameter
+
+            if (parameter != other.parameter) return false
+            if (type != other.type) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = parameter.hashCode()
+            result = 31 * result + type.hashCode()
+            return result
+        }
+    }
+}
+
 /**
  * Function for resolving type parameters of arguments and return value of [fn].
  * This function can by repeatedly applied to the [fn] for resolving types
  * from many sources.
  * @return [fn] with resolved type parameters
  */
-fun <R> resolve(parent: KType, fn: KFunction<R>) = object: KFunction<R> by fn {
-    inner class KResolvedParameter(private val parameter: KParameter): KParameter by parameter {
-        override val type by lazy { resolve(parent, parameter.type) }
-        override fun toString() = parameter.toString()
-    }
-
-    override val returnType = resolve(parent, fn.returnType)
-    override val parameters = fn.parameters.map(this::KResolvedParameter)
-    override fun toString() = fn.toString()
-}
+fun <R> resolve(parent: KType, fn: KFunction<R>): KFunction<R> = ResolvedFunction(parent, fn)
 
 /**
  * Function for resolving return type of [property].
