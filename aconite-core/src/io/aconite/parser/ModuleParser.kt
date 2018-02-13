@@ -53,18 +53,18 @@ class ModuleParser {
     }
 
     private fun parseModuleMethod(url: String, fn: KFunction<*>): ModuleMethodDesc {
-        val arguments = fn.parseArguments()
+        val arguments = parseArguments(fn)
         val responseType = fn.asyncReturnType()
         return ModuleMethodDesc(UrlTemplate(url), fn, arguments, parse(responseType))
     }
 
     private fun parseHttpMethod(url: String, method: String, fn: KFunction<*>): HttpMethodDesc {
-        val arguments = fn.parseArguments()
+        val arguments = parseArguments(fn)
         val response = parseResponse(fn)
         return HttpMethodDesc(UrlTemplate(url), fn, method, arguments, response)
     }
 
-    private fun KFunction<*>.parseArguments() = this.parameters.mapNotNull { parseArgument(it) }
+    fun parseArguments(fn: KFunction<*>) = fn.parameters.mapNotNull { parseArgument(it) }
 
     private fun parseArgument(param: KParameter): ArgumentDesc? {
         if (param.kind == KParameter.Kind.INSTANCE)

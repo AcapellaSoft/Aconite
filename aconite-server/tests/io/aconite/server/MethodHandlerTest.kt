@@ -1,27 +1,26 @@
 package io.aconite.server
 
-import io.aconite.AconiteException
 import io.aconite.ArgumentMissingException
 import io.aconite.Request
+import io.aconite.parser.HttpMethodDesc
+import io.aconite.parser.ModuleParser
 import org.junit.Assert
 import org.junit.Test
 import java.util.concurrent.CancellationException
-import kotlin.reflect.full.functions
 
 private val server = AconiteServer(
         bodySerializer = TestBodySerializer.Factory(),
         stringSerializer = TestStringSerializer.Factory(),
-        callAdapter = TestCallAdapter(),
         methodFilter = MethodFilterPassAll()
 )
 
 class MethodHandlerTest {
-
     @Test
     fun testAllParams() = asyncTest {
         val obj = TestModule()
-        val fn = TestModuleApi::class.functions.first { it.name == "get" }
-        val handler = MethodHandler(server, "GET", fn)
+        val fn = ModuleParser().parse(TestModuleApi::class)
+                .methods.first { it.function.name == "get" }
+        val handler = MethodHandler(server, fn as HttpMethodDesc)
 
         val response = handler.accept(obj, "/", Request(
                 method = "GET",
@@ -37,8 +36,9 @@ class MethodHandlerTest {
     @Test
     fun testAllParamsWrongMethod() = asyncTest {
         val obj = TestModule()
-        val fn = TestModuleApi::class.functions.first { it.name == "get" }
-        val handler = MethodHandler(server, "GET", fn)
+        val fn = ModuleParser().parse(TestModuleApi::class)
+                .methods.first { it.function.name == "get" }
+        val handler = MethodHandler(server, fn as HttpMethodDesc)
 
         val response = handler.accept(obj, "", Request(
                 method = "POST",
@@ -53,8 +53,9 @@ class MethodHandlerTest {
     @Test
     fun testDefaultValues() = asyncTest {
         val obj = TestModule()
-        val fn = TestModuleApi::class.functions.first { it.name == "get" }
-        val handler = MethodHandler(server, "GET", fn)
+        val fn = ModuleParser().parse(TestModuleApi::class)
+                .methods.first { it.function.name == "get" }
+        val handler = MethodHandler(server, fn as HttpMethodDesc)
 
         val response = handler.accept(obj, "/", Request(
                 method = "GET",
@@ -68,8 +69,9 @@ class MethodHandlerTest {
     @Test(expected = ArgumentMissingException::class)
     fun testNotAccepted() = asyncTest {
         val obj = TestModule()
-        val fn = TestModuleApi::class.functions.first { it.name == "get" }
-        val handler = MethodHandler(server, "GET", fn)
+        val fn = ModuleParser().parse(TestModuleApi::class)
+                .methods.first { it.function.name == "get" }
+        val handler = MethodHandler(server, fn as HttpMethodDesc)
 
         handler.accept(obj, "/", Request(
                 method = "GET",
@@ -78,18 +80,12 @@ class MethodHandlerTest {
         Assert.assertTrue(false)
     }
 
-    @Test(expected = AconiteException::class)
-    fun testNotAnnotated() = asyncTest {
-        val fn = TestModuleApi::class.functions.first { it.name == "putNotAnnotated" }
-        MethodHandler(server, "GET", fn)
-        Assert.assertTrue(false)
-    }
-
     @Test
     fun testNotDefaultName() = asyncTest {
         val obj = TestModule()
-        val fn = TestModuleApi::class.functions.first { it.name == "post" }
-        val handler = MethodHandler(server, "POST", fn)
+        val fn = ModuleParser().parse(TestModuleApi::class)
+                .methods.first { it.function.name == "post" }
+        val handler = MethodHandler(server, fn as HttpMethodDesc)
 
         val response = handler.accept(obj, "/", Request(
                 method = "POST",
@@ -102,16 +98,9 @@ class MethodHandlerTest {
     @Test(expected = CancellationException::class)
     fun testMethodCallCancellation() = asyncTest(1) {
         val obj = RootModule()
-        val fn = RootModuleApi::class.functions.first { it.name == "putInfinite" }
-        val handler = MethodHandler(server, "PUT", fn)
+        val fn = ModuleParser().parse(RootModuleApi::class)
+                .methods.first { it.function.name == "putInfinite" }
+        val handler = MethodHandler(server, fn as HttpMethodDesc)
         handler.accept(obj, "/", Request("PUT"))
-    }
-
-    @Test
-    fun testMethodCallNotFound() = asyncTest(1) {
-        val obj = RootModule()
-        val fn = RootModuleApi::class.functions.first { it.name == "patch" }
-        val handler = MethodHandler(server, "PATCH", fn)
-        Assert.assertNull(handler.accept(obj, "/foobar", Request("PATCH")))
     }
 }

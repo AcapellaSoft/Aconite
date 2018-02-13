@@ -4,28 +4,12 @@ import io.aconite.BodySerializer
 import io.aconite.Request
 import io.aconite.Response
 import io.aconite.StringSerializer
+import io.aconite.parser.ModuleParser
 import io.aconite.serializers.BuildInStringSerializers
 import io.aconite.serializers.SimpleBodySerializer
-import io.aconite.server.adapters.SuspendCallAdapter
 import io.aconite.server.filters.PassMethodFilter
-import java.util.concurrent.CompletableFuture
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
-import kotlin.reflect.full.createType
-
-/**
- * Used to wrap functions, that are not `suspend`, but use some other form of an asynchronous call,
- * for example, functions, that return [CompletableFuture].
- */
-interface CallAdapter {
-    /**
-     * Wrap [fn] to make it `suspend`. If this adapter does not support such type of functions,
-     * then it must return `null`.
-     * @param[fn] function to wrap
-     * @return wrapped function or `null` if not supported
-     */
-    fun adapt(fn: KFunction<*>): KFunction<*>?
-}
 
 /**
  * Used to specify, which functions would be registered as HTTP handlers. It may be useful, for example,
@@ -46,7 +30,6 @@ interface MethodFilter {
 class AconiteServer(
         val bodySerializer: BodySerializer.Factory = SimpleBodySerializer.Factory,
         val stringSerializer: StringSerializer.Factory = BuildInStringSerializers,
-        val callAdapter: CallAdapter = SuspendCallAdapter,
         val methodFilter: MethodFilter = PassMethodFilter,
         private val inner: RequestAcceptor = NotFoundRequestAcceptor
 ) : RequestAcceptor {
@@ -59,7 +42,6 @@ class AconiteServer(
     class Configuration {
         var bodySerializer: BodySerializer.Factory = SimpleBodySerializer.Factory
         var stringSerializer: StringSerializer.Factory = BuildInStringSerializers
-        var callAdapter: CallAdapter = SuspendCallAdapter
         var methodFilter: MethodFilter = PassMethodFilter
 
         private val registrations = mutableListOf<(AconiteServer) -> Unit>()
@@ -77,23 +59,25 @@ class AconiteServer(
         }
 
         fun build(inner: RequestAcceptor) = AconiteServer(
-                bodySerializer, stringSerializer, callAdapter, methodFilter, inner
+                bodySerializer, stringSerializer, methodFilter, inner
         ).apply {
             registrations.forEach { it(this) }
         }
     }
 
     private val modules = mutableListOf<RootHandler>()
+    internal val parser = ModuleParser()
     internal val interceptors = Interceptors(this)
 
     /**
      * Register factory [factory] of [iface] HTTP interface's implementations. All
-     * functions wrapped by [callAdapter] and filtered by [methodFilter]. After this
-     * call, handlers, that are represented as functions of the [iface] and all it
-     * submodules, will be accessible through the HTTP requests to this server.
+     * functions filtered by [methodFilter]. After this call, handlers, that are
+     * represented as functions of the [iface] and all it submodules, will be
+     * accessible through the HTTP requests to this server.
      */
     fun <T: Any> register(iface: KClass<T>, factory: () -> T) {
-        modules.add(RootHandler(this, factory, iface.createType()))
+        val desc = parser.parse(iface)
+        modules.add(RootHandler(this, factory, desc))
     }
 
     /**

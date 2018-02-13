@@ -1,6 +1,5 @@
 package io.aconite.server
 
-import io.aconite.AconiteException
 import io.aconite.Request
 import io.aconite.Response
 import io.aconite.server.errors.PassErrorHandler
@@ -14,7 +13,6 @@ class AconiteServerTest {
         val server = AconiteServer(
                 bodySerializer = TestBodySerializer.Factory(),
                 stringSerializer = TestStringSerializer.Factory(),
-                callAdapter = TestCallAdapter(),
                 methodFilter = MethodFilterPassSpecified("get", "post", "test", "patch")
         )
         server.register(RootModule(), RootModuleApi::class)
@@ -32,7 +30,6 @@ class AconiteServerTest {
             install(AconiteServer) {
                 bodySerializer = TestBodySerializer.Factory()
                 stringSerializer = TestStringSerializer.Factory()
-                callAdapter = TestCallAdapter()
                 methodFilter = MethodFilterPassSpecified("get", "post", "test", "patch")
 
                 register(RootModule(), RootModuleApi::class)
@@ -45,23 +42,11 @@ class AconiteServerTest {
         Assert.assertEquals(405, response.code)
     }
 
-    @Test(expected = AconiteException::class)
-    fun testRegisterFailed() = asyncTest {
-        val server = AconiteServer(
-                bodySerializer = TestBodySerializer.Factory(),
-                stringSerializer = TestStringSerializer.Factory(),
-                callAdapter = TestCallAdapter(),
-                methodFilter = MethodFilterPassAll()
-        )
-        server.register(RootModule(), RootModuleApi::class)
-    }
-
     @Test
     fun testRegisterFactory() = asyncTest {
         val server = AconiteServer(
                 bodySerializer = TestBodySerializer.Factory(),
                 stringSerializer = TestStringSerializer.Factory(),
-                callAdapter = TestCallAdapter(),
                 methodFilter = MethodFilterPassSpecified("get", "post", "test", "patch")
         )
 

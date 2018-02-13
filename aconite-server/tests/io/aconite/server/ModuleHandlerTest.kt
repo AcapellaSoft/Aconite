@@ -1,16 +1,14 @@
 package io.aconite.server
 
 import io.aconite.Request
-import kotlinx.coroutines.experimental.CancellationException
+import io.aconite.parser.ModuleMethodDesc
+import io.aconite.parser.ModuleParser
 import org.junit.Assert
 import org.junit.Test
-import kotlin.reflect.full.createType
-import kotlin.reflect.full.functions
 
 private val server = AconiteServer(
         bodySerializer = TestBodySerializer.Factory(),
         stringSerializer = TestStringSerializer.Factory(),
-        callAdapter = TestCallAdapter(),
         methodFilter = MethodFilterPassSpecified("get", "post")
 )
 
@@ -18,8 +16,9 @@ class ModuleHandlerTest {
 
     @Test
     fun testGet() = asyncTest {
-        val test = RootModuleApi::class.functions.first { it.name == "test" }
-        val module = ModuleHandler(server, TestModuleApi::class.createType(), test)
+        val test = ModuleParser().parse(RootModuleApi::class)
+                .methods.first { it.function.name == "test" }
+        val module = ModuleHandler(server, test as ModuleMethodDesc)
         val root = RootModule()
         val response = module.accept(root, "/kv/keys/abc", Request(
                 method = "GET",
@@ -32,20 +31,13 @@ class ModuleHandlerTest {
 
     @Test
     fun testPost() = asyncTest {
-        val test = RootModuleApi::class.functions.first { it.name == "test" }
-        val module = ModuleHandler(server, TestModuleApi::class.createType(), test)
+        val test = ModuleParser().parse(RootModuleApi::class)
+                .methods.first { it.function.name == "test" }
+        val module = ModuleHandler(server, test as ModuleMethodDesc)
         val root = RootModule()
         val response = module.accept(root, "/kv/keys2/foobar", Request(
                 method = "POST"
         ))
         Assert.assertEquals("foobar", response.body())
-    }
-
-    @Test(expected = CancellationException::class)
-    fun testMethodCallCancellation() = asyncTest(1) {
-        val obj = RootModule()
-        val fn = RootModuleApi::class.functions.first { it.name == "testInfinite" }
-        val handler = ModuleHandler(server, TestModuleApi::class.createType(), fn)
-        handler.accept(obj, "/foo/bar/inf", Request("PUT"))
     }
 }
