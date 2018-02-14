@@ -1,0 +1,4 @@
+- make serializers more generic: single ArgumentSerializer class instead of two Body- and String-Serializers
+- replace low level messy tests with high-level tests (test per feature)
+- DSL for client initialization
+- (maybe) swagger documentation generator 
