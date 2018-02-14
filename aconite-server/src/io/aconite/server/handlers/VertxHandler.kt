@@ -5,6 +5,7 @@ import io.aconite.Buffer
 import io.aconite.Request
 import io.aconite.Response
 import io.aconite.server.AconiteServer
+import io.aconite.server.RequestAcceptor
 import io.aconite.utils.parseContentType
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
@@ -15,7 +16,7 @@ import kotlinx.coroutines.experimental.CoroutineDispatcher
 import kotlinx.coroutines.experimental.async
 import kotlin.coroutines.experimental.CoroutineContext
 
-class VertxHandler(private val vertx: Vertx, private val server: AconiteServer): Handler<RoutingContext> {
+class VertxHandler(private val vertx: Vertx, private val acceptor: RequestAcceptor): Handler<RoutingContext> {
     val coroutineCtx : CoroutineContext = VertxCoroutineContext()
 
     companion object {
@@ -49,7 +50,7 @@ class VertxHandler(private val vertx: Vertx, private val server: AconiteServer):
             try {
                 val request = makeRequest(routingCtx)
                 val url = routingCtx.request().uri().substringBefore('?')
-                val response = server.accept(url, request)
+                val response = acceptor.accept(url, request)
                 makeResponse(routingCtx, response)
             } catch (ex: Throwable) {
                 ex.printStackTrace()
