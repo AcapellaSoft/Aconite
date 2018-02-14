@@ -16,9 +16,9 @@ internal abstract class AbstractHandler : Comparable<AbstractHandler> {
 
 internal class MethodHandler(server: AconiteServer, desc: HttpMethodDesc) : AbstractHandler() {
     private val method = desc.method
-    private val fn = desc.function
+    private val fn = desc.resolvedFunction
     private val args = transformRequestParams(server, desc.arguments)
-    private val responseSerializer = responseSerializer(server, desc.function, desc.response)
+    private val responseSerializer = responseSerializer(server, desc.resolvedFunction, desc.response)
     override val requiredArgsCount = args.count { !it.isOptional }
 
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
@@ -30,7 +30,7 @@ internal class MethodHandler(server: AconiteServer, desc: HttpMethodDesc) : Abst
 }
 
 internal class ModuleHandler(server: AconiteServer, desc: ModuleMethodDesc): AbstractHandler() {
-    private val fn = desc.function
+    private val fn = desc.resolvedFunction
     private val interceptors = server.interceptors
     private val args = transformRequestParams(server, desc.arguments)
     private val routers = buildRouters(server, desc.response)
@@ -84,7 +84,7 @@ private fun buildRouters(server: AconiteServer, module: ModuleDesc): List<Router
     val methodToHandler = MethodToHandler(server)
 
     for (method in module.methods) {
-        if (!server.methodFilter.predicate(method.function)) continue
+        if (!server.methodFilter.predicate(method.resolvedFunction)) continue
         val urlHandlers = allHandlers.computeIfAbsent(method.url) { ArrayList() }
         val handler = method.visit(methodToHandler)
         urlHandlers.add(handler)

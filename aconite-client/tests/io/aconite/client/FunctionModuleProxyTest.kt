@@ -1,16 +1,18 @@
 package io.aconite.client
 
 import io.aconite.Request
+import io.aconite.parser.ModuleMethodDesc
+import io.aconite.parser.ModuleParser
 import org.junit.Assert
 import org.junit.Test
-import kotlin.reflect.full.functions
 
 class FunctionModuleProxyTest {
     @Test fun testCreatesModuleProxy() = asyncTest {
         val client = AconiteClient(httpClient = TestHttpClient())
-        val fn = RootModuleApi::class.functions.first { it.name == "test" }
+        val desc = ModuleParser().parse(RootModuleApi::class).methods
+                .first { it.resolvedFunction.name == "test" }
 
-        val proxy = FunctionModuleProxy(client, fn, "/test/url")
+        val proxy = FunctionModuleProxy(client, desc as ModuleMethodDesc)
         val result = proxy.call("", Request("GET", body = body("foobar")), emptyArray())
 
         Assert.assertTrue(result is TestModuleApi)

@@ -4,7 +4,8 @@ import io.aconite.utils.UrlTemplate
 import kotlin.reflect.KFunction
 
 interface MethodDesc {
-    val function: KFunction<*>
+    val resolvedFunction: KFunction<*>
+    val originalFunction: KFunction<*>
     val url: UrlTemplate
     val type: String
 

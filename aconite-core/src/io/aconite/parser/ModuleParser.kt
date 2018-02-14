@@ -42,26 +42,26 @@ class ModuleParser {
             val (url, method) = fn.getHttpMethod() ?: continue
             val resolved = resolve(iface, fn)
             val handler = when (method) {
-                null -> parseModuleMethod(url, resolved)
-                else -> parseHttpMethod(url, method, resolved)
+                null -> parseModuleMethod(url, resolved, fn)
+                else -> parseHttpMethod(url, method, resolved, fn)
             }
             methods.add(handler)
         }
 
         val sortedMethods = methods.sortedWith(MethodComparator)
-        return ModuleDesc(clazz, sortedMethods)
+        return ModuleDesc(clazz, iface, sortedMethods)
     }
 
-    private fun parseModuleMethod(url: String, fn: KFunction<*>): ModuleMethodDesc {
-        val arguments = parseArguments(fn)
-        val responseType = fn.asyncReturnType()
-        return ModuleMethodDesc(UrlTemplate(url), fn, arguments, parse(responseType))
+    private fun parseModuleMethod(url: String, resolved: KFunction<*>, original: KFunction<*>): ModuleMethodDesc {
+        val arguments = parseArguments(resolved)
+        val responseType = resolved.asyncReturnType()
+        return ModuleMethodDesc(UrlTemplate(url), resolved, original, arguments, parse(responseType))
     }
 
-    private fun parseHttpMethod(url: String, method: String, fn: KFunction<*>): HttpMethodDesc {
-        val arguments = parseArguments(fn)
-        val response = parseResponse(fn)
-        return HttpMethodDesc(UrlTemplate(url), fn, method, arguments, response)
+    private fun parseHttpMethod(url: String, method: String, resolved: KFunction<*>, original: KFunction<*>): HttpMethodDesc {
+        val arguments = parseArguments(resolved)
+        val response = parseResponse(resolved)
+        return HttpMethodDesc(UrlTemplate(url), resolved, original, method, arguments, response)
     }
 
     fun parseArguments(fn: KFunction<*>) = fn.parameters.mapNotNull { parseArgument(it) }
@@ -115,11 +115,12 @@ class ModuleParser {
         val property = clazz.memberProperties
                 .find { it.name == param.name }
                 ?: throw AconiteException("All parameters of response class '$clazz' must be a properties")
+        val isOptional = property.returnType.isMarkedNullable
         val resolvedProperty = resolve(type, property)
 
         return when (annotation) {
-            is Body -> BodyFieldDesc(resolvedProperty)
-            is Header -> HeaderFieldDesc(resolvedProperty, name(param, annotation.name))
+            is Body -> BodyFieldDesc(isOptional, resolvedProperty)
+            is Header -> HeaderFieldDesc(isOptional, resolvedProperty, name(param, annotation.name))
             else -> throw RuntimeException("Unknown annotation $annotation") // should not happen
         }
     }

@@ -5,7 +5,8 @@ import kotlin.reflect.KFunction
 
 data class HttpMethodDesc(
         override val url: UrlTemplate,
-        override val function: KFunction<*>,
+        override val resolvedFunction: KFunction<*>,
+        override val originalFunction: KFunction<*>,
         val method: String,
         val arguments: List<ArgumentDesc>,
         val response: ResponseDesc

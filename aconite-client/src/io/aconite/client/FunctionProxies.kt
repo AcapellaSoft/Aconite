@@ -3,28 +3,8 @@ package io.aconite.client
 import io.aconite.AconiteException
 import io.aconite.Request
 import io.aconite.Response
-import io.aconite.annotations.*
-import io.aconite.utils.UrlTemplate
-import io.aconite.utils.asyncReturnType
-import io.aconite.utils.cls
-import io.aconite.utils.resolve
-import kotlin.reflect.KClass
+import io.aconite.parser.*
 import kotlin.reflect.KFunction
-import kotlin.reflect.KParameter
-import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.primaryConstructor
-
-private val PARAM_ANNOTATIONS = listOf(
-        Body::class,
-        Header::class,
-        Path::class,
-        Query::class
-)
-
-private val RESPONSE_PARAM_ANNOTATIONS = listOf(
-        Body::class,
-        Header::class
-)
 
 internal interface FunctionProxy {
     suspend fun call(url: String, request: Request, args: Array<Any?>): Any?
@@ -32,18 +12,17 @@ internal interface FunctionProxy {
 
 internal class FunctionModuleProxy(
         val client: AconiteClient,
-        fn: KFunction<*>,
-        url: String
+        desc: ModuleMethodDesc
 ): FunctionProxy {
-    private val appliers = buildAppliers(client, fn)
-    private val returnType = fn.asyncReturnType()
-    private val returnCls = returnType.cls()
-    private val url = UrlTemplate(url)
+    private val appliers = buildAppliers(client, desc.arguments)
+    private val response = desc.response
+    private val returnCls = desc.response.clazz
+    private val url = desc.url
 
     override suspend fun call(url: String, request: Request, args: Array<Any?>): Any? {
         val appliedRequest = request.apply(appliers, args)
         val appliedUrl = url + this.url.format(appliedRequest.path)
-        val handler = client.moduleFactory.create(returnType)
+        val handler = client.moduleFactory.create(response)
         val module = KotlinProxyFactory.create(returnCls) { fn, innerArgs ->
             handler.invoke(fn, appliedUrl, appliedRequest, innerArgs)
         }
@@ -53,13 +32,12 @@ internal class FunctionModuleProxy(
 
 internal class FunctionMethodProxy(
         private val client: AconiteClient,
-        fn: KFunction<*>,
-        url: String,
-        private val method: String
+        desc: HttpMethodDesc
 ): FunctionProxy {
-    private val appliers = buildAppliers(client, fn)
-    private val responseDeserializer = responseDeserializer(client, fn)
-    private val url = UrlTemplate(url)
+    private val appliers = buildAppliers(client, desc.arguments)
+    private val responseDeserializer = responseDeserializer(client, desc)
+    private val url = desc.url
+    private val method = desc.method
 
     override suspend fun call(url: String, request: Request, args: Array<Any?>): Any? {
         val appliedRequest = request.apply(appliers, args).copy(method = method)
@@ -74,66 +52,50 @@ internal class FunctionMethodProxy(
 
 typealias ResponseDeserializer = (response: Response) -> Any?
 
-private val emptyResponseDeserializer: ResponseDeserializer = { null }
+private class ResponseToDeserializer(
+        private val client: AconiteClient,
+        private val fn: KFunction<*>
+) : ResponseDesc.Visitor<ResponseDeserializer> {
 
-private fun responseDeserializer(client: AconiteClient, fn: KFunction<*>): ResponseDeserializer {
-    val returnType = fn.asyncReturnType()
-    if (returnType.classifier == Unit::class) return emptyResponseDeserializer
-    if (returnType.classifier == Void::class) return emptyResponseDeserializer
-
-    val clazz = returnType.classifier as KClass<*>
-    val deserializer: ResponseDeserializer
-
-    if (clazz.findAnnotation<ResponseClass>() != null) {
-        if (returnType.isMarkedNullable)
-            throw AconiteException("Return type of method '$fn' must not be nullable")
-        val constructor = clazz.primaryConstructor ?:
-                throw AconiteException("Return type of method '$fn' must have primary constructor")
-        val resolvedConstructor = resolve(returnType, constructor)
-        val transformers = transformResponseParams(client, resolvedConstructor)
-        deserializer = { r ->
-            val params = transformers.map { it.process(r) }
-            resolvedConstructor.call(*params.toTypedArray())
-        }
-    } else {
-        val bodyDeserializer = client.bodySerializer.create(fn, returnType) ?:
+    override fun body(desc: BodyResponseDesc): ResponseDeserializer {
+        val bodyDeserializer = client.bodySerializer.create(fn, desc.type) ?:
                 throw AconiteException("No suitable serializer found for response body of method '$fn'")
-        deserializer = { r -> r.body?.let { bodyDeserializer.deserialize(it) } }
+        return { r -> r.body?.let { bodyDeserializer.deserialize(it) } }
     }
 
-    return deserializer
+    override fun complex(desc: ComplexResponseDesc): ResponseDeserializer {
+        val transformers = transformResponseParams(client, desc.fields)
+        return { r ->
+            val params = transformers.map { it.process(r) }
+            desc.constructor.call(*params.toTypedArray())
+        }
+    }
 }
 
-private fun buildAppliers(client: AconiteClient, fn: KFunction<*>)
-        = fn.parameters.mapNotNull { buildApplier(client, it) }
+private fun responseDeserializer(client: AconiteClient, desc: HttpMethodDesc): ResponseDeserializer {
+    val responseToDeserializer = ResponseToDeserializer(client, desc.resolvedFunction)
+    return desc.response.visit(responseToDeserializer)
+}
 
-private fun buildApplier(client: AconiteClient, param: KParameter): ArgumentApplier? {
-    if (param.kind == KParameter.Kind.INSTANCE)
-        return null
-    if (param.kind == KParameter.Kind.EXTENSION_RECEIVER)
-        throw AconiteException("Extension methods are not allowed")
+private class ArgumentToApplier(private val client: AconiteClient) : ArgumentDesc.Visitor<ArgumentApplier> {
+    override fun header(desc: HeaderArgumentDesc) = HeaderApplier(client, desc)
+    override fun path(desc: PathArgumentDesc) = PathApplier(client, desc)
+    override fun query(desc: QueryArgumentDesc) = QueryApplier(client, desc)
+    override fun body(desc: BodyArgumentDesc) = BodyApplier(client, desc)
+}
 
-    val annotations = param.annotations.filter { it.annotationClass in PARAM_ANNOTATIONS }
-    if (annotations.isEmpty()) throw AconiteException("Parameter '$param' is not annotated")
-    if (annotations.size > 1) throw AconiteException("Parameter '$param' has more than one annotations")
-    val annotation = annotations.first()
-
-    return when (annotation) {
-        is Body -> BodyApplier(client, param)
-        is Header -> HeaderApplier(client, param, annotation.name)
-        is Path -> PathApplier(client, param, annotation.name)
-        is Query -> QueryApplier(client, param, annotation.name)
-        else -> throw RuntimeException("Unknown annotation $annotation") // should not happen
-    }
+private fun buildAppliers(client: AconiteClient, arguments: List<ArgumentDesc>) : List<ArgumentApplier> {
+    val argumentToApplier = ArgumentToApplier(client)
+    return arguments.map { it.visit(argumentToApplier) }
 }
 
 private interface ArgumentApplier {
     fun apply(request: Request, value: Any?): Request
 }
 
-private class BodyApplier(client: AconiteClient, param: KParameter): ArgumentApplier {
-    private val serializer = client.bodySerializer.create(param, param.type) ?:
-            throw AconiteException("No suitable serializer found for body parameter '$param'")
+private class BodyApplier(client: AconiteClient, desc: BodyArgumentDesc): ArgumentApplier {
+    private val serializer = client.bodySerializer.create(desc.parameter, desc.parameter.type) ?:
+            throw AconiteException("No suitable serializer found for body parameter '${desc.parameter}'")
 
     override fun apply(request: Request, value: Any?): Request {
         val serialized = serializer.serialize(value)
@@ -141,11 +103,11 @@ private class BodyApplier(client: AconiteClient, param: KParameter): ArgumentApp
     }
 }
 
-private class HeaderApplier(client: AconiteClient, param: KParameter, name: String): ArgumentApplier {
-    private val serializer = client.stringSerializer.create(param, param.type) ?:
-            throw AconiteException("No suitable serializer found for header parameter '$param'")
+private class HeaderApplier(client: AconiteClient, desc: HeaderArgumentDesc): ArgumentApplier {
+    private val serializer = client.stringSerializer.create(desc.parameter, desc.parameter.type) ?:
+            throw AconiteException("No suitable serializer found for header parameter '${desc.parameter}'")
 
-    val name = if (name.isEmpty()) param.name!! else name
+    val name = desc.name
 
     override fun apply(request: Request, value: Any?): Request {
         val serialized = serializer.serialize(value) ?: return request
@@ -155,11 +117,11 @@ private class HeaderApplier(client: AconiteClient, param: KParameter, name: Stri
     }
 }
 
-private class PathApplier(client: AconiteClient, param: KParameter, name: String): ArgumentApplier {
-    private val serializer = client.stringSerializer.create(param, param.type) ?:
-            throw AconiteException("No suitable serializer found for path parameter '$param'")
+private class PathApplier(client: AconiteClient, desc: PathArgumentDesc): ArgumentApplier {
+    private val serializer = client.stringSerializer.create(desc.parameter, desc.parameter.type) ?:
+            throw AconiteException("No suitable serializer found for path parameter '${desc.parameter}'")
 
-    val name = if (name.isEmpty()) param.name!! else name
+    val name = desc.name
 
     override fun apply(request: Request, value: Any?): Request {
         val serialized = serializer.serialize(value) ?: return request
@@ -169,11 +131,11 @@ private class PathApplier(client: AconiteClient, param: KParameter, name: String
     }
 }
 
-private class QueryApplier(client: AconiteClient, param: KParameter, name: String): ArgumentApplier {
-    private val serializer = client.stringSerializer.create(param, param.type) ?:
-            throw AconiteException("No suitable serializer found for query parameter '$param'")
+private class QueryApplier(client: AconiteClient, desc: QueryArgumentDesc): ArgumentApplier {
+    private val serializer = client.stringSerializer.create(desc.parameter, desc.parameter.type) ?:
+            throw AconiteException("No suitable serializer found for query parameter '${desc.parameter}'")
 
-    val name = if (name.isEmpty()) param.name!! else name
+    val name = desc.name
 
     override fun apply(request: Request, value: Any?): Request {
         val serialized = serializer.serialize(value) ?: return request
@@ -185,36 +147,29 @@ private class QueryApplier(client: AconiteClient, param: KParameter, name: Strin
 
 private fun Request.apply(appliers: List<ArgumentApplier>, values: Array<Any?>): Request {
     var appliedRequest = this
-    for (i in 0..appliers.size - 1)
+    for (i in 0 until appliers.size)
         appliedRequest = appliers[i].apply(appliedRequest, values[i])
     return appliedRequest
 }
 
-fun transformResponseParams(client: AconiteClient, constructor: KFunction<Any>): List<ResponseTransformer> {
-    return constructor.parameters.map { transformResponseParam(client, it) }
+private class FieldToTransformer(private val client: AconiteClient) : FieldDesc.Visitor<ResponseTransformer> {
+    override fun header(desc: HeaderFieldDesc) = HeaderResponseTransformer(client, desc)
+    override fun body(desc: BodyFieldDesc) = BodyResponseTransformer(client, desc)
 }
 
-fun transformResponseParam(client: AconiteClient, param: KParameter): ResponseTransformer {
-    val annotations = param.annotations.filter { it.annotationClass in RESPONSE_PARAM_ANNOTATIONS }
-    if (annotations.isEmpty()) throw AconiteException("Parameter '$param' is not annotated")
-    if (annotations.size > 1) throw AconiteException("Parameter '$param' has more than one annotations")
-    val annotation = annotations.first()
-
-    return when (annotation) {
-        is Body -> BodyResponseTransformer(client, param)
-        is Header -> HeaderResponseTransformer(client, param, annotation.name)
-        else -> throw RuntimeException("Unknown annotation $annotation") // should not happen
-    }
+fun transformResponseParams(client: AconiteClient, fields: List<FieldDesc>): List<ResponseTransformer> {
+    val fieldToTransformer = FieldToTransformer(client)
+    return fields.map { it.visit(fieldToTransformer) }
 }
 
 interface ResponseTransformer {
     fun process(response: Response): Any?
 }
 
-class BodyResponseTransformer(client: AconiteClient, param: KParameter) : ResponseTransformer {
-    private val deserializer = client.bodySerializer.create(param, param.type) ?:
-            throw AconiteException("No suitable serializer found for body parameter '$param'")
-    private val optional = param.type.isMarkedNullable
+class BodyResponseTransformer(client: AconiteClient, desc: BodyFieldDesc) : ResponseTransformer {
+    private val deserializer = client.bodySerializer.create(desc.property, desc.property.returnType) ?:
+            throw AconiteException("No suitable serializer found for body property '${desc.property}'")
+    private val optional = desc.isOptional
 
     override fun process(response: Response): Any? {
         val body = response.body
@@ -226,11 +181,11 @@ class BodyResponseTransformer(client: AconiteClient, param: KParameter) : Respon
     }
 }
 
-class HeaderResponseTransformer(client: AconiteClient, param: KParameter, name: String) : ResponseTransformer {
-    private val deserializer = client.stringSerializer.create(param, param.type) ?:
-            throw AconiteException("No suitable serializer found for header property '$param'")
-    private val name = if (name.isEmpty()) param.name else name
-    private val optional = param.type.isMarkedNullable
+class HeaderResponseTransformer(client: AconiteClient, desc: HeaderFieldDesc) : ResponseTransformer {
+    private val deserializer = client.stringSerializer.create(desc.property, desc.property.returnType) ?:
+            throw AconiteException("No suitable serializer found for header property '${desc.property}'")
+    private val name = desc.name
+    private val optional = desc.isOptional
 
     override fun process(response: Response): Any? {
         val header = response.headers[name]

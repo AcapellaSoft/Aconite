@@ -3,6 +3,7 @@ package io.aconite.parser
 import kotlin.reflect.KProperty
 
 data class HeaderFieldDesc(
+        override val isOptional: Boolean,
         override val property: KProperty<*>,
         val name: String
 ) : FieldDesc {

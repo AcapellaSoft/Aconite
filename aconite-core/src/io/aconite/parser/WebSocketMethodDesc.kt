@@ -6,7 +6,8 @@ import kotlin.reflect.KFunction
 // todo: web socket support
 data class WebSocketMethodDesc(
         override val url: UrlTemplate,
-        override val function: KFunction<*>,
+        override val resolvedFunction: KFunction<*>,
+        override val originalFunction: KFunction<*>,
         val arguments: List<ArgumentDesc>,
         val response: ResponseDesc
 ) : MethodDesc {

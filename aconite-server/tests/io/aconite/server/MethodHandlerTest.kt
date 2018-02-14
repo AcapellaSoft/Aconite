@@ -19,7 +19,7 @@ class MethodHandlerTest {
     fun testAllParams() = asyncTest {
         val obj = TestModule()
         val fn = ModuleParser().parse(TestModuleApi::class)
-                .methods.first { it.function.name == "get" }
+                .methods.first { it.resolvedFunction.name == "get" }
         val handler = MethodHandler(server, fn as HttpMethodDesc)
 
         val response = handler.accept(obj, "/", Request(
@@ -37,7 +37,7 @@ class MethodHandlerTest {
     fun testAllParamsWrongMethod() = asyncTest {
         val obj = TestModule()
         val fn = ModuleParser().parse(TestModuleApi::class)
-                .methods.first { it.function.name == "get" }
+                .methods.first { it.resolvedFunction.name == "get" }
         val handler = MethodHandler(server, fn as HttpMethodDesc)
 
         val response = handler.accept(obj, "", Request(
@@ -54,7 +54,7 @@ class MethodHandlerTest {
     fun testDefaultValues() = asyncTest {
         val obj = TestModule()
         val fn = ModuleParser().parse(TestModuleApi::class)
-                .methods.first { it.function.name == "get" }
+                .methods.first { it.resolvedFunction.name == "get" }
         val handler = MethodHandler(server, fn as HttpMethodDesc)
 
         val response = handler.accept(obj, "/", Request(
@@ -70,7 +70,7 @@ class MethodHandlerTest {
     fun testNotAccepted() = asyncTest {
         val obj = TestModule()
         val fn = ModuleParser().parse(TestModuleApi::class)
-                .methods.first { it.function.name == "get" }
+                .methods.first { it.resolvedFunction.name == "get" }
         val handler = MethodHandler(server, fn as HttpMethodDesc)
 
         handler.accept(obj, "/", Request(
@@ -84,7 +84,7 @@ class MethodHandlerTest {
     fun testNotDefaultName() = asyncTest {
         val obj = TestModule()
         val fn = ModuleParser().parse(TestModuleApi::class)
-                .methods.first { it.function.name == "post" }
+                .methods.first { it.resolvedFunction.name == "post" }
         val handler = MethodHandler(server, fn as HttpMethodDesc)
 
         val response = handler.accept(obj, "/", Request(
@@ -99,7 +99,7 @@ class MethodHandlerTest {
     fun testMethodCallCancellation() = asyncTest(1) {
         val obj = RootModule()
         val fn = ModuleParser().parse(RootModuleApi::class)
-                .methods.first { it.function.name == "putInfinite" }
+                .methods.first { it.resolvedFunction.name == "putInfinite" }
         val handler = MethodHandler(server, fn as HttpMethodDesc)
         handler.accept(obj, "/", Request("PUT"))
     }

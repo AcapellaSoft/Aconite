@@ -3,6 +3,7 @@ package io.aconite.parser
 import kotlin.reflect.KProperty
 
 interface FieldDesc {
+    val isOptional: Boolean
     val property: KProperty<*>
 
     fun <R> visit(visitor: Visitor<R>): R
