@@ -146,6 +146,23 @@ class UrlTemplate(url: String): Comparable<UrlTemplate> {
 
         return r
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as UrlTemplate
+
+        if (parts != other.parts) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return parts.hashCode()
+    }
+
+    override fun toString() = parts.joinToString("")
 }
 
 private interface UrlPart: Comparable<UrlPart> {
@@ -165,6 +182,22 @@ private class TextUrlPart(val text: String): UrlPart {
 
     override fun toRegex() = Regex.escape(text)
     override fun format(params: Map<String, String>) = text
+    override fun toString() = text
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as TextUrlPart
+
+        if (text != other.text) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return text.hashCode()
+    }
 }
 
 private class ParameterUrlPart(val name: String): UrlPart {
@@ -179,6 +212,22 @@ private class ParameterUrlPart(val name: String): UrlPart {
 
     override fun toRegex() = "([^/]+)"
     override fun format(params: Map<String, String>) = params[name]!!
+    override fun toString() = "{name}"
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ParameterUrlPart
+
+        if (name != other.name) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return name.hashCode()
+    }
 }
 
 private object EmptyUrlPart: UrlPart {
@@ -193,6 +242,7 @@ private object EmptyUrlPart: UrlPart {
 
     override fun toRegex() = ""
     override fun format(params: Map<String, String>) = ""
+    override fun toString() = ""
 }
 
 fun KFunction<*>.getHttpMethod(): Pair<String, String?>? {

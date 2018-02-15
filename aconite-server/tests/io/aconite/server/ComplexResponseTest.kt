@@ -50,7 +50,7 @@ class ComplexResponseTest {
         ))
 
         Assert.assertEquals("123", response.body())
-        Assert.assertEquals("456", response?.headers?.get("header"))
+        Assert.assertEquals("456", response.headers["header"])
     }
 
     @Test
@@ -63,6 +63,6 @@ class ComplexResponseTest {
                 headers = mapOf("header" to "456")
         ))
 
-        Assert.assertEquals("456", response?.headers?.get("header"))
+        Assert.assertEquals("456", response.headers["header"])
     }
 }

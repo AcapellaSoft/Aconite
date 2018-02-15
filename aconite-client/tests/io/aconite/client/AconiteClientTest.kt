@@ -8,19 +8,19 @@ import org.junit.Test
 
 class AconiteClientTest {
     @Test fun testCreateRootProxy() {
-        val client = AconiteClient(httpClient = TestHttpClient())
+        val client = AconiteClient(acceptor = TestHttpClient())
         val proxy = client.create<RootModuleApi>()
         Assert.assertNotNull(proxy)
     }
 
     @Test fun testCreateModuleProxy() {
-        val client = AconiteClient(httpClient = TestHttpClient())
+        val client = AconiteClient(acceptor = TestHttpClient())
         val proxy = client.create<TestModuleApi>()
         Assert.assertNotNull(proxy)
     }
 
     @Test fun testCallMethodWithProxy() = asyncTest {
-        val client = AconiteClient(httpClient = TestHttpClient { _, r -> Response(body = r.body) })
+        val client = AconiteClient(acceptor = TestHttpClient { _, r -> Response(body = r.body) })
         val proxy = client.create<RootModuleApi>()["http://localhost"]
 
         val result = proxy.patch("foobar")
@@ -28,7 +28,7 @@ class AconiteClientTest {
     }
 
     @Test fun testCallModuleWithProxy() = asyncTest {
-        val client = AconiteClient(httpClient = TestHttpClient { _, r -> Response(body = r.body) })
+        val client = AconiteClient(acceptor = TestHttpClient { _, r -> Response(body = r.body) })
         val proxy = client.create<RootModuleApi>()["http://localhost"]
 
         val result = proxy.test()
@@ -36,7 +36,7 @@ class AconiteClientTest {
     }
 
     @Test fun testCallMethodInModuleWithProxy() = asyncTest {
-        val client = AconiteClient(httpClient = TestHttpClient { _, r -> Response(body = r.body) })
+        val client = AconiteClient(acceptor = TestHttpClient { _, r -> Response(body = r.body) })
         val proxy = client.create<RootModuleApi>()["http://localhost"]
 
         val module = proxy.test()
@@ -45,7 +45,7 @@ class AconiteClientTest {
     }
 
     @Test fun testPathParameters() = asyncTest {
-        val client = AconiteClient(httpClient = TestHttpClient { url, _ -> Response(body = body(url)) })
+        val client = AconiteClient(acceptor = TestHttpClient { url, _ -> Response(body = body(url)) })
         val proxy = client.create<TestModuleApi>()["http://localhost"]
 
         val result = proxy.get("param", "version")
@@ -54,7 +54,7 @@ class AconiteClientTest {
 
     @Test(expected = CancellationException::class)
     fun testMethodCancellation() = asyncTest(1) {
-        val client = AconiteClient(httpClient = TestHttpClient { _, _ ->
+        val client = AconiteClient(acceptor = TestHttpClient { _, _ ->
             suspendCancellableCoroutine { /* will block forever */ }
         })
         val api = client.create<RootModuleApi>()["http://localhost"]

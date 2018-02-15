@@ -41,7 +41,7 @@ internal class Interceptors(private val server: AconiteServer) {
 }
 
 internal class InterceptWrapper(server: AconiteServer, private val fn: KFunction<*>) {
-    private val args = transformRequestParams(server, fn)
+    private val args = transformRequestParams(server, server.parser.parseArguments(fn))
 
     suspend operator fun invoke(obj: Any, request: Request) {
         fn.httpCall(args, obj, request)

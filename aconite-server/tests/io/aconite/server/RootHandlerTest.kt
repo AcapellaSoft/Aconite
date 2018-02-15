@@ -1,22 +1,20 @@
 package io.aconite.server
 
 import io.aconite.Request
+import io.aconite.parser.ModuleParser
 import org.junit.Assert
 import org.junit.Test
-import kotlin.reflect.full.createType
 
 private val server = AconiteServer(
         bodySerializer = TestBodySerializer.Factory(),
         stringSerializer = TestStringSerializer.Factory(),
-        callAdapter = TestCallAdapter(),
         methodFilter = MethodFilterPassSpecified("get", "post", "test", "patch")
 )
 
 class RootHandlerTest {
-
     @Test
     fun testInnerModuleGet() = asyncTest {
-        val root = RootHandler(server, { RootModule() }, RootModuleApi::class.createType())
+        val root = RootHandler(server, { RootModule() }, ModuleParser().parse(RootModuleApi::class))
         val response = root.accept("/foo/bar/kv/keys/abc", Request(
                 method = "GET",
                 query = mapOf("version" to "123")
@@ -26,7 +24,7 @@ class RootHandlerTest {
 
     @Test
     fun testInnerModulePost() = asyncTest {
-        val root = RootHandler(server, { RootModule() }, RootModuleApi::class.createType())
+        val root = RootHandler(server, { RootModule() }, ModuleParser().parse(RootModuleApi::class))
         val response = root.accept("/foo/bar/kv/keys2/abc", Request(
                 method = "POST"
         ))
@@ -35,7 +33,7 @@ class RootHandlerTest {
 
     @Test
     fun testRootModulePatch() = asyncTest(1000) {
-        val root = RootHandler(server, { RootModule() }, RootModuleApi::class.createType())
+        val root = RootHandler(server, { RootModule() }, ModuleParser().parse(RootModuleApi::class))
         val response = root.accept("/", Request(
                 method = "PATCH",
                 body = body("12345")

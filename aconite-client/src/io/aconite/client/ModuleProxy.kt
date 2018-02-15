@@ -1,31 +1,31 @@
 package io.aconite.client
 
-import io.aconite.AconiteException
 import io.aconite.Request
-import io.aconite.utils.cls
-import io.aconite.utils.getHttpMethod
-import io.aconite.utils.resolve
+import io.aconite.parser.*
+import io.aconite.utils.startCoroutine
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.coroutines.experimental.Continuation
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
-import kotlin.reflect.full.functions
 
 private class AdaptedFunctionProxy(
-        val proxy: FunctionProxy,
-        val adapter: CallAdapter
+        val proxy: FunctionProxy
 ) {
-    fun call(url: String, request: Request, args: Array<Any?>): Any? = adapter.call(args) { adaptedArgs ->
-        proxy.call(url, request, adaptedArgs)
+    @Suppress("UNCHECKED_CAST")
+    fun call(url: String, request: Request, args: Array<Any?>): Any? {
+        val continuation = args.last() as Continuation<Any?>
+        val realArgs = args.sliceArray(0 until args.size - 1)
+        return startCoroutine(continuation) { proxy.call(url, request, realArgs) }
     }
 }
 
-internal class ModuleProxy(client: AconiteClient, iface: KType) {
-    private val proxyMap = buildFunctionProxies(client, iface)
+internal class ModuleProxy(client: AconiteClient, desc: ModuleDesc) {
+    private val proxyMap = buildFunctionProxies(client, desc)
 
     class Factory(val client: AconiteClient) {
         private val map = ConcurrentHashMap<KType, ModuleProxy>()
 
-        fun create(iface: KType) = map.computeIfAbsent(iface) { ModuleProxy(client, iface) }
+        fun create(desc: ModuleDesc) = map.computeIfAbsent(desc.type) { ModuleProxy(client, desc) }
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -35,27 +35,15 @@ internal class ModuleProxy(client: AconiteClient, iface: KType) {
     }
 }
 
-private fun buildFunctionProxies(client: AconiteClient, iface: KType): Map<KFunction<*>, AdaptedFunctionProxy> {
-    val cls = iface.cls()
-    val proxies = hashMapOf<KFunction<*>, AdaptedFunctionProxy>()
-
-    for (fn in cls.functions) {
-        val (url, method) = fn.getHttpMethod() ?: continue
-        val resolved = resolve(iface, fn)
-        if (resolved.isOpen) continue
-        val adapter = adaptFunction(client, resolved)
-        val adaptedFn = adapter.function
-        val proxy = when (method) {
-            null -> FunctionModuleProxy(client, adaptedFn, url)
-            else -> FunctionMethodProxy(client, adaptedFn, url, method)
-        }
-        proxies[fn] = AdaptedFunctionProxy(proxy, adapter)
-    }
-
-    return proxies
+private class MethodToProxy(private val client: AconiteClient) : MethodDesc.Visitor<FunctionProxy> {
+    override fun module(desc: ModuleMethodDesc) = FunctionModuleProxy(client, desc)
+    override fun http(desc: HttpMethodDesc) = FunctionMethodProxy(client, desc)
+    override fun webSocket(desc: WebSocketMethodDesc) = throw NotImplementedError()
 }
 
-private fun adaptFunction(client: AconiteClient, fn: KFunction<*>): CallAdapter {
-    return client.callAdapter.create(fn) ?:
-            throw AconiteException("No suitable adapter found for function $fn")
+private fun buildFunctionProxies(client: AconiteClient, desc: ModuleDesc): Map<KFunction<*>, AdaptedFunctionProxy> {
+    val methodToProxy = MethodToProxy(client)
+    return desc.methods
+            .map { Pair(it.originalFunction, AdaptedFunctionProxy(it.visit(methodToProxy))) }
+            .toMap()
 }

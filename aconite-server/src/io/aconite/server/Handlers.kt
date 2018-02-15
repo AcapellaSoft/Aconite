@@ -3,14 +3,10 @@ package io.aconite.server
 import io.aconite.AconiteException
 import io.aconite.Request
 import io.aconite.Response
-import io.aconite.annotations.ResponseClass
-import io.aconite.utils.*
+import io.aconite.parser.*
+import io.aconite.utils.UrlTemplate
 import java.util.*
-import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
-import kotlin.reflect.KType
-import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.functions
 
 internal abstract class AbstractHandler : Comparable<AbstractHandler> {
     abstract val requiredArgsCount: Int
@@ -18,10 +14,12 @@ internal abstract class AbstractHandler : Comparable<AbstractHandler> {
     final override fun compareTo(other: AbstractHandler) = requiredArgsCount.compareTo(other.requiredArgsCount)
 }
 
-internal class MethodHandler(server: AconiteServer, private val method: String, private val fn: KFunction<*>) : AbstractHandler() {
-    private val args = transformRequestParams(server, fn)
-    private val responseSerializer = responseSerializer(server, fn)
-    override val requiredArgsCount = args.count { !it.isNullable }
+internal class MethodHandler(server: AconiteServer, desc: HttpMethodDesc) : AbstractHandler() {
+    private val method = desc.method
+    private val fn = desc.resolvedFunction
+    private val args = transformRequestParams(server, desc.arguments)
+    private val responseSerializer = responseSerializer(server, desc.resolvedFunction, desc.response)
+    override val requiredArgsCount = args.count { !it.isOptional }
 
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
         if (url != "/") return null
@@ -31,12 +29,12 @@ internal class MethodHandler(server: AconiteServer, private val method: String, 
     }
 }
 
-internal class ModuleHandler(server: AconiteServer, iface: KType, fn: KFunction<*>): AbstractHandler() {
+internal class ModuleHandler(server: AconiteServer, desc: ModuleMethodDesc): AbstractHandler() {
+    private val fn = desc.resolvedFunction
     private val interceptors = server.interceptors
-    private val fn = resolve(iface, fn)
-    private val args = transformRequestParams(server, fn)
-    private val routers = buildRouters(server, iface)
-    override val requiredArgsCount = args.count { !it.isNullable }
+    private val args = transformRequestParams(server, desc.arguments)
+    private val routers = buildRouters(server, desc.response)
+    override val requiredArgsCount = args.count { !it.isOptional }
 
     override suspend fun accept(obj: Any, url: String, request: Request): Response? {
         val nextObj = fn.httpCall(args, obj, request)!!
@@ -44,9 +42,9 @@ internal class ModuleHandler(server: AconiteServer, iface: KType, fn: KFunction<
     }
 }
 
-internal class RootHandler(server: AconiteServer, private val factory: () -> Any, iface: KType) {
+internal class RootHandler(server: AconiteServer, private val factory: () -> Any, desc: ModuleDesc) {
     private val interceptors = server.interceptors
-    private val routers = buildRouters(server, iface)
+    private val routers = buildRouters(server, desc)
 
     suspend fun accept(url: String, request: Request): Response? {
         val obj = factory()
@@ -75,54 +73,51 @@ private suspend fun processHandlerRouters(
     return result
 }
 
-private fun buildRouters(server: AconiteServer, iface: KType): List<Router> {
-    val cls = iface.cls()
-    val allHandlers = hashMapOf<String, MutableList<AbstractHandler>>()
+private class MethodToHandler(private val server: AconiteServer) : MethodDesc.Visitor<AbstractHandler> {
+    override fun module(desc: ModuleMethodDesc) = ModuleHandler(server, desc)
+    override fun http(desc: HttpMethodDesc) = MethodHandler(server, desc)
+    override fun webSocket(desc: WebSocketMethodDesc) = throw NotImplementedError()
+}
 
-    for (fn in cls.functions) {
-        val (url, method) = fn.getHttpMethod() ?: continue
-        val resolved = resolve(iface, fn)
-        if (!server.methodFilter.predicate(resolved)) continue
-        val adapted = adaptFunction(server, resolved)
-        val urlHandlers = allHandlers.computeIfAbsent(url) { ArrayList() }
-        val handler = when (method) {
-            null -> ModuleHandler(server, adapted.asyncReturnType(), adapted)
-            else -> MethodHandler(server, method, adapted)
-        }
+private fun buildRouters(server: AconiteServer, module: ModuleDesc): List<Router> {
+    val allHandlers = hashMapOf<UrlTemplate, MutableList<AbstractHandler>>()
+    val methodToHandler = MethodToHandler(server)
+
+    for (method in module.methods) {
+        if (!server.methodFilter.predicate(method.resolvedFunction)) continue
+        val urlHandlers = allHandlers.computeIfAbsent(method.url) { ArrayList() }
+        val handler = method.visit(methodToHandler)
         urlHandlers.add(handler)
     }
 
     return allHandlers
-            .map { Router(UrlTemplate(it.key), it.value.sorted().reversed()) }
-            .sorted()
-            .reversed()
+            .map { Router(it.key, it.value.sortedDescending()) }
+            .sortedDescending()
 }
 
 typealias ResponseSerializer = (Any?) -> Response
 
-private val emptyResponseSerializer: ResponseSerializer = { Response() }
+private class ResponseToSerializer(
+        private val fn: KFunction<*>,
+        private val server: AconiteServer
+) : ResponseDesc.Visitor<ResponseSerializer> {
 
-private fun responseSerializer(server: AconiteServer, fn: KFunction<*>): ResponseSerializer {
-    val returnType = fn.asyncReturnType()
-    if (returnType.classifier == Unit::class) return emptyResponseSerializer
-    if (returnType.classifier == Void::class) return emptyResponseSerializer
+    override fun body(desc: BodyResponseDesc): ResponseSerializer {
+        val bodySerializer = server.bodySerializer.create(fn, desc.type) ?:
+        throw AconiteException("No suitable serializer found for response body of method '$fn'")
+        return { r -> Response(body = bodySerializer.serialize(r)) }
+    }
 
-    val clazz = returnType.classifier as KClass<*>
-    val serializer: ResponseSerializer
-
-    if (clazz.findAnnotation<ResponseClass>() != null) {
-        if (returnType.isMarkedNullable)
-            throw AconiteException("Return type of method '$fn' must not be nullable")
-        val transformers = transformResponseParams(server, returnType)
-        serializer = { r ->
+    override fun complex(desc: ComplexResponseDesc): ResponseSerializer {
+        val transformers = transformResponseParams(server, desc)
+        return { r ->
             transformers.map { it.process(r!!) }
                     .reduce { a, b -> a + b }
         }
-    } else {
-        val bodySerializer = server.bodySerializer.create(fn, returnType) ?:
-                throw AconiteException("No suitable serializer found for response body of method '$fn'")
-        serializer = { r -> Response(body = bodySerializer.serialize(r)) }
     }
+}
 
-    return serializer
+private fun responseSerializer(server: AconiteServer, fn: KFunction<*>, desc: ResponseDesc): ResponseSerializer {
+    val responseToSerializer = ResponseToSerializer(fn, server)
+    return desc.visit(responseToSerializer)
 }

@@ -22,7 +22,7 @@ class ServiceTest {
     @Test
     fun testSetCookie() = asyncTest {
         val client = AconiteClient(
-                httpClient = TestHttpClient { _, r -> Response(headers = r.headers) }
+                acceptor = TestHttpClient { _, r -> Response(headers = r.headers) }
         )
         val service = client.create<CookieTestApi>()
         service.setCookie(Cookie(mapOf("123" to "456")))
@@ -36,7 +36,7 @@ class ServiceTest {
     @Test
     fun testClearCookie() = asyncTest {
         val client = AconiteClient(
-                httpClient = TestHttpClient { _, r -> Response(headers = r.headers) }
+                acceptor = TestHttpClient { _, r -> Response(headers = r.headers) }
         )
         val service = client.create<CookieTestApi>()
         service.setCookie(Cookie(mapOf("123" to "456")))

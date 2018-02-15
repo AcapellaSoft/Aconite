@@ -1,42 +1,24 @@
 package io.aconite.client
 
-import io.aconite.*
+import io.aconite.BodySerializer
+import io.aconite.RequestAcceptor
+import io.aconite.StringSerializer
+import io.aconite.parser.ModuleParser
 import io.aconite.serializers.BuildInStringSerializers
 import io.aconite.serializers.SimpleBodySerializer
-import io.aconite.client.adapters.SuspendCallAdapter
-import io.aconite.client.errors.PassErrorHandler
 import kotlin.reflect.KClass
-import kotlin.reflect.KFunction
-import kotlin.reflect.full.createType
-
-interface HttpClient {
-    suspend fun makeRequest(url: String, request: Request): Response
-}
-
-interface CallAdapter {
-    interface Factory {
-        fun create(fn: KFunction<*>): CallAdapter?
-    }
-
-    val function: KFunction<*>
-    fun call(args: Array<Any?>, fn: suspend (Array<Any?>) -> Any?): Any?
-}
-
-interface ErrorHandler {
-    fun handle(error: Response): HttpException
-}
 
 class AconiteClient(
-        val httpClient: HttpClient,
+        val acceptor: RequestAcceptor,
         val bodySerializer: BodySerializer.Factory = SimpleBodySerializer.Factory,
-        val stringSerializer: StringSerializer.Factory = BuildInStringSerializers,
-        val callAdapter: CallAdapter.Factory = SuspendCallAdapter.Factory,
-        val errorHandler: ErrorHandler = PassErrorHandler
+        val stringSerializer: StringSerializer.Factory = BuildInStringSerializers
 ) {
+    private val parser = ModuleParser()
     internal val moduleFactory = ModuleProxy.Factory(this)
 
     fun <T: Any> create(iface: KClass<T>): Service<T> {
-        val module = moduleFactory.create(iface.createType())
+        val desc = parser.parse(iface)
+        val module = moduleFactory.create(desc)
         return ServiceImpl(module, iface)
     }
 

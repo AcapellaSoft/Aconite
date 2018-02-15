@@ -2,9 +2,11 @@ package io.aconite.bench.vertx
 
 import io.aconite.annotations.GET
 import io.aconite.client.AconiteClient
+import io.aconite.client.clientPipeline
 import io.aconite.client.clients.VertxHttpClient
 import io.aconite.server.AconiteServer
 import io.aconite.server.handlers.VertxHandler
+import io.aconite.server.serverPipeline
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Vertx
 import io.vertx.ext.web.Router
@@ -22,15 +24,18 @@ interface Api {
 }
 
 class Impl : Api {
-    suspend override fun test() {
+    override suspend fun test() {
 
     }
 }
 
 class ServerVerticle(private val host: String, private val port: Int) : AbstractVerticle() {
     override fun start() {
-        val server = AconiteServer()
-        server.register(Impl(), Api::class)
+        val server = serverPipeline {
+            install(AconiteServer) {
+                register(Impl(), Api::class)
+            }
+        }
 
         val handler = VertxHandler(vertx, server)
 
@@ -52,9 +57,13 @@ class ClientVerticle(
         private val timeout: Long
 ) : AbstractVerticle() {
     override fun start() {
-        val client = AconiteClient(
-                httpClient = VertxHttpClient(connections, vertx)
-        )
+        val pipeline = clientPipeline {
+            install(VertxHttpClient) {
+                connectionsCount = connections
+                vertx = this@ClientVerticle.vertx
+            }
+        }
+        val client = AconiteClient(pipeline)
         val api = client.create<Api>()["http://$host:$port"]
 
         (1..connections).forEach {

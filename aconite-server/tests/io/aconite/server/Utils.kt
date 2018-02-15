@@ -25,9 +25,6 @@ interface TestModuleApi {
     @GET("/kv/keys/{key}")
     suspend fun get(@Path key: String, @Query version: String, @Header opt: String? = null, @Body body: String? = null): String
 
-    @PUT("/kv/keys/{key}")
-    suspend fun putNotAnnotated(key: String): String
-
     @POST("/kv/keys2/{key-in-path}")
     suspend fun post(@Path("key-in-path") key: String): String
 }
@@ -49,7 +46,6 @@ class RootModule: RootModuleApi {
 open class TestModule: TestModuleApi {
     override suspend fun get(key: String, version: String, opt: String?, body: String?)
             = "key = $key, version = $version, opt = ${opt ?: "foobar"}, body = $body"
-    override suspend fun putNotAnnotated(key: String) = key
     override suspend fun post(key: String) = key
 }
 
@@ -90,10 +86,6 @@ class TestStringSerializer: StringSerializer {
     }
 }
 
-class TestCallAdapter: CallAdapter {
-    override fun adapt(fn: KFunction<*>) = fn
-}
-
 class MethodFilterPassAll: MethodFilter {
     override fun predicate(fn: KFunction<*>) = true
 }
@@ -111,7 +103,6 @@ fun Response?.body() = this?.body?.content?.string!!
 fun body(s: String) = BodyBuffer(Buffer.wrap(s), "text/plain")
 
 fun asyncTest(timeout: Long = 10, unit: TimeUnit = TimeUnit.SECONDS, block: suspend () -> Unit) {
-    //withTimeout(timeout, unit) { block(); println("445") }
     val f = CompletableFuture<Void>()
     var ex: Throwable? = null
     launch(Unconfined) {
