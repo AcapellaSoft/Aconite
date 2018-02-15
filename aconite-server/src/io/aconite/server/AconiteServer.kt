@@ -2,6 +2,7 @@ package io.aconite.server
 
 import io.aconite.BodySerializer
 import io.aconite.Request
+import io.aconite.RequestAcceptor
 import io.aconite.Response
 import io.aconite.StringSerializer
 import io.aconite.parser.ModuleParser

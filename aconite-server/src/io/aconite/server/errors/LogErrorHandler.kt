@@ -1,7 +1,6 @@
 package io.aconite.server.errors
 
 import io.aconite.*
-import io.aconite.server.RequestAcceptor
 import org.slf4j.LoggerFactory
 
 object LogErrorHandler : RequestAcceptor.Factory<LogErrorHandler.Configuration> {

@@ -1,8 +1,8 @@
 package io.aconite.server.errors
 
 import io.aconite.Request
+import io.aconite.RequestAcceptor
 import io.aconite.Response
-import io.aconite.server.RequestAcceptor
 
 abstract class ErrorHandler(private val inner: RequestAcceptor) : RequestAcceptor {
     companion object {

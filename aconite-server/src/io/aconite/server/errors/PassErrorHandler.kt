@@ -1,7 +1,6 @@
 package io.aconite.server.errors
 
 import io.aconite.*
-import io.aconite.server.RequestAcceptor
 
 object PassErrorHandler : RequestAcceptor.Factory<Unit> {
     override fun create(inner: RequestAcceptor, configurator: Unit.() -> Unit) = ErrorHandler(inner) { ex ->

@@ -1,6 +1,7 @@
 package io.aconite.server
 
 import io.aconite.Request
+import io.aconite.RequestAcceptor
 import io.aconite.Response
 import io.aconite.server.errors.PassErrorHandler
 import org.junit.Assert

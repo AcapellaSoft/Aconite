@@ -1,5 +1,7 @@
 package io.aconite.server
 
+import io.aconite.RequestAcceptor
+
 class ServerPipelineBuilder {
     private val handlers = mutableListOf<(RequestAcceptor) -> RequestAcceptor>()
 

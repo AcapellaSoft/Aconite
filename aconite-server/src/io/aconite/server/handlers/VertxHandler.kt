@@ -3,9 +3,9 @@ package io.aconite.server.handlers
 import io.aconite.BodyBuffer
 import io.aconite.Buffer
 import io.aconite.Request
+import io.aconite.RequestAcceptor
 import io.aconite.Response
 import io.aconite.server.AconiteServer
-import io.aconite.server.RequestAcceptor
 import io.aconite.utils.parseContentType
 import io.vertx.core.Handler
 import io.vertx.core.Vertx

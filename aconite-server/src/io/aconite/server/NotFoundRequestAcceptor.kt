@@ -1,9 +1,6 @@
 package io.aconite.server
 
-import io.aconite.BodyBuffer
-import io.aconite.Buffer
-import io.aconite.Request
-import io.aconite.Response
+import io.aconite.*
 
 /**
  * Respond with 404 status.
