@@ -10,13 +10,13 @@ import kotlin.reflect.full.functions
 
 class ModuleProxyTest {
     @Test fun testCreatesModuleProxy() {
-        val client = AconiteClient(httpClient = TestHttpClient())
+        val client = AconiteClient(acceptor = TestHttpClient())
         val proxy = client.moduleFactory.create(ModuleParser().parse(RootModuleApi::class))
         Assert.assertNotNull(proxy)
     }
 
     @Test fun testCallProxyMethod() = asyncTest {
-        val client = AconiteClient(httpClient = TestHttpClient { _, r -> Response(body = r.body)})
+        val client = AconiteClient(acceptor = TestHttpClient { _, r -> Response(body = r.body)})
         val proxy = client.moduleFactory.create(ModuleParser().parse(RootModuleApi::class))
         val fn = RootModuleApi::class.functions.first { it.name == "patch" }
 
@@ -28,7 +28,7 @@ class ModuleProxyTest {
     }
 
     @Test fun testCallProxyModule() = asyncTest {
-        val client = AconiteClient(httpClient = TestHttpClient())
+        val client = AconiteClient(acceptor = TestHttpClient())
         val proxy = client.moduleFactory.create(ModuleParser().parse(RootModuleApi::class))
         val fn = RootModuleApi::class.functions.first { it.name == "test" }
 

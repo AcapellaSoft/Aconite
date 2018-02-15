@@ -8,7 +8,7 @@ import org.junit.Test
 
 class FunctionModuleProxyTest {
     @Test fun testCreatesModuleProxy() = asyncTest {
-        val client = AconiteClient(httpClient = TestHttpClient())
+        val client = AconiteClient(acceptor = TestHttpClient())
         val desc = ModuleParser().parse(RootModuleApi::class).methods
                 .first { it.resolvedFunction.name == "test" }
 

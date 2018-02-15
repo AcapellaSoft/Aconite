@@ -1,25 +1,17 @@
 package io.aconite.client
 
-import io.aconite.*
-import io.aconite.client.errors.PassErrorHandler
+import io.aconite.BodySerializer
+import io.aconite.RequestAcceptor
+import io.aconite.StringSerializer
 import io.aconite.parser.ModuleParser
 import io.aconite.serializers.BuildInStringSerializers
 import io.aconite.serializers.SimpleBodySerializer
 import kotlin.reflect.KClass
 
-interface HttpClient {
-    suspend fun makeRequest(url: String, request: Request): Response
-}
-
-interface ErrorHandler {
-    fun handle(error: Response): HttpException
-}
-
 class AconiteClient(
-        val httpClient: HttpClient,
+        val acceptor: RequestAcceptor,
         val bodySerializer: BodySerializer.Factory = SimpleBodySerializer.Factory,
-        val stringSerializer: StringSerializer.Factory = BuildInStringSerializers,
-        val errorHandler: ErrorHandler = PassErrorHandler
+        val stringSerializer: StringSerializer.Factory = BuildInStringSerializers
 ) {
     private val parser = ModuleParser()
     internal val moduleFactory = ModuleProxy.Factory(this)

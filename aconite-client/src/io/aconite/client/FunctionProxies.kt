@@ -42,10 +42,7 @@ internal class FunctionMethodProxy(
     override suspend fun call(url: String, request: Request, args: Array<Any?>): Any? {
         val appliedRequest = request.apply(appliers, args).copy(method = method)
         val appliedUrl = url + this.url.format(appliedRequest.path)
-        val response = client.httpClient.makeRequest(appliedUrl, appliedRequest)
-
-        if (response.code ?: 200 != 200)
-            throw client.errorHandler.handle(response)
+        val response = client.acceptor.accept(appliedUrl, appliedRequest)
         return responseDeserializer(response)
     }
 }

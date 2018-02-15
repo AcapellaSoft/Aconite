@@ -2,6 +2,7 @@ package io.aconite.bench.vertx
 
 import io.aconite.annotations.GET
 import io.aconite.client.AconiteClient
+import io.aconite.client.clientPipeline
 import io.aconite.client.clients.VertxHttpClient
 import io.aconite.server.AconiteServer
 import io.aconite.server.handlers.VertxHandler
@@ -56,9 +57,13 @@ class ClientVerticle(
         private val timeout: Long
 ) : AbstractVerticle() {
     override fun start() {
-        val client = AconiteClient(
-                httpClient = VertxHttpClient(connections, vertx)
-        )
+        val pipeline = clientPipeline {
+            install(VertxHttpClient) {
+                connectionsCount = connections
+                vertx = this@ClientVerticle.vertx
+            }
+        }
+        val client = AconiteClient(pipeline)
         val api = client.create<Api>()["http://$host:$port"]
 
         (1..connections).forEach {

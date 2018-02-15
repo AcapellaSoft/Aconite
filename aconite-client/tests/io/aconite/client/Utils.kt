@@ -1,11 +1,10 @@
 package io.aconite.client
 
-import io.aconite.BodyBuffer
-import io.aconite.Buffer
-import io.aconite.Request
-import io.aconite.Response
+import io.aconite.*
 import io.aconite.annotations.*
-import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.CancellationException
+import kotlinx.coroutines.experimental.Unconfined
+import kotlinx.coroutines.experimental.launch
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -26,10 +25,12 @@ interface TestModuleApi {
     suspend fun post(@Path("key-in-path") key: String): String
 }
 
-class TestHttpClient(val handler: suspend (String, Request) -> Response): HttpClient {
+class TestHttpClient(val handler: suspend (String, Request) -> Response) : RequestAcceptor, RequestAcceptor.Factory<Unit> {
     constructor(): this({ _, _ -> Response()})
 
-    suspend override fun makeRequest(url: String, request: Request) = handler(url, request)
+    override fun create(inner: RequestAcceptor, configurator: Unit.() -> Unit) = this
+
+    override suspend fun accept(url: String, request: Request) = handler(url, request)
 }
 
 fun body(s: String) = BodyBuffer(Buffer.wrap(s), "text/plain")

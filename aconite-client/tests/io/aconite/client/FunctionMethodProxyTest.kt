@@ -10,7 +10,7 @@ import org.junit.Test
 class FunctionMethodProxyTest {
     @Test fun testPassProxy() = asyncTest {
         val client = AconiteClient(
-                httpClient = TestHttpClient { _, r -> Response(body = body(r.method)) }
+                acceptor = TestHttpClient { _, r -> Response(body = body(r.method)) }
         )
         val desc = ModuleParser().parse(TestModuleApi::class).methods
                 .first { it.resolvedFunction.name == "get" }
@@ -23,7 +23,7 @@ class FunctionMethodProxyTest {
 
     @Test fun testBodyParameter() = asyncTest {
         val client = AconiteClient(
-                httpClient = TestHttpClient { _, r -> Response(body = r.body) }
+                acceptor = TestHttpClient { _, r -> Response(body = r.body) }
         )
         val desc = ModuleParser().parse(TestModuleApi::class).methods
                 .first { it.resolvedFunction.name == "get" }
@@ -36,7 +36,7 @@ class FunctionMethodProxyTest {
 
     @Test fun testHeaderParameter() = asyncTest {
         val client = AconiteClient(
-                httpClient = TestHttpClient { _, r -> Response(body = body(r.headers["opt"]!!)) }
+                acceptor = TestHttpClient { _, r -> Response(body = body(r.headers["opt"]!!)) }
         )
         val desc = ModuleParser().parse(TestModuleApi::class).methods
                 .first { it.resolvedFunction.name == "get" }
@@ -49,7 +49,7 @@ class FunctionMethodProxyTest {
 
     @Test fun testPathParameter() = asyncTest {
         val client = AconiteClient(
-                httpClient = TestHttpClient { _, r -> Response(body = body(r.path["key"]!!)) }
+                acceptor = TestHttpClient { _, r -> Response(body = body(r.path["key"]!!)) }
         )
         val desc = ModuleParser().parse(TestModuleApi::class).methods
                 .first { it.resolvedFunction.name == "get" }
@@ -62,7 +62,7 @@ class FunctionMethodProxyTest {
 
     @Test fun testQueryParameter() = asyncTest {
         val client = AconiteClient(
-                httpClient = TestHttpClient { _, r -> Response(body = body(r.query["version"]!!)) }
+                acceptor = TestHttpClient { _, r -> Response(body = body(r.query["version"]!!)) }
         )
         val desc = ModuleParser().parse(TestModuleApi::class).methods
                 .first { it.resolvedFunction.name == "get" }
@@ -75,7 +75,7 @@ class FunctionMethodProxyTest {
 
     @Test fun testAppendUrl() = asyncTest {
         val client = AconiteClient(
-                httpClient = TestHttpClient { url, _ -> Response(body = body(url)) }
+                acceptor = TestHttpClient { url, _ -> Response(body = body(url)) }
         )
         val desc = ModuleParser().parse(TestModuleApi::class).methods
                 .first { it.resolvedFunction.name == "get" }

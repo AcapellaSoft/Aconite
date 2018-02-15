@@ -2,6 +2,7 @@ package io.aconite.client.clients
 
 import io.aconite.BodyBuffer
 import io.aconite.Request
+import io.aconite.RequestAcceptor
 import io.aconite.Response
 import io.aconite.utils.parseContentType
 import io.vertx.core.AsyncResult
@@ -26,7 +27,20 @@ import kotlin.coroutines.experimental.CoroutineContext
 class VertxHttpClient(
         private val connectionsCount: Int = 1,
         private val vertx: Vertx = Vertx.vertx()
-) : io.aconite.client.HttpClient {
+) : RequestAcceptor {
+    companion object : RequestAcceptor.Factory<Config> {
+        override fun create(inner: RequestAcceptor, configurator: Config.() -> Unit): RequestAcceptor {
+            return Config().apply(configurator).build()
+        }
+    }
+
+    class Config {
+        var connectionsCount: Int = 1
+        var vertx: Vertx? = null
+
+        fun build() = VertxHttpClient(connectionsCount, vertx ?: Vertx.vertx())
+    }
+
     private val clients = (1..connectionsCount).map { WebClient.create(vertx) }
     private val clientIndex = AtomicInteger()
     private val coroutineCtx = VertxCoroutineContext()
@@ -39,7 +53,7 @@ class VertxHttpClient(
         }
     }
 
-    suspend override fun makeRequest(url: String, request: Request) = suspendCancellableCoroutine<Response> { c ->
+    override suspend fun accept(url: String, request: Request) = suspendCancellableCoroutine<Response> { c ->
         val handler = Handler<AsyncResult<HttpResponse<Buffer>>> { response ->
             handleResponse(c, response)
         }
