@@ -1,11 +1,6 @@
 package io.aconite.server.handlers
 
-import io.aconite.BodyBuffer
-import io.aconite.Buffer
-import io.aconite.Request
-import io.aconite.RequestAcceptor
-import io.aconite.Response
-import io.aconite.server.AconiteServer
+import io.aconite.*
 import io.aconite.utils.parseContentType
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
@@ -20,7 +15,7 @@ class VertxHandler(private val vertx: Vertx, private val acceptor: RequestAccept
     val coroutineCtx : CoroutineContext = VertxCoroutineContext()
 
     companion object {
-        fun runServer(server: AconiteServer, port: Int) {
+        fun runServer(server: RequestAcceptor, port: Int) {
             val vertx = Vertx.vertx()
             val router = Router.router(vertx)
             val handler = VertxHandler(vertx, server)
