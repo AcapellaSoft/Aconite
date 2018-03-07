@@ -112,6 +112,8 @@ interface GenericApi<T> {
 }
 ```
 
+More examples can be found [here](/examples/src/io/aconite/examples).
+
 Build
 -----
 
