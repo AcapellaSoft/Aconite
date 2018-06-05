@@ -212,7 +212,7 @@ private class ParameterUrlPart(val name: String): UrlPart {
 
     override fun toRegex() = "([^/]+)"
     override fun format(params: Map<String, String>) = params[name]!!
-    override fun toString() = "{name}"
+    override fun toString() = "{$name}"
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
