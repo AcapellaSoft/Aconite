@@ -6,6 +6,7 @@ import kotlin.reflect.KType
 
 class AnyOfBodySerializerFactory(vararg val serializers: BodySerializer.Factory): BodySerializer.Factory {
     override fun create(annotations: KAnnotatedElement, type: KType) = serializers
+            .asSequence()
             .map { it.create(annotations, type) }
             .firstOrNull { it != null }
 }
