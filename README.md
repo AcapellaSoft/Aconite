@@ -3,6 +3,46 @@ Aconite
 
 Type-safe HTTP client/server framework for Kotlin inspired by [Retrofit](http://square.github.io/retrofit/).
 
+Download
+--------
+
+Dependencies for maven:
+
+```xml
+<dependency>
+  <groupId>io.aconite</groupId>
+  <artifactId>aconite-core</artifactId>
+  <version>0.5.2</version>
+  <type>pom</type>
+</dependency>
+<dependency>
+  <groupId>io.aconite</groupId>
+  <artifactId>aconite-server</artifactId>
+  <version>0.5.2</version>
+  <type>pom</type>
+</dependency>
+<dependency>
+  <groupId>io.aconite</groupId>
+  <artifactId>aconite-client</artifactId>
+  <version>0.5.2</version>
+  <type>pom</type>
+</dependency>
+```
+
+or for gradle:
+
+```gradle
+buildscript {
+    ext.aconite_version = '0.5.2'
+}
+
+dependencies {
+    compile group: 'io.aconite', name: 'aconite-core', version: "$aconite_version"
+    compile group: 'io.aconite', name: 'aconite-server', version: "$aconite_version"
+    compile group: 'io.aconite', name: 'aconite-client', version: "$aconite_version"
+}
+```
+
 Introduction
 ------------
 
