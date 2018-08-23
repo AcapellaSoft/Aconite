@@ -68,7 +68,7 @@ class VertxHttpClient(
     private fun sendRequest(url: String, request: Request, handler: Handler<AsyncResult<HttpResponse<Buffer>>>) {
         val method = HttpMethod.valueOf(request.method)
         val client = selectClient()
-        async(coroutineCtx) {
+        launch(coroutineCtx) {
             client.requestAbs(method, url).apply {
                 request.body?.contentType?.let { putHeader("Content-Type", it) }
                 putHeader("Accept", "*/*")

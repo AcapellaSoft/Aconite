@@ -47,7 +47,7 @@ class VertxHandler(private val vertx: Vertx, private val acceptor: ServerRequest
     }
 
     override fun handle(routingCtx: RoutingContext) {
-        async(coroutineCtx) {
+        launch(coroutineCtx) {
             try {
                 val request = makeRequest(routingCtx)
                 val info = RequestInfo(
