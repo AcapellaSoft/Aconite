@@ -43,7 +43,7 @@ class ComplexResponseTest {
         val server = AconiteServer()
         server.register(ApiImpl(), Api::class)
 
-        val response = server.accept("/foo", Request(
+        val response = server.accept(RequestInfo("/foo"), Request(
                 method = "GET",
                 body = body("123"),
                 headers = mapOf("header" to "456")
@@ -58,7 +58,7 @@ class ComplexResponseTest {
         val server = AconiteServer()
         server.register(ApiImpl(), Api::class)
 
-        val response = server.accept("/bar", Request(
+        val response = server.accept(RequestInfo("/bar"), Request(
                 method = "GET",
                 headers = mapOf("header" to "456")
         ))

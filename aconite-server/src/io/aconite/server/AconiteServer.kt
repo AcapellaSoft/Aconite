@@ -2,7 +2,6 @@ package io.aconite.server
 
 import io.aconite.BodySerializer
 import io.aconite.Request
-import io.aconite.RequestAcceptor
 import io.aconite.Response
 import io.aconite.StringSerializer
 import io.aconite.parser.ModuleParser
@@ -32,10 +31,10 @@ class AconiteServer(
         val bodySerializer: BodySerializer.Factory = SimpleBodySerializer.Factory,
         val stringSerializer: StringSerializer.Factory = BuildInStringSerializers,
         val methodFilter: MethodFilter = PassMethodFilter,
-        private val inner: RequestAcceptor = NotFoundRequestAcceptor
-) : RequestAcceptor {
-    companion object : RequestAcceptor.Factory<Configuration> {
-        override fun create(inner: RequestAcceptor, configurator: Configuration.() -> Unit): RequestAcceptor {
+        private val inner: ServerRequestAcceptor = NotFoundRequestAcceptor
+) : ServerRequestAcceptor {
+    companion object : ServerRequestAcceptor.Factory<Configuration> {
+        override fun create(inner: ServerRequestAcceptor, configurator: Configuration.() -> Unit): ServerRequestAcceptor {
             return Configuration().apply(configurator).build(inner)
         }
     }
@@ -59,7 +58,7 @@ class AconiteServer(
             register(iface) { obj }
         }
 
-        fun build(inner: RequestAcceptor) = AconiteServer(
+        fun build(inner: ServerRequestAcceptor) = AconiteServer(
                 bodySerializer, stringSerializer, methodFilter, inner
         ).apply {
             registrations.forEach { it(this) }
@@ -99,13 +98,13 @@ class AconiteServer(
     /**
      * Accepts HTTP request and routes it to the corresponding handler. Serialization and
      * deserialization performed by the [bodySerializer] and [stringSerializer].
-     * @param[url] url of requested handler
+     * @param[info] extended info of requested handler
      * @param[request] HTTP request
      * @return HTTP response if handler was found, otherwise - `null`.
      */
-    override suspend fun accept(url: String, request: Request): Response {
+    override suspend fun accept(info: RequestInfo, request: Request): Response {
         for (router in modules)
-            return router.accept(url, request) ?: continue
-        return inner.accept(url, request)
+            return router.accept(info.url, request) ?: continue
+        return inner.accept(info, request)
     }
 }

@@ -1,7 +1,6 @@
 package io.aconite.server
 
 import io.aconite.Request
-import io.aconite.RequestAcceptor
 import io.aconite.Response
 import io.aconite.server.errors.PassErrorHandler
 import org.junit.Assert
@@ -17,7 +16,7 @@ class AconiteServerTest {
                 methodFilter = MethodFilterPassSpecified("get", "post", "test", "patch")
         )
         server.register(RootModule(), RootModuleApi::class)
-        val response = server.accept("/foo/bar/kv/keys/abc", Request(
+        val response = server.accept(RequestInfo("/foo/bar/kv/keys/abc"), Request(
                 method = "GET",
                 query = mapOf("version" to "123")
         ))
@@ -36,7 +35,7 @@ class AconiteServerTest {
                 register(RootModule(), RootModuleApi::class)
             }
         }
-        val response = server.accept("/foo/bar/kv/keys/abc", Request(
+        val response = server.accept(RequestInfo("/foo/bar/kv/keys/abc"), Request(
                 method = "DELETE",
                 query = mapOf("version" to "123")
         ))
@@ -59,7 +58,7 @@ class AconiteServerTest {
         }
 
         for (i in 1..2) {
-            server.accept("/foo/bar/kv/keys/abc", Request(
+            server.accept(RequestInfo("/foo/bar/kv/keys/abc"), Request(
                     method = "GET",
                     query = mapOf("version" to "123")
             ))
@@ -68,11 +67,11 @@ class AconiteServerTest {
         Assert.assertEquals(2, counter)
     }
 
-    private class TestRequestAcceptor(private val action: () -> Unit) : RequestAcceptor.Factory<Unit> {
-        override fun create(inner: RequestAcceptor, configurator: Unit.() -> Unit) = object : RequestAcceptor {
-            override suspend fun accept(url: String, request: Request): Response {
+    private class TestRequestAcceptor(private val action: () -> Unit) : ServerRequestAcceptor.Factory<Unit> {
+        override fun create(inner: ServerRequestAcceptor, configurator: Unit.() -> Unit) = object : ServerRequestAcceptor {
+            override suspend fun accept(info: RequestInfo, request: Request): Response {
                 action()
-                return inner.accept(url, request)
+                return inner.accept(info, request)
             }
         }
     }
@@ -86,7 +85,7 @@ class AconiteServerTest {
             install(TestRequestAcceptor { order.add("second") })
             install(TestRequestAcceptor { order.add("third") })
         }
-        server.accept("/foo", Request())
+        server.accept(RequestInfo("/foo"), Request())
 
         Assert.assertEquals(listOf("first", "second", "third"), order)
     }

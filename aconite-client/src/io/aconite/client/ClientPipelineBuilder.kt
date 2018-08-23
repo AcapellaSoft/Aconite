@@ -1,20 +1,18 @@
 package io.aconite.client
 
-import io.aconite.RequestAcceptor
-
 class ClientPipelineBuilder {
-    private val handlers = mutableListOf<(RequestAcceptor) -> RequestAcceptor>()
+    private val handlers = mutableListOf<(ClientRequestAcceptor) -> ClientRequestAcceptor>()
 
-    fun <C> install(factory: RequestAcceptor.Factory<C>, configurator: C.() -> Unit) {
+    fun <C> install(factory: ClientRequestAcceptor.Factory<C>, configurator: C.() -> Unit) {
         handlers.add { inner -> factory.create(inner, configurator) }
     }
 
-    fun <C> install(factory: RequestAcceptor.Factory<C>) {
+    fun <C> install(factory: ClientRequestAcceptor.Factory<C>) {
         handlers.add { inner -> factory.create(inner, {}) }
     }
 
-    fun build(): RequestAcceptor {
-        val init: RequestAcceptor = NotImplementedRequestAcceptor
+    fun build(): ClientRequestAcceptor {
+        val init: ClientRequestAcceptor = NotImplementedRequestAcceptor
         return handlers
                 .reversed()
                 .fold(init) { inner, factory -> factory(inner) }
@@ -45,6 +43,6 @@ class ClientPipelineBuilder {
  * }
  * val client = AconiteClient(acceptor = pipeline)
  */
-fun clientPipeline(builder: ClientPipelineBuilder.() -> Unit): RequestAcceptor {
+fun clientPipeline(builder: ClientPipelineBuilder.() -> Unit): ClientRequestAcceptor {
     return ClientPipelineBuilder().apply(builder).build()
 }

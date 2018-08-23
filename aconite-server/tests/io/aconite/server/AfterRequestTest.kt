@@ -54,7 +54,7 @@ class AfterRequestTest {
         val ref = AtomicReference("111")
         server.register<ModuleApi> { DummyApiImpl(ref) }
 
-        val response = server.accept("/foo", Request(
+        val response = server.accept(RequestInfo("/foo"), Request(
                 method = "GET"
         ))
 
@@ -68,7 +68,7 @@ class AfterRequestTest {
         val ref = AtomicReference("111")
         server.register<ModuleApi> { HeaderApiImpl(ref) }
 
-        val response = server.accept("/foo", Request(
+        val response = server.accept(RequestInfo("/foo"), Request(
                 method = "GET",
                 headers = mapOf("Foo" to "456")
         ))
@@ -83,7 +83,7 @@ class AfterRequestTest {
         val ref = AtomicReference("111")
         server.register<RootApi> { RootApiImpl(ref) }
 
-        server.accept("/foo", Request(
+        server.accept(RequestInfo("/foo"), Request(
                 method = "GET"
         ))
 
