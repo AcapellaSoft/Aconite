@@ -1,14 +1,15 @@
 package io.aconite.server.errors
 
 import io.aconite.*
+import io.aconite.server.ServerRequestAcceptor
 import org.slf4j.LoggerFactory
 
-object LogErrorHandler : RequestAcceptor.Factory<LogErrorHandler.Configuration> {
+object LogErrorHandler : ServerRequestAcceptor.Factory<LogErrorHandler.Configuration> {
     class Configuration {
         var clazz: Class<*> = LogErrorHandler::class.java
     }
 
-    override fun create(inner: RequestAcceptor, configurator: Configuration.() -> Unit): RequestAcceptor {
+    override fun create(inner: ServerRequestAcceptor, configurator: Configuration.() -> Unit): ServerRequestAcceptor {
         val config = Configuration().apply(configurator)
         val logger = LoggerFactory.getLogger(config.clazz)
 

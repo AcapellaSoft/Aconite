@@ -1,7 +1,6 @@
 package io.aconite.client
 
 import io.aconite.BodySerializer
-import io.aconite.RequestAcceptor
 import io.aconite.StringSerializer
 import io.aconite.parser.ModuleParser
 import io.aconite.serializers.BuildInStringSerializers
@@ -9,7 +8,7 @@ import io.aconite.serializers.SimpleBodySerializer
 import kotlin.reflect.KClass
 
 class AconiteClient(
-        val acceptor: RequestAcceptor,
+        val acceptor: ClientRequestAcceptor,
         val bodySerializer: BodySerializer.Factory = SimpleBodySerializer.Factory,
         val stringSerializer: StringSerializer.Factory = BuildInStringSerializers
 ) {

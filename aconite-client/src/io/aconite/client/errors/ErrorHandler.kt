@@ -2,12 +2,12 @@ package io.aconite.client.errors
 
 import io.aconite.HttpException
 import io.aconite.Request
-import io.aconite.RequestAcceptor
 import io.aconite.Response
+import io.aconite.client.ClientRequestAcceptor
 
-abstract class ErrorHandler(private val inner: RequestAcceptor) : RequestAcceptor {
+abstract class ErrorHandler(private val inner: ClientRequestAcceptor) : ClientRequestAcceptor {
     companion object {
-        operator fun invoke(inner: RequestAcceptor, handler: (Response) -> HttpException) = object : ErrorHandler(inner) {
+        operator fun invoke(inner: ClientRequestAcceptor, handler: (Response) -> HttpException) = object : ErrorHandler(inner) {
             override fun handle(error: Response) = handler(error)
         }
     }

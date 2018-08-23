@@ -12,7 +12,7 @@ class SomeHandler : SomeApi {
 
 fun main(args: Array<String>) {
     val server = serverPipeline {
-        install(Interceptor) {
+        install(ServerInterceptor) {
             prefix = "request logger"
         }
         install(AconiteServer) {

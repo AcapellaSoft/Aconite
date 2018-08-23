@@ -1,6 +1,12 @@
 package io.aconite.server.handlers
 
-import io.aconite.*
+import io.aconite.BodyBuffer
+import io.aconite.Buffer
+import io.aconite.Request
+import io.aconite.Response
+import io.aconite.server.HttpVersion
+import io.aconite.server.RequestInfo
+import io.aconite.server.ServerRequestAcceptor
 import io.aconite.utils.parseContentType
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
@@ -8,14 +14,14 @@ import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
 import kotlinx.coroutines.experimental.CoroutineDispatcher
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.launch
 import kotlin.coroutines.experimental.CoroutineContext
 
-class VertxHandler(private val vertx: Vertx, private val acceptor: RequestAcceptor): Handler<RoutingContext> {
+class VertxHandler(private val vertx: Vertx, private val acceptor: ServerRequestAcceptor): Handler<RoutingContext> {
     val coroutineCtx : CoroutineContext = VertxCoroutineContext()
 
     companion object {
-        fun runServer(server: RequestAcceptor, port: Int) {
+        fun runServer(server: ServerRequestAcceptor, port: Int) {
             val vertx = Vertx.vertx()
             val router = Router.router(vertx)
             val handler = VertxHandler(vertx, server)
@@ -44,8 +50,12 @@ class VertxHandler(private val vertx: Vertx, private val acceptor: RequestAccept
         async(coroutineCtx) {
             try {
                 val request = makeRequest(routingCtx)
-                val url = routingCtx.request().uri().substringBefore('?')
-                val response = acceptor.accept(url, request)
+                val info = RequestInfo(
+                        url = routingCtx.request().uri().substringBefore('?'),
+                        remoteClient = routingCtx.request().remoteAddress()?.host() ?: "",
+                        protocolVersion = routingCtx.request().version().toAconiteVersion()
+                )
+                val response = acceptor.accept(info, request)
                 makeResponse(routingCtx, response)
             } catch (ex: Throwable) {
                 ex.printStackTrace()
@@ -88,5 +98,11 @@ class VertxHandler(private val vertx: Vertx, private val acceptor: RequestAccept
                 end()
             }
         }
+    }
+
+    private fun io.vertx.core.http.HttpVersion.toAconiteVersion() = when (this) {
+        io.vertx.core.http.HttpVersion.HTTP_1_0 -> HttpVersion.HTTP_1_0
+        io.vertx.core.http.HttpVersion.HTTP_1_1 -> HttpVersion.HTTP_1_1
+        io.vertx.core.http.HttpVersion.HTTP_2 -> HttpVersion.HTTP_2_0
     }
 }

@@ -7,7 +7,7 @@ import kotlinx.coroutines.experimental.runBlocking
 
 fun main(args: Array<String>) {
     val client = AconiteClient(clientPipeline {
-        install(Interceptor) {
+        install(ClientInterceptor) {
             prefix = "request logger"
         }
         install(VertxHttpClient)

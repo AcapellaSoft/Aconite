@@ -1,6 +1,9 @@
 package io.aconite.client
 
-import io.aconite.*
+import io.aconite.BodyBuffer
+import io.aconite.Buffer
+import io.aconite.Request
+import io.aconite.Response
 import io.aconite.annotations.*
 import kotlinx.coroutines.experimental.CancellationException
 import kotlinx.coroutines.experimental.Unconfined
@@ -25,10 +28,10 @@ interface TestModuleApi {
     suspend fun post(@Path("key-in-path") key: String): String
 }
 
-class TestHttpClient(val handler: suspend (String, Request) -> Response) : RequestAcceptor, RequestAcceptor.Factory<Unit> {
+class TestHttpClient(val handler: suspend (String, Request) -> Response) : ClientRequestAcceptor, ClientRequestAcceptor.Factory<Unit> {
     constructor(): this({ _, _ -> Response()})
 
-    override fun create(inner: RequestAcceptor, configurator: Unit.() -> Unit) = this
+    override fun create(inner: ClientRequestAcceptor, configurator: Unit.() -> Unit) = this
 
     override suspend fun accept(url: String, request: Request) = handler(url, request)
 }

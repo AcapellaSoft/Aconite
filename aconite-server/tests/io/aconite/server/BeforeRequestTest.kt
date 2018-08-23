@@ -56,7 +56,7 @@ class BeforeRequestTest {
         val server = AconiteServer()
         server.register<ModuleApi> { DummyApiImpl() }
 
-        val response = server.accept("/foo", Request(
+        val response = server.accept(RequestInfo("/foo"), Request(
                 method = "GET"
         ))
 
@@ -68,7 +68,7 @@ class BeforeRequestTest {
         val server = AconiteServer()
         server.register<ModuleApi> { HeaderApiImpl() }
 
-        val response = server.accept("/foo", Request(
+        val response = server.accept(RequestInfo("/foo"), Request(
                 method = "GET",
                 headers = mapOf("Foo" to "456")
         ))
@@ -81,7 +81,7 @@ class BeforeRequestTest {
         val server = AconiteServer()
         server.register<RootApi> { RootApiImpl() }
 
-        val response = server.accept("/foo", Request(
+        val response = server.accept(RequestInfo("/foo"), Request(
                 method = "GET"
         ))
 

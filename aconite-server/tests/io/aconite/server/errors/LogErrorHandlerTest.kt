@@ -4,6 +4,7 @@ import io.aconite.BodyBuffer
 import io.aconite.Buffer
 import io.aconite.Request
 import io.aconite.server.AconiteServer
+import io.aconite.server.RequestInfo
 import io.aconite.server.asyncTest
 import io.aconite.server.serverPipeline
 import org.junit.Assert
@@ -17,7 +18,7 @@ class LogErrorHandlerTest {
                 register(ThrowsImpl { RuntimeException(it) }, ThrowsApi::class)
             }
         }
-        val response = server.accept("/", Request(
+        val response = server.accept(RequestInfo("/"), Request(
                 method = "GET",
                 body = BodyBuffer(Buffer.wrap("123"), "text/plain")
         ))

@@ -1,20 +1,18 @@
 package io.aconite.server
 
-import io.aconite.RequestAcceptor
-
 class ServerPipelineBuilder {
-    private val handlers = mutableListOf<(RequestAcceptor) -> RequestAcceptor>()
+    private val handlers = mutableListOf<(ServerRequestAcceptor) -> ServerRequestAcceptor>()
 
-    fun <C> install(factory: RequestAcceptor.Factory<C>, configurator: C.() -> Unit) {
+    fun <C> install(factory: ServerRequestAcceptor.Factory<C>, configurator: C.() -> Unit) {
         handlers.add { inner -> factory.create(inner, configurator) }
     }
 
-    fun <C> install(factory: RequestAcceptor.Factory<C>) {
+    fun <C> install(factory: ServerRequestAcceptor.Factory<C>) {
         handlers.add { inner -> factory.create(inner, {}) }
     }
 
-    fun build(): RequestAcceptor {
-        val init: RequestAcceptor = NotFoundRequestAcceptor
+    fun build(): ServerRequestAcceptor {
+        val init: ServerRequestAcceptor = NotFoundRequestAcceptor
         return handlers
                 .reversed()
                 .fold(init) { inner, factory -> factory(inner) }
@@ -52,6 +50,6 @@ class ServerPipelineBuilder {
  *     }
  * }
  */
-fun serverPipeline(builder: ServerPipelineBuilder.() -> Unit): RequestAcceptor {
+fun serverPipeline(builder: ServerPipelineBuilder.() -> Unit): ServerRequestAcceptor {
     return ServerPipelineBuilder().apply(builder).build()
 }

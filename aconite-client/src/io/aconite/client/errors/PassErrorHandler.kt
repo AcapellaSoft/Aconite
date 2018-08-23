@@ -1,10 +1,10 @@
 package io.aconite.client.errors
 
 import io.aconite.HttpException
-import io.aconite.RequestAcceptor
+import io.aconite.client.ClientRequestAcceptor
 
-object PassErrorHandler : RequestAcceptor.Factory<Unit> {
-    override fun create(inner: RequestAcceptor, configurator: Unit.() -> Unit) = ErrorHandler(inner) { error ->
+object PassErrorHandler : ClientRequestAcceptor.Factory<Unit> {
+    override fun create(inner: ClientRequestAcceptor, configurator: Unit.() -> Unit) = ErrorHandler(inner) { error ->
         HttpException(error.code!!, error.body?.content?.string)
     }
 }
