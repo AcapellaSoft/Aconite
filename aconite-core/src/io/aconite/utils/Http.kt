@@ -2,6 +2,7 @@ package io.aconite.utils
 
 import io.aconite.AconiteException
 import io.aconite.annotations.*
+import java.net.URLDecoder
 import kotlin.reflect.KFunction
 
 private val URL_PARAM_REGEX = Regex("^\\{(?<param>[^/{}]+)}|^(?<text>[^{}]+)")
@@ -263,3 +264,39 @@ fun KFunction<*>.getHttpMethod(): Pair<String, String?>? {
 
 // todo: parse encoding
 fun parseContentType(header: String): String = header.split(';').first().trim().toLowerCase()
+
+data class UrlAndQuery(val url: String, val query: Map<String, String>)
+
+/**
+ * Extract query parameters from [url] string.
+ * For example:
+ * ```
+ * parseQuery("http://localhost/foo?bar=qux")
+ * ```
+ * will return:
+ * ```
+ * UrlAndQuery(
+ *     url = "http://localhost/foo",
+ *     query = mapOf(
+ *         "bar" to "qux"
+ *     )
+ * )
+ * ```
+ */
+fun parseQuery(url: String): UrlAndQuery {
+    val urlParts = url.split('?', limit = 2)
+    val resultUrl = urlParts[0]
+    val queryStr = urlParts.getOrNull(1)
+    val queryPairs = queryStr?.split('&')
+
+    val query = queryPairs?.associate { pair ->
+        val queryParts = pair.split('=', limit = 2)
+        val nameEncoded = queryParts.getOrElse(0) { "" }
+        val valueEncoded = queryParts.getOrElse(1) { "" }
+        val name = URLDecoder.decode(nameEncoded, "UTF-8")
+        val value = URLDecoder.decode(valueEncoded, "UTF-8")
+        Pair(name, value)
+    } ?: emptyMap()
+
+    return UrlAndQuery(resultUrl, query)
+}
