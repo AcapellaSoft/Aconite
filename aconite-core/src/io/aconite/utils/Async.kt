@@ -3,20 +3,9 @@ package io.aconite.utils
 import kotlinx.coroutines.experimental.suspendCancellableCoroutine
 import java.lang.reflect.InvocationTargetException
 import kotlin.coroutines.experimental.Continuation
+import kotlin.coroutines.experimental.intrinsics.COROUTINE_SUSPENDED
 import kotlin.coroutines.experimental.startCoroutine
 import kotlin.reflect.KFunction
-
-/**
- * This object can be used as the return value of the async function to indicate
- * that function was suspended.
- * TODO: find better way to use suspend with reflection
- */
-val COROUTINE_SUSPENDED: Any = {
-    val cls = Class.forName("kotlin.coroutines.experimental.intrinsics.IntrinsicsKt")
-    val field = cls.getDeclaredField("COROUTINE_SUSPENDED")
-    field.isAccessible = true
-    field.get(null)
-}()
 
 /**
  * Extension for calling asynchronous functions by reflection.
