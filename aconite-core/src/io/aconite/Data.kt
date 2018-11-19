@@ -33,11 +33,15 @@ interface Buffer {
         fun wrap(string: String) = object: Buffer {
             override val string = string
             override val bytes by lazy { string.toByteArray() }
+
+            override fun toString() = "StringBuffer(string=$string)"
         }
 
         fun wrap(bytes: ByteArray) = object: Buffer {
             override val string by lazy { String(bytes) }
             override val bytes = bytes
+
+            override fun toString() = "ByteBuffer(string=$string)"
         }
     }
 }

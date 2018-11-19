@@ -44,6 +44,8 @@ class VertxHandler(private val vertx: Vertx, private val acceptor: ServerRequest
     private class VertxBuffer(private val buffer: io.vertx.core.buffer.Buffer): Buffer {
         override val bytes by lazy { buffer.bytes!! }
         override val string by lazy { buffer.toString() }
+
+        override fun toString() = "VertxBuffer(string=$string)"
     }
 
     override fun handle(routingCtx: RoutingContext) {
