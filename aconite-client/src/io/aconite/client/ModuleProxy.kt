@@ -4,7 +4,7 @@ import io.aconite.Request
 import io.aconite.parser.*
 import io.aconite.utils.startCoroutine
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.coroutines.experimental.Continuation
+import kotlin.coroutines.Continuation
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
 

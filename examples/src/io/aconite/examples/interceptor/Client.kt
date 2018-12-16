@@ -3,7 +3,7 @@ package io.aconite.examples.interceptor
 import io.aconite.client.AconiteClient
 import io.aconite.client.clientPipeline
 import io.aconite.client.clients.VertxHttpClient
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.runBlocking
 
 fun main(args: Array<String>) {
     val client = AconiteClient(clientPipeline {

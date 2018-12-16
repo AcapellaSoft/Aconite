@@ -11,9 +11,9 @@ import io.vertx.core.AbstractVerticle
 import io.vertx.core.Vertx
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.handler.BodyHandler
-import kotlinx.coroutines.experimental.Unconfined
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.withTimeoutOrNull
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicInteger
@@ -67,7 +67,7 @@ class ClientVerticle(
         val api = client.create<Api>()["http://$host:$port"]
 
         (1..connections).forEach {
-            launch(Unconfined) {
+            GlobalScope.launch {
                 while (true) {
                     withTimeoutOrNull(timeout) {
                         api.test()

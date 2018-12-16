@@ -2,10 +2,10 @@ package io.aconite.server
 
 import io.aconite.*
 import io.aconite.annotations.*
-import kotlinx.coroutines.experimental.CancellationException
-import kotlinx.coroutines.experimental.Unconfined
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.suspendCancellableCoroutine
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -105,7 +105,7 @@ fun body(s: String) = BodyBuffer(Buffer.wrap(s), "text/plain")
 fun asyncTest(timeout: Long = 10, unit: TimeUnit = TimeUnit.SECONDS, block: suspend () -> Unit) {
     val f = CompletableFuture<Void>()
     var ex: Throwable? = null
-    launch(Unconfined) {
+    GlobalScope.launch {
         try {
             block()
         } catch (e: Throwable) {

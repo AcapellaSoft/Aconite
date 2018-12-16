@@ -5,9 +5,9 @@ import io.aconite.Buffer
 import io.aconite.Request
 import io.aconite.Response
 import io.aconite.annotations.*
-import kotlinx.coroutines.experimental.CancellationException
-import kotlinx.coroutines.experimental.Unconfined
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -43,7 +43,7 @@ fun Response?.body() = this?.body?.content?.string!!
 fun asyncTest(timeout: Long = 10, unit: TimeUnit = TimeUnit.SECONDS, block: suspend () -> Unit) {
     val f = CompletableFuture<Void>()
     var ex: Throwable? = null
-    launch(Unconfined) {
+    GlobalScope.launch {
         try {
             block()
         } catch (e: Throwable) {

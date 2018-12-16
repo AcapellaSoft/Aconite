@@ -3,7 +3,7 @@ package io.aconite.client
 import io.aconite.Request
 import io.aconite.Response
 import io.aconite.parser.ModuleParser
-import kotlinx.coroutines.experimental.suspendCancellableCoroutine
+import kotlinx.coroutines.suspendCancellableCoroutine
 import org.junit.Assert
 import org.junit.Test
 import kotlin.reflect.full.functions

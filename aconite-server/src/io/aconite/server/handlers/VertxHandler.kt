@@ -13,9 +13,10 @@ import io.vertx.core.Vertx
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
-import kotlinx.coroutines.experimental.CoroutineDispatcher
-import kotlinx.coroutines.experimental.launch
-import kotlin.coroutines.experimental.CoroutineContext
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlin.coroutines.CoroutineContext
 
 class VertxHandler(private val vertx: Vertx, private val acceptor: ServerRequestAcceptor): Handler<RoutingContext> {
     val coroutineCtx : CoroutineContext = VertxCoroutineContext()
@@ -49,7 +50,7 @@ class VertxHandler(private val vertx: Vertx, private val acceptor: ServerRequest
     }
 
     override fun handle(routingCtx: RoutingContext) {
-        launch(coroutineCtx) {
+        GlobalScope.launch(coroutineCtx) {
             try {
                 val request = makeRequest(routingCtx)
                 val info = RequestInfo(

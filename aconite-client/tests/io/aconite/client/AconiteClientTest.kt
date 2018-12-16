@@ -1,8 +1,8 @@
 package io.aconite.client
 
 import io.aconite.Response
-import kotlinx.coroutines.experimental.CancellationException
-import kotlinx.coroutines.experimental.suspendCancellableCoroutine
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.suspendCancellableCoroutine
 import org.junit.Assert
 import org.junit.Test
 
