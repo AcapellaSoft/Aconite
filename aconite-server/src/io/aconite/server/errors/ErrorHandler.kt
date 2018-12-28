@@ -7,18 +7,18 @@ import io.aconite.server.ServerRequestAcceptor
 
 abstract class ErrorHandler(private val inner: ServerRequestAcceptor) : ServerRequestAcceptor {
     companion object {
-        operator fun invoke(inner: ServerRequestAcceptor, handler: (Exception) -> Response) = object : ErrorHandler(inner) {
-            override fun handle(ex: Exception) = handler(ex)
+        operator fun invoke(inner: ServerRequestAcceptor, handler: (Throwable) -> Response) = object : ErrorHandler(inner) {
+            override fun handle(ex: Throwable) = handler(ex)
         }
     }
 
     final override suspend fun accept(info: RequestInfo, request: Request): Response {
         return try {
             inner.accept(info, request)
-        } catch (ex: Exception) {
+        } catch (ex: Throwable) {
             handle(ex)
         }
     }
 
-    abstract fun handle(ex: Exception): Response
+    abstract fun handle(ex: Throwable): Response
 }
