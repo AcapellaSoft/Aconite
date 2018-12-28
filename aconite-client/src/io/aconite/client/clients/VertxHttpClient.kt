@@ -60,7 +60,7 @@ class VertxHttpClient(
         val handler = Handler<AsyncResult<HttpResponse<Buffer>>> { response ->
             handleResponse(c, response)
         }
-        sendRequest(url, request, handler)
+        sendRequest(url, request, handler, c)
     }
 
     private fun selectClient(): WebClient {
@@ -68,24 +68,33 @@ class VertxHttpClient(
         return clients[index]
     }
 
-    private fun sendRequest(url: String, request: Request, handler: Handler<AsyncResult<HttpResponse<Buffer>>>) {
-        val method = HttpMethod.valueOf(request.method)
-        val client = selectClient()
+    private fun sendRequest(
+        url: String,
+        request: Request,
+        handler: Handler<AsyncResult<HttpResponse<Buffer>>>,
+        cont: Continuation<Response>
+    ) {
         GlobalScope.launch(coroutineCtx) {
-            client.requestAbs(method, url).apply {
-                request.body?.contentType?.let { putHeader("Content-Type", it) }
-                putHeader("Accept", "*/*")
+            try {
+                val method = HttpMethod.valueOf(request.method)
+                val client = selectClient()
+                client.requestAbs(method, url).apply {
+                    request.body?.contentType?.let { putHeader("Content-Type", it) }
+                    putHeader("Accept", "*/*")
 
-                for ((name, value) in request.headers)
-                    putHeader(name, value)
-                for ((name, value) in request.query)
-                    addQueryParam(name, value)
+                    for ((name, value) in request.headers)
+                        putHeader(name, value)
+                    for ((name, value) in request.query)
+                        addQueryParam(name, value)
 
-                val body = request.body?.let { Buffer.buffer(it.content.bytes) }
-                if (body != null)
-                    sendBuffer(body, handler)
-                else
-                    send(handler)
+                    val body = request.body?.let { Buffer.buffer(it.content.bytes) }
+                    if (body != null)
+                        sendBuffer(body, handler)
+                    else
+                        send(handler)
+                }
+            } catch (ex: Throwable) {
+                cont.resumeWithException(ex)
             }
         }
     }
